@@ -2751,7 +2751,7 @@ public class TargetedMSController extends SpringActionController
 
         private Integer _chartWidth = null;
         private Integer _chartHeight = null;
-        private int _dpi = SCREEN_RES;
+        private int _dpi = 144;
 
         public int getChartWidth()
         {
@@ -3692,6 +3692,7 @@ public class TargetedMSController extends SpringActionController
             // run anyway
             settings.setContainerFilterName(null);
             settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("PeptideGroupId", "RunId"), form.getId()));
+            settings.setBaseSort(new Sort("Sequence"));
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             return schema.createView(getViewContext(), settings, errors);
         }
@@ -4184,16 +4185,20 @@ public class TargetedMSController extends SpringActionController
             summaryChartBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
             summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
             summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
+            int count = 0;
             // Peptide summary charts
             if (peptideCount != null && peptideCount > 0)
             {
+                count += peptideCount.intValue();
                 summaryChartBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(getUser(), getContainer()))));
             }
             // Molecule summary charts
             else if (moleculeCount != null && moleculeCount > 0)
             {
+                count += moleculeCount.intValue();
                 summaryChartBean.setMoleculeList(new ArrayList<>(MoleculeManager.getMoleculesForGroup(group.getId())));
             }
+            summaryChartBean.setInitialWidth(Math.max(600, 100 + count * 30));
             JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp", summaryChartBean);
             summaryChartView.setTitle("Summary Charts");
             summaryChartView.enableExpandCollapse("SummaryChartsView", false);

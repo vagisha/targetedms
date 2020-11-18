@@ -527,7 +527,7 @@ public abstract class ChromatogramDataset
             // Each key in the map is the index for a transition peak (TransitionChromInfo) into the RT and intensity arrays
             // Value is the value in the "quantitative" column for the corresponding transition.
             // This value will be null if the transition is quantitative.
-            Map<Integer, Boolean> transitionChromIndexes = TransitionManager.getTransitionChromatogramIndexes(pChromInfo.getId());
+            Map<Integer, Boolean> transitionChromIndexes = TransitionManager.getTransitionChromatogramIndexes(pChromInfo);
 
             // We will consider the precursor peak to be "quantitative" if any of its transition peaks are quantitative.
             // The value in the transitionChromIndexes map for a quantitative transition peak  will be null.
@@ -826,18 +826,36 @@ public abstract class ChromatogramDataset
             for(int chromatogramIndex = 0; chromatogramIndex < transitionCount; chromatogramIndex++)
             {
                 List<TransitionChromInfo> tChromInfoList = TransitionManager.getTransitionChromInfoList(_pChromInfo.getId(), chromatogramIndex);
-                if(tChromInfoList.isEmpty())
-                    continue;
-                for(TransitionChromInfo tChromInfo: tChromInfoList)
+
+                for (TransitionChromInfo tChromInfo : tChromInfoList)
                 {
                     Transition transition = TransitionManager.get(tChromInfo.getTransitionId(), _user, _container);
 
-                    if(include(transition))
+                    if (include(transition))
                     {
                         tciList.add(new TransChromInfoPlusTransition(tChromInfo, transition));
                     }
                 }
             }
+
+            if (tciList.isEmpty() && _pChromInfo.getTransitionChromatogramIndicesList() != null)
+            {
+                List<Transition> transitions = TransitionManager.getTransitionsForPrecursor(_precursor.getId(), _user, _container);
+                if (transitions.size() != _pChromInfo.getTransitionChromatogramIndicesList().size())
+                {
+                    throw new IllegalStateException("Mismatch in transitions and indices lengths: " + transitions.size() + " vs " + _pChromInfo.getTransitionChromatogramIndicesList().size());
+                }
+                int index = 0;
+                for (Transition transition : transitions)
+                {
+                    if (include(transition))
+                    {
+                        tciList.add(new TransChromInfoPlusTransition(_pChromInfo.makeDummyTransitionChromInfo(index), transition));
+                    }
+                    index++;
+                }
+            }
+
             // Sort according to the ion order used in Skyline
             tciList.sort(new TransChromInfoPlusTransitionComparator());
 
@@ -1103,6 +1121,24 @@ public abstract class ChromatogramDataset
                     }
                 }
             }
+
+            if (tciList.isEmpty() && _pChromInfo.getTransitionChromatogramIndicesList() != null)
+            {
+                List<MoleculeTransition> transitions = MoleculeTransitionManager.getTransitionsForPrecursor(_molPrecursor.getId(), _user, _container);
+                if (transitions.size() != _pChromInfo.getTransitionChromatogramIndicesList().size())
+                {
+                    throw new IllegalStateException("Mismatch in transitions and indices lengths: " + transitions.size() + " vs " + _pChromInfo.getTransitionChromatogramIndicesList().size());
+                }
+                int index = 0;
+                for (MoleculeTransition transition : transitions)
+                {
+                    if (include(transition))
+                    {
+                        tciList.add(new MoleculeTransChromInfoPlusTransition(_pChromInfo.makeDummyTransitionChromInfo(index++), transition));
+                    }
+                }
+            }
+
             tciList.sort(new MoleculeTransChromInfoPlusTransitionComparator());
 
             _jfreeDataset = new XYSeriesCollection();

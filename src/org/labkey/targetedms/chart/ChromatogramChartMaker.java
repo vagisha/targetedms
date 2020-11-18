@@ -131,8 +131,9 @@ class ChromatogramChartMaker
             @Override
             public StringBuffer format(double number, StringBuffer toAppendTo, FieldPosition pos)
             {
+                String pattern = (yAxis.getUpperBound() - yAxis.getLowerBound()) / chromatogramDataset.getIntensityScale() > 100 ? "0" : "0.0";
                 // Display the scaled value in the tick label.
-                return toAppendTo.append(new DecimalFormat("0.0").format(number / chromatogramDataset.getIntensityScale()));
+                return toAppendTo.append(new DecimalFormat(pattern).format(number / chromatogramDataset.getIntensityScale()));
             }
 
             @Override
