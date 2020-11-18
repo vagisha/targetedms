@@ -79,9 +79,6 @@ public class ContainerChromatogramLibraryWriter
     private final List<Integer> _representativeRunIds;
     private ChromatogramLibraryWriter _libWriter;
 
-    private int _proteinCount = 0;
-    private int _peptideCount = 0;
-    private int _moleculeCount = 0;
     private int _precursorCount = 0;
     private int _transitionCount = 0;
 
@@ -116,7 +113,6 @@ public class ContainerChromatogramLibraryWriter
         try
         {
             _libWriter = new ChromatogramLibraryWriter();
-            _libWriter.setMaxCacheSize(20000);
             _libWriter.openLibrary(tempChromLibFile);
 
             _sampleFileIdMap = new HashMap<>();
@@ -169,11 +165,12 @@ public class ContainerChromatogramLibraryWriter
         libInfo.setCreated(new Date());
         libInfo.setSchemaVersion(Constants.SCHEMA_VERSION);
         libInfo.setLibraryRevision(libraryRevision);
-        libInfo.setProteins(_proteinCount);
-        libInfo.setPeptides(_peptideCount);
+        libInfo.setProteins(_libWriter.getProteinCount());
+        libInfo.setPeptides(_libWriter.getPeptideCount());
         libInfo.setPrecursors(_precursorCount);
         libInfo.setTransitions(_transitionCount);
-        libInfo.setMolecules(_moleculeCount);
+        libInfo.setMoleculeLists(_libWriter.getMoleculeListCount());
+        libInfo.setMolecules(_libWriter.getMoleculeCount());
         _libWriter.writeLibInfo(libInfo);
     }
 
@@ -359,7 +356,7 @@ public class ContainerChromatogramLibraryWriter
                     LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors, run);
                     peptidePrecursors.clear();
 
-                    _libWriter.writePeptide(libPeptide);
+                    _libWriter.writePeptide(libPeptide, peptide);
                 }
                 lastPeptideId = precursor.getGeneralMoleculeId();
                 peptidePrecursors = new ArrayList<>();
@@ -370,11 +367,11 @@ public class ContainerChromatogramLibraryWriter
         {
             Peptide peptide = PeptideManager.getPeptide(_container, lastPeptideId);
             LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors, run);
-            _libWriter.writePeptide(libPeptide);
+            _libWriter.writePeptide(libPeptide, peptide);
         }
     }
 
-    private void saveMoleculePrecursors(TargetedMSRun run) throws SQLException
+    private void saveMoleculePrecursors(TargetedMSRun run)
     {
         List<MoleculePrecursor> precursors = MoleculePrecursorManager.getRepresentativeMoleculePrecursors(run.getId());
         // Sort by id
@@ -392,7 +389,7 @@ public class ContainerChromatogramLibraryWriter
                     LibMolecule libMolecule = makeLibMolecule(molecule, moleculePrecursors, run);
                     moleculePrecursors.clear();
 
-                    _libWriter.writeMolecule(libMolecule);
+                    _libWriter.writeMolecule(libMolecule, molecule);
                 }
                 lastMoleculeId = precursor.getGeneralMoleculeId();
                 moleculePrecursors = new ArrayList<>();
@@ -403,20 +400,14 @@ public class ContainerChromatogramLibraryWriter
         {
             Molecule molecule = MoleculeManager.getMolecule(_container, lastMoleculeId);
             LibMolecule libMolecule = makeLibMolecule(molecule, moleculePrecursors, run);
-            _libWriter.writeMolecule(libMolecule);
+            _libWriter.writeMolecule(libMolecule, molecule);
         }
     }
 
-    private void savePeptideGroup(PeptideGroup pepGroup, TargetedMSRun run) throws SQLException
+    private void savePeptideGroup(PeptideGroup pepGroup, TargetedMSRun run)
     {
         // Create an entry in the Protein table.
-        LibProtein libProtein = new LibProtein();
-        libProtein.setName(pepGroup.getLabel());
-        libProtein.setDescription(pepGroup.getDescription());
-        if(pepGroup.getSequenceId() != null)
-        {
-            libProtein.setSequence(ProteinService.get().getProteinSequence(pepGroup.getSequenceId()));
-        }
+        LibProtein libProtein = new LibProtein(pepGroup);
 
         // Get the replicate that has the maximum overall peak area for this protein
         getBestReplicateIdForPeptideGroup(pepGroup);
@@ -425,8 +416,7 @@ public class ContainerChromatogramLibraryWriter
         addPeptides(pepGroup, libProtein, run);
 
         // Save the protein.
-        _proteinCount++;
-        _libWriter.writeProtein(libProtein);
+        _libWriter.writeProtein(pepGroup.getId(), libProtein);
     }
 
     private void getBestReplicateIdForPeptideGroup(PeptideGroup pepGroup)
@@ -444,7 +434,7 @@ public class ContainerChromatogramLibraryWriter
             List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), schema);
 
             LibPeptide libPeptide = makeLibPeptide(peptide, precursors, run);
-            protein.addPeptide(libPeptide);
+            protein.addChild(libPeptide);
         }
     }
 
@@ -525,7 +515,6 @@ public class ContainerChromatogramLibraryWriter
 
             libPeptide.addStructuralModification(libPepMod);
         }
-        _peptideCount++;
         return libPeptide;
     }
 
@@ -536,7 +525,7 @@ public class ContainerChromatogramLibraryWriter
         libMolecule.setCustomIonName(molecule.getCustomIonName());
         libMolecule.setMassMonoisotopic(molecule.getMassMonoisotopic());
         libMolecule.setMassAverage(molecule.getMassAverage());
-        _moleculeCount++;
+        libMolecule.setMoleculeAccession(molecule.getMoleculeId());
         return libMolecule;
     }
 

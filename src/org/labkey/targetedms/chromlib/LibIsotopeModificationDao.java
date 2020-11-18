@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -111,7 +112,7 @@ public class LibIsotopeModificationDao extends BaseDaoImpl<LibIsotopeModificatio
     }
 
     @Override
-    public void saveAll(List<LibIsotopeModification> isotopeModifications, Connection connection)
+    public void saveAll(Collection<LibIsotopeModification> isotopeModifications, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

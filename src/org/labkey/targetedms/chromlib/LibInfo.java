@@ -34,6 +34,7 @@ public class LibInfo
     private int _precursors;
     private int _transitions;
 
+    private int _moleculeLists;
     private int _molecules;
 
     public String getPanoramaServer()
@@ -136,6 +137,16 @@ public class LibInfo
         _molecules = molecules;
     }
 
+    public int getMoleculeLists()
+    {
+        return _moleculeLists;
+    }
+
+    public void setMoleculeLists(int moleculeLists)
+    {
+        _moleculeLists = moleculeLists;
+    }
+
     @Override
     public boolean equals(Object o)
     {
@@ -150,6 +161,7 @@ public class LibInfo
         if (_proteins != libInfo._proteins) return false;
         if (_transitions != libInfo._transitions) return false;
         if (_molecules != libInfo._molecules) return false;
+        if (_moleculeLists != libInfo._moleculeLists) return false;
         if (_container != null ? !_container.equals(libInfo._container) : libInfo._container != null) return false;
         if (_created != null ? !_created.equals(libInfo._created) : libInfo._created != null) return false;
         if (_panoramaServer != null ? !_panoramaServer.equals(libInfo._panoramaServer) : libInfo._panoramaServer != null)
@@ -173,6 +185,7 @@ public class LibInfo
         result = 31 * result + _precursors;
         result = 31 * result + _transitions;
         result = 31 * result + _molecules;
+        result = 31 * result + _moleculeLists;
         return result;
     }
 }

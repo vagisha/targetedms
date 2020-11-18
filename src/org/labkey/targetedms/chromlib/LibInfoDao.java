@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -46,7 +47,7 @@ public class LibInfoDao implements Dao<LibInfo>
             sql.append(" (");
             sql.append(getInsertColumnSql());
             sql.append(")");
-            sql.append(" VALUES (?,?,?,?,?,?,?,?,?,?);");
+            sql.append(" VALUES (?,?,?,?,?,?,?,?,?,?,?);");
 
             try (PreparedStatement stmt = connection.prepareStatement(sql.toString()))
             {
@@ -60,6 +61,7 @@ public class LibInfoDao implements Dao<LibInfo>
                 stmt.setInt(colIndex++, libInfo.getPeptides());
                 stmt.setInt(colIndex++, libInfo.getPrecursors());
                 stmt.setInt(colIndex++, libInfo.getTransitions());
+                stmt.setInt(colIndex++, libInfo.getMoleculeLists());
                 stmt.setInt(colIndex++, libInfo.getMolecules());
                 stmt.executeUpdate();
             }
@@ -96,6 +98,7 @@ public class LibInfoDao implements Dao<LibInfo>
                 libInfo.setPeptides(rs.getInt(LibInfoColumn.Peptides.baseColumn().name()));
                 libInfo.setPrecursors(rs.getInt(LibInfoColumn.Precursors.baseColumn().name()));
                 libInfo.setTransitions(rs.getInt(LibInfoColumn.Transitions.baseColumn().name()));
+                libInfo.setMoleculeLists(rs.getInt(LibInfoColumn.MoleculeLists.baseColumn().name()));
                 libInfo.setMolecules(rs.getInt(LibInfoColumn.Molecules.baseColumn().name()));
                 libInfos.add(libInfo);
             }
@@ -116,7 +119,7 @@ public class LibInfoDao implements Dao<LibInfo>
     }
 
     @Override
-    public void saveAll(List<LibInfo> libInfos, Connection connection)
+    public void saveAll(Collection<LibInfo> libInfos, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

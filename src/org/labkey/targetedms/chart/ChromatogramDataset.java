@@ -53,7 +53,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * User: vsharma
@@ -525,25 +524,38 @@ public abstract class ChromatogramDataset
             double minTime = chromatogramRtRange.getMinRt();
             double maxTime = chromatogramRtRange.getMaxRt();
 
-            Set<Integer> transitionChromIndexes = TransitionManager.getTransitionChromatogramIndexes(pChromInfo.getId());
+            // Each key in the map is the index for a transition peak (TransitionChromInfo) into the RT and intensity arrays
+            // Value is the value in the "quantitative" column for the corresponding transition.
+            // This value will be null if the transition is quantitative.
+            Map<Integer, Boolean> transitionChromIndexes = TransitionManager.getTransitionChromatogramIndexes(pChromInfo.getId());
+
+            // We will consider the precursor peak to be "quantitative" if any of its transition peaks are quantitative.
+            // The value in the transitionChromIndexes map for a quantitative transition peak  will be null.
+            boolean isQuantitativePrecursor = transitionChromIndexes.values().stream().anyMatch(v -> v == null || v.booleanValue());
 
             // sum up the intensities of all transitions of this precursor
             double[] totalIntensities = new double[times.length];
             for(int i = 0; i < chromatogram.getTransitionsCount(); i++)
             {
-                if(!transitionChromIndexes.contains(i))
+                if(!transitionChromIndexes.containsKey(i))
                     continue;
 
-                float[] transitionIntensities = chromatogram.getIntensities(i);
-                assert times.length == transitionIntensities.length : "Length of times and intensities don't match";
-
-                for (int j = 0; j < times.length; j++)
+                // Add to the total intensities if the transition peak is quantitative OR if none of the
+                // transition peaks for the precursor are quantitative.
+                Boolean quantitative = transitionChromIndexes.get(i);
+                if(!isQuantitativePrecursor || (quantitative == null || quantitative.booleanValue()))
                 {
-                    if(times[j] < minTime)
-                        continue;
-                    if(times[j] > maxTime)
-                        break;
-                    totalIntensities[j] += transitionIntensities[j];
+                    float[] transitionIntensities = chromatogram.getIntensities(i);
+                    assert times.length == transitionIntensities.length : "Length of times and intensities don't match";
+
+                    for (int j = 0; j < times.length; j++)
+                    {
+                        if (times[j] < minTime)
+                            continue;
+                        if (times[j] > maxTime)
+                            break;
+                        totalIntensities[j] += transitionIntensities[j];
+                    }
                 }
             }
 
@@ -859,7 +871,7 @@ public abstract class ChromatogramDataset
             int i = 0;
             for(TransitionChromInfoPlusGeneralTransition tci: chromInfoList)
             {
-                _quantative[i++] = tci.getTransition().isQuantitativeTransition();
+                _quantative[i++] = tci.getTransition().explicitQuantitative();
             }
         }
 

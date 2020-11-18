@@ -21,7 +21,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
@@ -33,10 +32,8 @@ import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * User: vsharma
@@ -153,15 +150,25 @@ public class TransitionManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
+
+    /**
+     * @param precursorChromInfoId id of a precursor peak in the PrecursorChromInfo table
+     * @return a map where the keys are the index for a transition peak (TransitionChromInfo) into the RT and intensity arrays
+     * for the precursor peak (stored in the "chromatogram" column of PrecursorChromInfo or read from the skyd file).
+     * Values are the value in the "quantitative" column for the corresponding transition. This value will be null if the
+     * transition is quantitative.
+     */
     @NotNull
-    public static Set<Integer> getTransitionChromatogramIndexes(long precursorChromInfoId)
+    public static Map<Integer, Boolean> getTransitionChromatogramIndexes(long precursorChromInfoId)
     {
-        TableInfo tinfo = TargetedMSManager.getTableInfoTransitionChromInfo();
-        Collection<Integer> tranChromIndexes = new TableSelector(tinfo.getColumn("ChromatogramIndex"),
-                                                        new SimpleFilter(FieldKey.fromParts("PrecursorChromInfoId"), precursorChromInfoId),
-                                                        null
-                                                        ).getCollection(Integer.class);
-        return new HashSet<>(tranChromIndexes);
+        SQLFragment sql = new SQLFragment("SELECT tci.ChromatogramIndex, gt.Quantitative FROM ")
+                .append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci")
+                .append(" INNER JOIN ")
+                .append(TargetedMSManager.getTableInfoGeneralTransition(), "gt")
+                .append(" ON gt.id = tci.transitionId ")
+                .append(" WHERE tci.PrecursorChromInfoId = ?").add(precursorChromInfoId);
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getValueMap();
     }
 
     @NotNull

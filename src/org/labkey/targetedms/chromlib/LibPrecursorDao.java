@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -122,7 +123,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
     }
 
     @Override
-    public void saveAll(List<LibPrecursor> precursors, Connection connection) throws SQLException
+    public void saveAll(Collection<LibPrecursor> precursors, Connection connection) throws SQLException
     {
         if(precursors.size() > 0)
         {

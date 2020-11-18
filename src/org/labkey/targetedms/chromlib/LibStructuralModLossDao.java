@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -77,7 +78,7 @@ public class LibStructuralModLossDao extends BaseDaoImpl<LibStructuralModLoss>
     }
 
     @Override
-    public void saveAll(List<LibStructuralModLoss> structuralModLosses, Connection connection)
+    public void saveAll(Collection<LibStructuralModLoss> structuralModLosses, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

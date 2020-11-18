@@ -80,7 +80,46 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     }
 
     public enum FolderType {
-        Experiment, Library, LibraryProtein, QC, Undefined
+        Experiment
+                {
+                    @Override
+                    public void chooseFolderType(TargetedMSTest test)
+                    {
+                        test.click(Locator.radioButtonById("experimentalData")); // click the first radio button - Experimental Data
+                    }
+                },
+        ExperimentMAM
+                {
+                    @Override
+                    public void chooseFolderType(TargetedMSTest test)
+                    {
+                        test.click(Locator.radioButtonById("multiAttributeMethod")); // click the second radio button - Experimental Data
+                    }
+                }, Library
+                {
+                    @Override
+                    public void chooseFolderType(TargetedMSTest test)
+                    {
+                        test.click(Locator.radioButtonById("chromatogramLibrary")); // click the 3rd radio button - Library
+                    }
+                }, LibraryProtein
+                {
+                    @Override
+                    public void chooseFolderType(TargetedMSTest test)
+                    {
+                        test.click(Locator.radioButtonById("chromatogramLibrary")); // click the 3rd radio button - Library
+                        test.click(Locator.checkboxByName("precursorNormalized")); // check the normalization checkbox.
+                    }
+                }, QC
+                {
+                    @Override
+                    public void chooseFolderType(TargetedMSTest test)
+                    {
+                        test.click(Locator.radioButtonById("QC")); // click the 4th radio button - QC
+                    }
+                };
+
+        public abstract void chooseFolderType(TargetedMSTest test);
     }
 
     public TargetedMSTest()
@@ -248,22 +287,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     @LogMethod
     protected void selectFolderType(FolderType folderType) {
         log("Select Folder Type: " + folderType);
-        switch(folderType)
-        {
-            case Experiment:
-                click(Locator.radioButtonById("experimentalData")); // click the first radio button - Experimental Data
-                break;
-            case Library:
-                click(Locator.radioButtonById("chromatogramLibrary")); // click the 2nd radio button - Library
-                break;
-            case LibraryProtein:
-                click(Locator.radioButtonById("chromatogramLibrary")); // click the 2nd radio button - Library
-                click(Locator.checkboxByName("precursorNormalized")); // check the normalization checkbox.
-                break;
-            case QC:
-                click(Locator.radioButtonById("QC")); // click the 3rd radio button - QC
-                break;
-        }
+        folderType.chooseFolderType(this);
         clickButton("Finish");
     }
 

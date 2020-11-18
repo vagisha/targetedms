@@ -15,40 +15,14 @@
  */
 package org.labkey.targetedms.chromlib;
 
-import org.labkey.api.protein.ProteinService;
 import org.labkey.targetedms.parser.PeptideGroup;
 
-/**
- * User: vsharma
- * Date: 12/31/12
- * Time: 9:22 AM
- */
-public class LibProtein extends AbstractLibList<LibPeptide>
+public class LibMoleculeList extends AbstractLibList<LibMolecule>
 {
-    public LibProtein() {}
+    public LibMoleculeList() {}
 
-    public LibProtein(PeptideGroup pepGroup)
+    public LibMoleculeList(PeptideGroup group)
     {
-        super(pepGroup);
-        if(pepGroup.getSequenceId() != null)
-        {
-            setSequence(ProteinService.get().getProteinSequence(pepGroup.getSequenceId()));
-        }
-        else
-        {
-            setSequence(pepGroup.getSequence());
-        }
-    }
-
-    private String _sequence;
-
-    public String getSequence()
-    {
-        return _sequence;
-    }
-
-    public void setSequence(String sequence)
-    {
-        _sequence = sequence;
+        super(group);
     }
 }

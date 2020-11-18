@@ -23,6 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 /**
  * User: vsharma
@@ -47,11 +48,11 @@ public class LibProteinDao extends BaseDaoImpl<LibProtein>
 
             if(_peptideDao != null)
             {
-                for(LibPeptide peptide: protein.getPeptides())
+                for(LibPeptide peptide: protein.getChildren())
                 {
                     peptide.setProteinId(protein.getId());
                 }
-                _peptideDao.saveAll(protein.getPeptides(), connection);
+                _peptideDao.saveAll(protein.getChildren(), connection);
             }
         }
     }
@@ -78,7 +79,7 @@ public class LibProteinDao extends BaseDaoImpl<LibProtein>
     }
 
     @Override
-    public void saveAll(List<LibProtein> proteins, Connection connection) throws SQLException
+    public void saveAll(Collection<LibProtein> proteins, Connection connection) throws SQLException
     {
         if(proteins != null && proteins.size() > 0)
         {
@@ -90,7 +91,7 @@ public class LibProteinDao extends BaseDaoImpl<LibProtein>
             {
                 for(LibProtein protein: proteins)
                 {
-                    for(LibPeptide peptide: protein.getPeptides())
+                    for(LibPeptide peptide: protein.getChildren())
                     {
                         peptide.setProteinId(protein.getId());
                         peptideList.add(peptide);
@@ -129,7 +130,7 @@ public class LibProteinDao extends BaseDaoImpl<LibProtein>
         List<LibPeptide> peptides = _peptideDao.queryForForeignKey(Constants.PeptideColumn.ProteinId.baseColumn().name(), protein.getId(), connection);
         for(LibPeptide peptide: peptides)
         {
-            protein.addPeptide(peptide);
+            protein.addChild(peptide);
         }
     }
 }

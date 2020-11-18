@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -125,7 +126,7 @@ public class LibSampleFileDao extends BaseDaoImpl<LibSampleFile>
     }
 
     @Override
-    public void saveAll(List<LibSampleFile> sampleFiles, Connection connection)
+    public void saveAll(Collection<LibSampleFile> sampleFiles, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

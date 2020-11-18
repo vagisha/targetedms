@@ -9,6 +9,9 @@
                     <column columnName="Sequence">
                         <displayColumnFactory>
                             <className>org.labkey.targetedms.query.ModifiedSequenceDisplayColumn$PeptideDisplayColumnFactory</className>
+                            <properties>
+                                <property name="showNextAndPrevious">true</property>
+                            </properties>
                         </displayColumnFactory>
                     </column>
                     <column columnName="MinObservedPeptideMass">

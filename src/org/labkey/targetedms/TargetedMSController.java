@@ -352,6 +352,7 @@ public class TargetedMSController extends SpringActionController
             switch (FolderType.valueOf(moduleProperty.getValueContainerSpecific(c)))
             {
                 case Experiment:
+                case ExperimentMAM:
                 case Library:
                 case LibraryProtein:
                 case QC:
@@ -361,9 +362,10 @@ public class TargetedMSController extends SpringActionController
                     break;
             }
 
-            if (FolderType.Experiment.toString().equals(folderSetupForm.getFolderType()))
+            if (FolderType.Experiment.toString().equals(folderSetupForm.getFolderType()) ||
+                    FolderType.ExperimentMAM.toString().equals(folderSetupForm.getFolderType()))
             {
-                moduleProperty.saveValue(getUser(), c, FolderType.Experiment.toString());
+                moduleProperty.saveValue(getUser(), c, folderSetupForm.getFolderType());
 
                 // setup the EXPERIMENTAL_DATA default webparts
                 addDashboardTab(DefaultFolderType.DEFAULT_DASHBOARD, c, EXPERIMENT_FOLDER_WEB_PARTS);

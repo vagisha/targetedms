@@ -24,6 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -58,7 +59,7 @@ public abstract class BaseDaoImpl<T extends AbstractLibEntity> implements Dao<T>
     }
 
     @Override
-    public void saveAll(List<T> list, Connection connection) throws SQLException
+    public void saveAll(Collection<T> list, Connection connection) throws SQLException
     {
         _log.info("Batch insert of "+list.size()+" objects");
         if(list.size() > 0)
