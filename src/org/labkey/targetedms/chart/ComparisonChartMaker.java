@@ -322,7 +322,7 @@ public class ComparisonChartMaker
         xAxis.setMaximumCategoryLabelWidthRatio(0.3f);
         xAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
         NumberAxis yAxis = (NumberAxis)plot.getRangeAxis();
-        yAxis.setNumberFormatOverride(new DecimalFormat(yAxis.getUpperBound() - yAxis.getLowerBound() > 100 ? "0" : "0.0"));
+        yAxis.setNumberFormatOverride(new DecimalFormat(yAxis.getUpperBound() - yAxis.getLowerBound() > 100 ? "#,##0" : "#,##0.0"));
         xAxis.setLabelFont(yAxis.getLabelFont());
         xAxis.setTickLabelFont(yAxis.getTickLabelFont());
         plot.setDomainAxis(xAxis);

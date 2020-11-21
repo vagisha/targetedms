@@ -262,8 +262,10 @@ import static org.labkey.api.targetedms.TargetedMSService.FolderType;
 import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
 import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_DIR;
 import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_TAB;
+import static org.labkey.api.util.DOM.Attribute.height;
 import static org.labkey.api.util.DOM.Attribute.method;
 import static org.labkey.api.util.DOM.Attribute.src;
+import static org.labkey.api.util.DOM.Attribute.width;
 import static org.labkey.api.util.DOM.DIV;
 import static org.labkey.api.util.DOM.TD;
 import static org.labkey.api.util.DOM.TR;
@@ -4043,7 +4045,8 @@ public class TargetedMSController extends SpringActionController
             {
                 ActionURL chromURL = new ActionURL(SampleFileChromatogramChartAction.class, getContainer());
                 chromURL.addParameter("id", sampleFileChromInfo.getId());
-                HtmlView chromView = new HtmlView(DOM.IMG(at(src, chromURL.toString())));
+                SampleFileChromInfoForm imgForm = new SampleFileChromInfoForm();
+                HtmlView chromView = new HtmlView(DOM.IMG(at(src, chromURL.toString(), height, imgForm.getChartHeight(), width, imgForm.getChartWidth())));
                 chromView.setFrame(WebPartView.FrameType.PORTAL);
                 chromView.setTitle(sampleFileChromInfo.getTextId());
                 result.addView(chromView);

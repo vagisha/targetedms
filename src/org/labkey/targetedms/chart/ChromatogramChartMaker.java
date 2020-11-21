@@ -123,7 +123,7 @@ class ChromatogramChartMaker
 
         // Limit labels to one decimal place on the x-axis (retention time).
         NumberAxis xAxis = (NumberAxis)chart.getXYPlot().getDomainAxis();
-        xAxis.setNumberFormatOverride(new DecimalFormat("0.0"));
+        xAxis.setNumberFormatOverride(new DecimalFormat("#,##0.0"));
 
         // Display scaled values in the y-axis tick labels.  The scaling factor is displayed in the axis label.
         NumberAxis yAxis = (NumberAxis)chart.getXYPlot().getRangeAxis();
@@ -131,7 +131,7 @@ class ChromatogramChartMaker
             @Override
             public StringBuffer format(double number, StringBuffer toAppendTo, FieldPosition pos)
             {
-                String pattern = (yAxis.getUpperBound() - yAxis.getLowerBound()) / chromatogramDataset.getIntensityScale() > 100 ? "0" : "0.0";
+                String pattern = (yAxis.getUpperBound() - yAxis.getLowerBound()) / chromatogramDataset.getIntensityScale() > 100 ? "#,##0" : "#,##0.0";
                 // Display the scaled value in the tick label.
                 return toAppendTo.append(new DecimalFormat(pattern).format(number / chromatogramDataset.getIntensityScale()));
             }
