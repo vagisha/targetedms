@@ -27,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -5807,6 +5808,8 @@ public class TargetedMSController extends SpringActionController
                     false,                     // tooltips?
                     false                     // URLs?
             );
+            // Don't show fractional values on the y-axis
+            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());
             chart.setBackgroundPaint(new Color(1,1,1,1));
 
             response.setContentType("image/png");

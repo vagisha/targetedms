@@ -25,6 +25,7 @@
 <%
 
     long conflictCount = ConflictResultsManager.getConflictCount(getUser(), getContainer());
+    boolean hasMolecules = TargetedMSManager.containerHasSmallMolecules(getContainer());
     TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
     ActionURL conflictViewUrl = (folderType == TargetedMSService.FolderType.LibraryProtein) ?
                                            new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getContainer()) :
@@ -42,7 +43,7 @@
     <%}%>
     <%if(folderType == TargetedMSService.FolderType.Library){%>
         <div style="color:red; font-weight:bold;">
-            There are conflicting peptides in this folder.
+            There are conflicting <%= h(hasMolecules ? "molecules" : "peptides") %> in this folder.
             <a style="color:red; text-decoration:underline;" href="<%= h(conflictViewUrl) %>">Resolve conflicts.</a>
         </div>
     <%}%>
