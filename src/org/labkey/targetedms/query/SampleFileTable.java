@@ -15,14 +15,20 @@
  */
 package org.labkey.targetedms.query;
 
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Aggregate;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.data.dialect.SqlDialect;
+import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
@@ -36,18 +42,24 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.targetedms.datasource.MsDataSourceUtil;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.parser.SampleFile;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class SampleFileTable extends TargetedMSTable
 {
@@ -90,6 +102,16 @@ public class SampleFileTable extends TargetedMSTable
         DetailsURL detailsURL = new DetailsURL(url, urlParams);
         setDetailsURL(detailsURL);
         getMutableColumn("ReplicateId").setURL(detailsURL);
+
+
+        // Add a column to display the file name extracted from the value in the sampleFile.FilePath column
+        ExprColumn fileNameCol = new ExprColumn(this, "File", getFileNameSql(), JdbcType.VARCHAR);
+        addColumn(fileNameCol);
+
+        var downloadCol = addWrapColumn("Download", getRealTable().getColumn("Id"));
+        downloadCol.setKeyField(false);
+        downloadCol.setTextAlign("left");
+        downloadCol.setDisplayColumnFactory(colInfo -> new DownloadLinkColumn(colInfo));
     }
 
     @Override
@@ -100,7 +122,8 @@ public class SampleFileTable extends TargetedMSTable
             // Always include these columns
             List<FieldKey> defaultCols = new ArrayList<>(Arrays.asList(
                     FieldKey.fromParts("ReplicateId"),
-                    FieldKey.fromParts("FilePath"),
+                    FieldKey.fromParts("File"),
+                    FieldKey.fromParts("Download"),
                     FieldKey.fromParts("AcquiredTime")));
 
             // Find the columns that have values for the run of interest, and include them in the set of columns in the default
@@ -170,5 +193,93 @@ public class SampleFileTable extends TargetedMSTable
                 return super.deleteRow(user, container, oldRowMap);
             }
         };
+    }
+
+    private SQLFragment getFileNameSql()
+    {
+        SqlDialect dialect = TargetedMSManager.getSqlDialect();
+
+        // If FilePath is C:\Project1\RawData\sample001.raw
+        // we want sample001.raw
+        // Example SQL on Postgres (sf is alias for SampleFile):
+        // CASE WHEN sf.FilePath IS NOT NULL AND POSITION('\' IN sf.FilePath) > 0
+        //     THEN substr(sf.FilePath, length(sf.FilePath) - POSITION('\' IN  REVERSE(sf.FilePath)) + 2 , length(sf.FilePath))
+        //     ELSE sf.FilePath
+        //     END
+        SQLFragment filePathColSql = new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".FilePath");
+        SQLFragment filePathLengthSql = new SQLFragment(dialect.getVarcharLengthFunction()).append("(").append(filePathColSql).append(")");
+        return new SQLFragment("CASE")
+                .append(" WHEN ").append(filePathColSql).append(" IS NOT NULL AND ").append(dialect.getStringIndexOfFunction(new SQLFragment("'\\'"), filePathColSql)).append(" > 0")
+                .append(" THEN ").append(dialect.getSubstringFunction(
+                        filePathColSql,
+                        new SQLFragment(filePathLengthSql).append(" - ")
+                                .append(dialect.getStringIndexOfFunction(new SQLFragment("'\\'"), new SQLFragment(" REVERSE(").append(filePathColSql)).append(") + 2 ")),
+                        filePathLengthSql))
+                .append(" ELSE ").append(filePathColSql).append(" END");
+    }
+
+    private class DownloadLinkColumn extends DataColumn
+    {
+        private FieldKey _containerFieldKey = FieldKey.fromParts("ReplicateId", "RunId", "Container");
+
+        public DownloadLinkColumn(ColumnInfo col)
+        {
+            super(col);
+        }
+
+        @Override
+        public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+        {
+            Long sampleFileId = ctx.get(this.getColumnInfo().getFieldKey(), Long.class);
+            Container container = ctx.get(_containerFieldKey, Container.class);
+
+            if (sampleFileId != null && container != null)
+            {
+                SampleFile sampleFile = ReplicateManager.getSampleFile(sampleFileId);
+
+                if(sampleFile != null)
+                {
+                    MsDataSourceUtil.RawDataInfo downloadInfo = MsDataSourceUtil.getInstance().getDownloadInfo(sampleFile, container);
+                    if(downloadInfo != null)
+                    {
+                        Long dataSize = downloadInfo.getSize();
+                        String size = dataSize != null ? FileUtils.byteCountToDisplaySize(dataSize) : "";
+                        ExpData expData = downloadInfo.getExpData();
+                        String url = expData.getWebDavURL(ExpData.PathType.full);
+                        if(!downloadInfo.isFile())
+                        {
+                            int idx = url.lastIndexOf('/');
+                            url = idx != -1 ? url.substring(0, idx) : url;
+                            url = url + "?method=zip&depth=-1&file=" + expData.getName() + "&zipName=" + expData.getName();
+                        }
+
+                        out.write(PageFlowUtil.iconLink("fa fa-download", null).href(url).toString());
+                        out.write("&nbsp;");
+                        out.write(PageFlowUtil.filter(size));
+                        return;
+                    }
+                }
+            }
+            out.write("<em>Not available</em>");
+        }
+
+        @Override
+        public void addQueryFieldKeys(Set<FieldKey> keys)
+        {
+            super.addQueryFieldKeys(keys);
+            keys.add(_containerFieldKey);
+        }
+
+        @Override
+        public boolean isFilterable()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isSortable()
+        {
+            return false;
+        }
     }
 }

@@ -77,6 +77,7 @@ public interface TargetedMSService
     TableInfo getTableInfoPeptideGroup();
     TableInfo getTableInfoGeneralMolecule();
     List<String> getSampleFilePaths(long runId);
+    List<? extends ISampleFile> getSampleFiles(long runId);
     List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId);
     List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(long runId);
     Map<String, List<BlibSourceFile>> getBlibSourceFiles(ITargetedMSRun run);
@@ -91,4 +92,11 @@ public interface TargetedMSService
 
     /** @return rowId for pipeline job that will perform the import asynchronously */
     Integer importSkylineDocument(ViewBackgroundInfo info, Path skylinePath) throws XarFormatException, PipelineValidationException;
+
+    /**
+     * @param sampleFiles list of sample files for which we should check if data exists
+     * @param container container where we should look for the data
+     * @return list of sample files for which data was found
+     */
+    List<? extends ISampleFile> getSampleFilesWithData(List<? extends ISampleFile> sampleFiles, Container container);
 }

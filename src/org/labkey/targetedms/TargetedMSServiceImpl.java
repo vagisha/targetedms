@@ -25,6 +25,7 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.targetedms.BlibSourceFile;
 import org.labkey.api.targetedms.IModification;
+import org.labkey.api.targetedms.ISampleFile;
 import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.targetedms.SkylineAnnotation;
 import org.labkey.api.targetedms.SkylineDocumentImportListener;
@@ -32,6 +33,8 @@ import org.labkey.api.targetedms.TargetedMSFolderTypeListener;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.datasource.MsDataSourceUtil;
+import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
@@ -137,6 +140,12 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
+    public List<SampleFile> getSampleFiles(long runId)
+    {
+        return ReplicateManager.getSampleFilesForRun(runId);
+    }
+
+    @Override
     public List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId)
     {
         return ModificationManager.getStructuralModificationsUsedInRun(runId);
@@ -227,5 +236,11 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public Integer importSkylineDocument(ViewBackgroundInfo info, Path skylinePath) throws XarFormatException, PipelineValidationException
     {
         return TargetedMSManager.addRunToQueue(info, skylinePath);
+    }
+
+    @Override
+    public List<? extends ISampleFile> getSampleFilesWithData(List<? extends ISampleFile> sampleFiles, Container container)
+    {
+        return MsDataSourceUtil.getInstance().getSampleFilesWithData(sampleFiles, container);
     }
 }
