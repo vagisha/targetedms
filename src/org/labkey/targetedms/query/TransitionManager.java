@@ -162,14 +162,23 @@ public class TransitionManager
      * transition is quantitative.
      */
     @NotNull
-    public static Map<Integer, Boolean> getTransitionChromatogramIndexes(PrecursorChromInfo pci)
+    public static Map<Integer, Boolean> getTransitionChromatogramIndexes(PrecursorChromInfo pci, User user, Container container)
     {
         if (pci.getTransitionChromatogramIndicesList() != null)
         {
+            List<Transition> transitions = TransitionManager.getTransitionsForPrecursor(pci.getPrecursorId(), user, container);
+            if (transitions.size() != pci.getTransitionChromatogramIndicesList().size())
+            {
+                throw new IllegalStateException("Mismatch in transitions and indices lengths: " + transitions.size() + " vs " + pci.getTransitionChromatogramIndicesList().size());
+            }
+
             Map<Integer, Boolean> result = new LinkedHashMap<>();
+            int i = 0;
             for (Integer index : pci.getTransitionChromatogramIndicesList())
             {
-                result.put(index, true);
+                Transition transition = transitions.get(i); // Transition list is sorted by the 'Id' column so should be in the same order as the chromatogram indices list
+                result.put(index, transition.explicitQuantitative());
+                i++;
             }
             return result;
         }

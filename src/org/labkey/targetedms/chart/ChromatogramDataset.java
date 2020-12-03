@@ -527,7 +527,7 @@ public abstract class ChromatogramDataset
             // Each key in the map is the index for a transition peak (TransitionChromInfo) into the RT and intensity arrays
             // Value is the value in the "quantitative" column for the corresponding transition.
             // This value will be null if the transition is quantitative.
-            Map<Integer, Boolean> transitionChromIndexes = TransitionManager.getTransitionChromatogramIndexes(pChromInfo);
+            Map<Integer, Boolean> transitionChromIndexes = TransitionManager.getTransitionChromatogramIndexes(pChromInfo, _user, _container);
 
             // We will consider the precursor peak to be "quantitative" if any of its transition peaks are quantitative.
             // The value in the transitionChromIndexes map for a quantitative transition peak  will be null.
