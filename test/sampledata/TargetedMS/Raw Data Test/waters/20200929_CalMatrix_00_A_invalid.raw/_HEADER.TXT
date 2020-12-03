@@ -1,0 +1,54 @@
+$$ Version: 01.00
+$$ Acquired Name: 20200929_Cal_CovidPaper_CalMatrix_00_A
+$$ Acquired Date: 29-Sep-2020
+$$ Acquired Time: 17:27:36
+$$ Job Code: 20200929_CalCurve_COVID_Paper
+$$ Task Code: 
+$$ User Name: 
+$$ Instrument: XEVO-TQS#WAA141
+$$ Conditions: 
+$$ Laboratory Name: 
+$$ Sample Description: Cal Matrix_00 | A | 0 pmol
+$$ Solvent Delay: 0.0000
+$$ Submitter: 
+$$ SampleID: 
+$$ Bottle Number: 2:A,10
+$$ Plate Desc: 01TL,YX,LN,1: 8,2:12,3: 90.0,4: 90.0,5:  0.0,6:  0.0,7:O,8:O,9:1280.0,10:860.0,11:270.0,12: 70.0,13:144.0,14:112.0
+$$ Cal MS1 Static: 9.918764539242734e-3,1.000502377424664e0,-8.115439736534231e-7,4.513961870246008e-10,-7.426636589709209e-14,T0
+$$ Cal MS2 Static: -9.493944548720442e-2,1.000629522542829e0,-1.202016700122067e-6,6.720806177089202e-10,-1.235804773924803e-13,T0
+$$ Associated Datafile: 
+$$ Cal MS1 Static Params: 96,1963,0.00,5.00,2.6,14.6,-0.1,Phosphoricpos2,STATMS1
+$$ Cal MS1 Dynamic Params: 2,2048,20.4600,-1.00,2.6,14.6,-0.1,Phosphoricpos2,SCNMS1
+$$ Cal MS1 Fast Params: 2,2048,1.0230,-1.00,2.6,14.6,-0.1,Phosphoricpos2,FASTMS1
+$$ Cal MS2 Static Params: 96,1963,0.00,5.00,2.9,14.9,0.6,Phosphoricpos2,STATMS2
+$$ Cal MS2 Dynamic Params: 2,2048,20.4600,-1.00,2.9,14.9,0.6,Phosphoricpos2,SCNMS2
+$$ Cal MS2 Fast Params: 2,2048,0.2046,-1.00,2.9,14.9,0.6,Phosphoricpos2,FASTMS2
+$$ Cal Time: 15:50
+$$ Cal Date: 06/21/19
+$$ Analog Channel 1 Offset: 0.000
+$$ Analog Channel 2 Offset: 0.000
+$$ Analog Channel 3 Offset: 0.000
+$$ Analog Channel 4 Offset: 0.000
+$$ Mux Stream: 0
+$$ Cal Temperature: 0.0000000
+$$ Inlet Method: C:\MassLynx\JennyH.PRO\ACQUDB\ID_FastPep_10min_45C_600ul
+$$ Inlet Prerun Method: 
+$$ Inlet Postrun Method: 
+$$ Inlet Switch Method: 
+$$ HPLC Method: 
+$$ MS Method: C:\MassLynx\JennyH.PRO\ACQUDB\20200929_Inflammatory_Covid_ShortList_10min.EXP
+$$ Tune Method: C:\MassLynx\JennyH.PRO\ACQUDB\Ivan Peptides 400ulmin.IPR
+$$ FractionLynx Method: 
+$$ Spare1: 
+$$ Spare2: 
+$$ Spare3: 
+$$ Spare4: 
+$$ Spare5: 
+$$ Reinjections: 0
+$$ PIC MRM Function:  
+$$ PIC Scan Function: 0,0
+$$ ScanWave Func List: 
+$$ Calibration File: C:\MassLynx\IntelliStart\Results\Quantitative\Calibration_20190621_3.cal
+$$ Cal Function 1: 0.000000000000000e0,1.000000000000000e0,T0
+$$ Cal StdDev Function 1: 0.000000000000000e0
+$$ Cal CoVar 1: 0.000000000000000e0,0.000000000000000e0,0.000000000000000e0

@@ -62,12 +62,12 @@ import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.parser.list.ListData;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.query.ConflictResultsManager;
-import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
 import org.labkey.targetedms.query.SkylineListManager;
 
 import javax.xml.stream.XMLStreamException;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -97,6 +97,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.labkey.targetedms.TargetedMSManager.getTableInfoPrecursorChromInfo;
 import static org.labkey.targetedms.TargetedMSManager.getTableInfoTransitionChromInfo;
 
 /**
@@ -151,11 +152,10 @@ public class SkylineDocImporter
     private transient PreparedStatement _precursorAnnotationStmt;
     private transient PreparedStatement _transitionChromInfoStmt;
     private transient PreparedStatement _precursorChromInfoStmt;
+    private transient PreparedStatement _precursorChromInfoIndicesStmt;
     private File _auditLogFile;
 
-    private boolean _importTransitionChromInfos = true;
-
-    private Set<String> _missingLibraries = new HashSet<>();
+    private final Set<String> _missingLibraries = new HashSet<>();
 
     @JsonCreator
     private SkylineDocImporter(@JsonProperty("_expData") ExpData expData, @JsonProperty("_context") XarContext context,
@@ -273,7 +273,8 @@ public class SkylineDocImporter
     {
         // TODO - Consider if this is too big to fit in a single transaction. If so, need to blow away all existing
         // data for this run before restarting the import in the case of a retry
-        if (!TargetedMSManager.getSchema().getScope().isTransactionActive())
+        DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().getCurrentTransaction();
+        if (transaction == null)
         {
             throw new IllegalStateException("Callers should start their own transaction");
         }
@@ -285,6 +286,18 @@ public class SkylineDocImporter
 
         try (SkylineDocumentParser parser = new SkylineDocumentParser(f, _log, run.getContainer(), _progressMonitor.getParserProgressTracker()))
         {
+            // Persist all of the indices into the chromatograms from the SKYD file separately. We need to retain it
+            // at the PrecursorChromInfo level if we end up not storing the TransitionChromInfos. We will update the
+            // PrecursorChromInfo to include the data if we end up needing it.
+            final String suffix = StringUtilsLabKey.getPaddedUniquifier(9);
+            final String precursorChromInfoIndicesTempTableName = TargetedMSManager.getSqlDialect().getTempTablePrefix() +  "PrecursorChromInfoIndices" + suffix;
+            new SqlExecutor(TargetedMSSchema.getSchema()).execute("CREATE " +
+                    TargetedMSManager.getSqlDialect().getTempTableKeyword() + " TABLE " + precursorChromInfoIndicesTempTableName + " ( " +
+                    "\tPrecursorChromInfoId BIGINT NOT NULL PRIMARY KEY,\n" +
+                    "\tIndices " + TargetedMSManager.getSqlDialect().getBinaryDataType() +
+                    ")");
+            _precursorChromInfoIndicesStmt = ensureStatement(null,"INSERT INTO " + precursorChromInfoIndicesTempTableName + "(PrecursorChromInfoId, Indices) VALUES (?, ?)", false);
+
             run.setFormatVersion(parser.getFormatVersion());
             run.setSoftwareVersion(parser.getSoftwareVersion());
 
@@ -357,7 +370,7 @@ public class SkylineDocImporter
                 }
             }
 
-            if (parser.getTransitionChromInfoCount() > SkylineDocumentParser.MAX_TRANSITION_CHROM_INFOS)
+            if (!parser.shouldSaveTransitionChromInfos())
             {
                 _log.info("None of the " + parser.getTransitionChromInfoCount() + " TransitionChromInfos in the file were imported because they exceed the limit of " + SkylineDocumentParser.MAX_TRANSITION_CHROM_INFOS);
                 SQLFragment whereClause = new SQLFragment("WHERE r.Id = ?", _runId);
@@ -367,7 +380,17 @@ public class SkylineDocImporter
                 TargetedMSManager.deleteTransitionChromInfoDependent(TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), whereClause);
                 TargetedMSManager.deleteTransitionChromInfoDependent(TargetedMSManager.getTableInfoTransitionAreaRatio(), whereClause);
                 TargetedMSManager.deleteGeneralTransitionDependent(getTableInfoTransitionChromInfo(), "TransitionId", whereClause);
+
+                // Since we don't have the TransitionChromInfos to use for the indices, copy them from the temp table
+                // into PrecursorChromInfo (but filter to only touch the rows where we have matches in the temp table)
+                int updated = new SqlExecutor(TargetedMSSchema.getSchema()).execute("UPDATE " + getTableInfoPrecursorChromInfo() + " " +
+                            "SET TransitionChromatogramIndices = (SELECT Indices FROM " + precursorChromInfoIndicesTempTableName +
+                        " WHERE Id = PrecursorChromInfoId) WHERE Id IN (SELECT PrecursorChromInfoId FROM " + precursorChromInfoIndicesTempTableName + ")");
+                _log.info("Updated " + updated + " PrecursorChromInfos with transition chromatogram index information");
             }
+
+            // We're done with this table now, used or not
+            new SqlExecutor(TargetedMSSchema.getSchema()).execute("DROP TABLE " + precursorChromInfoIndicesTempTableName);
 
             // Done parsing document
             _progressMonitor.getParserProgressTracker().complete("Done parsing Skyline document.");
@@ -460,6 +483,8 @@ public class SkylineDocImporter
         }
         finally
         {
+            if (_precursorChromInfoIndicesStmt != null) { try { _precursorChromInfoIndicesStmt.close(); } catch (SQLException ignored) {} }
+            _precursorChromInfoIndicesStmt = null;
             if (_transitionChromInfoAnnotationStmt != null) { try { _transitionChromInfoAnnotationStmt.close(); } catch (SQLException ignored) {} }
             _transitionChromInfoAnnotationStmt = null;
             if (_transitionAnnotationStmt != null) { try { _transitionAnnotationStmt.close(); } catch (SQLException ignored) {} }
@@ -614,10 +639,7 @@ public class SkylineDocImporter
 
         public void addSampleToDelete(String currentSamplePath, SampleFile oldSampleFile)
         {
-            if(oldSamplesToDelete.get(currentSamplePath) == null)
-            {
-                oldSamplesToDelete.put(currentSamplePath, new HashSet<>());
-            }
+            oldSamplesToDelete.computeIfAbsent(currentSamplePath, k -> new HashSet<>());
             oldSamplesToDelete.get(currentSamplePath).add(oldSampleFile);
         }
     }
@@ -1213,7 +1235,7 @@ public class SkylineDocImporter
             }
 
             insertPeptideOrSmallMolecule(optimizationInfo, skylineIdSampleFileIdMap, modInfo,
-                    libraryNameIdMap, pepGroup, generalMolecule, transitionSettings);
+                    libraryNameIdMap, pepGroup, generalMolecule, transitionSettings, parser);
         }
         if(peptideCount > 0)
         {
@@ -1269,7 +1291,8 @@ public class SkylineDocImporter
                                               Map<String, Long> libraryNameIdMap,
                                               PeptideGroup pepGroup,
                                               GeneralMolecule generalMolecule,
-                                              TransitionSettings transitionSettings)
+                                              TransitionSettings transitionSettings,
+                                              SkylineDocumentParser parser)
     {
         Peptide peptide = null;
 
@@ -1303,7 +1326,7 @@ public class SkylineDocImporter
 
             for (MoleculePrecursor moleculePrecursor : molecule.getMoleculePrecursorsList())
             {
-                insertMoleculePrecursor(molecule, moleculePrecursor, skylineIdSampleFileIdMap, modInfo, sampleFileIdGeneralMolChromInfoIdMap);
+                insertMoleculePrecursor(molecule, moleculePrecursor, skylineIdSampleFileIdMap, modInfo, sampleFileIdGeneralMolChromInfoIdMap, parser);
             }
         }
 
@@ -1337,7 +1360,7 @@ public class SkylineDocImporter
                         libraryNameIdMap,
                         peptide,
                         sampleFileIdGeneralMolChromInfoIdMap,
-                        precursor);
+                        precursor, parser);
             }
 
             // 4. Calculate and insert peak area ratios
@@ -1415,9 +1438,9 @@ public class SkylineDocImporter
     private void insertMoleculePrecursor(Molecule molecule, MoleculePrecursor moleculePrecursor,
                                          Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                          ModificationInfo modInfo,
-                                         Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap)
+                                         Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap, SkylineDocumentParser parser)
     {
-        GeneralPrecursor gp = insertGeneralPrecursor(modInfo, molecule, moleculePrecursor);
+        GeneralPrecursor<?> gp = insertGeneralPrecursor(modInfo, molecule, moleculePrecursor);
 
         moleculePrecursor.setIsotopeLabelId(gp.getIsotopeLabelId());
         moleculePrecursor.setId(gp.getId());
@@ -1432,11 +1455,11 @@ public class SkylineDocImporter
 
         for(MoleculeTransition moleculeTransition: moleculePrecursor.getTransitionsList())
         {
-            insertMoleculeTransition(moleculePrecursor, moleculeTransition, skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap);
+            insertMoleculeTransition(moleculePrecursor, moleculeTransition, skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap, parser);
         }
     }
 
-    private void insertPrecursorAnnotation(List<PrecursorAnnotation> precursorAnnotations, GeneralPrecursor gp, long id)
+    private void insertPrecursorAnnotation(List<PrecursorAnnotation> precursorAnnotations, GeneralPrecursor<?> gp, long id)
     {
         for (PrecursorAnnotation annotation : precursorAnnotations)
         {
@@ -1448,7 +1471,8 @@ public class SkylineDocImporter
 
     private void insertMoleculeTransition(MoleculePrecursor moleculePrecursor, MoleculeTransition moleculeTransition,
                                           Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
-                                          Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap)
+                                          Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap,
+                                          SkylineDocumentParser parser)
     {
         GeneralTransition gt = new GeneralTransition();
         gt.setGeneralPrecursorId(moleculePrecursor.getId());
@@ -1474,7 +1498,7 @@ public class SkylineDocImporter
         //small molecule transition annotations
         insertTransitionAnnotation(moleculeTransition.getAnnotations(), moleculeTransition.getId()); //adding small molecule transition annotation in TransitionAnnotation table. We might need to change this if we decide to have a separate MoleculeTransitionAnnotation table in the future.
 
-        insertTransitionChromInfos(gt.getId(), moleculeTransition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap);
+        insertTransitionChromInfos(gt.getId(), moleculeTransition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap, parser);
     }
 
     private void insertTransitionAnnotation(List<TransitionAnnotation> annotations, long id)
@@ -1492,7 +1516,8 @@ public class SkylineDocImporter
                                  Map<String, Long> libraryNameIdMap,
                                  Peptide peptide,
                                  Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap,
-                                 Precursor precursor)
+                                 Precursor precursor,
+                                 SkylineDocumentParser parser)
     {
         if(_isPeptideLibraryDoc)
         {
@@ -1508,7 +1533,7 @@ public class SkylineDocImporter
             }
         }
 
-        GeneralPrecursor gp = insertGeneralPrecursor(modInfo, peptide, precursor);
+        GeneralPrecursor<?> gp = insertGeneralPrecursor(modInfo, peptide, precursor);
 
         precursor.setIsotopeLabelId(gp.getIsotopeLabelId());
         precursor.setId(gp.getId());
@@ -1528,11 +1553,11 @@ public class SkylineDocImporter
         // 4. transition
         for(Transition transition: precursor.getTransitionsList())
         {
-            insertTransition(optimizationInfo, skylineIdSampleFileIdMap, modInfo, precursor, sampleFilePrecursorChromInfoIdMap, transition);
+            insertTransition(optimizationInfo, skylineIdSampleFileIdMap, modInfo, precursor, sampleFilePrecursorChromInfoIdMap, transition, parser);
         }
     }
 
-    private void insertLibInfo(Precursor.LibraryInfo libraryInfo, Precursor precursor, GeneralPrecursor gp, Map<String, Long> libraryNameIdMap, TableInfo tableInfo)
+    private void insertLibInfo(Precursor.LibraryInfo libraryInfo, Precursor precursor, GeneralPrecursor<?> gp, Map<String, Long> libraryNameIdMap, TableInfo tableInfo)
     {
         if(libraryInfo != null)
         {
@@ -1558,10 +1583,10 @@ public class SkylineDocImporter
         }
     }
 
-    private GeneralPrecursor insertGeneralPrecursor(ModificationInfo modInfo, GeneralMolecule peptide, GeneralPrecursor precursor)
+    private GeneralPrecursor<?> insertGeneralPrecursor(ModificationInfo modInfo, GeneralMolecule peptide, GeneralPrecursor<?> precursor)
     {
         //setting values for GeneralPrecursor here seems odd - is there a better way?
-        GeneralPrecursor gp = new GeneralPrecursor();
+        GeneralPrecursor<?> gp = new GeneralPrecursor<>();
         gp.setGeneralMoleculeId(peptide.getId());
         gp.setMz(precursor.getMz());
         gp.setCharge(precursor.getCharge());
@@ -1585,7 +1610,7 @@ public class SkylineDocImporter
                                   ModificationInfo modInfo,
                                   Precursor precursor,
                                   Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap,
-                                  Transition transition)
+                                  Transition transition, SkylineDocumentParser parser)
     {
         GeneralTransition gt = new GeneralTransition();
         gt.setGeneralPrecursorId(precursor.getId());
@@ -1632,7 +1657,7 @@ public class SkylineDocImporter
         }
 
         // transition results
-        insertTransitionChromInfos(gt.getId(), transition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap);
+        insertTransitionChromInfos(gt.getId(), transition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap, parser);
 
         // transition neutral losses
         for (TransitionLoss loss : transition.getNeutralLosses())
@@ -1757,10 +1782,12 @@ public class SkylineDocImporter
 
     private void insertTransitionChromInfos(long gtId, List<TransitionChromInfo> transitionChromInfos,
                                             Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
-                                            Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap)
+                                            Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap,
+                                            SkylineDocumentParser parser)
     {
-        if (!_importTransitionChromInfos)
+        if (!parser.shouldSaveTransitionChromInfos())
         {
+            // Bail out and don't persist to the DB
             return;
         }
 
@@ -1887,20 +1914,27 @@ public class SkylineDocImporter
      * tradeoff between having more custom code and the perf hit from Table.insert() having to prep a statement for
      * every row
      */
-    private PreparedStatement ensureStatement(PreparedStatement stmt, String sql, boolean reselect) throws SQLException
+    private PreparedStatement ensureStatement(PreparedStatement stmt, String sql, boolean reselect)
     {
         if (stmt == null)
         {
-            assert TargetedMSManager.getSchema().getScope().isTransactionActive();
-            Connection c = TargetedMSManager.getSchema().getScope().getConnection();
-            if (reselect)
+            try
             {
-                SQLFragment reselectSQL = new SQLFragment(sql);
-                // All we really need is a ColumnInfo of the right name and type, so choose one of the TableInfos to supply it
-                TargetedMSManager.getSchema().getSqlDialect().addReselect(reselectSQL, getTableInfoTransitionChromInfo().getColumn("Id"), null);
-                sql = reselectSQL.getSQL();
+                assert TargetedMSManager.getSchema().getScope().isTransactionActive();
+                Connection c = TargetedMSManager.getSchema().getScope().getConnection();
+                if (reselect)
+                {
+                    SQLFragment reselectSQL = new SQLFragment(sql);
+                    // All we really need is a ColumnInfo of the right name and type, so choose one of the TableInfos to supply it
+                    TargetedMSManager.getSchema().getSqlDialect().addReselect(reselectSQL, getTableInfoTransitionChromInfo().getColumn("Id"), null);
+                    sql = reselectSQL.getSQL();
+                }
+                stmt = c.prepareStatement(sql);
             }
-            stmt = c.prepareStatement(sql);
+            catch (SQLException e)
+            {
+                throw new RuntimeSQLException(e);
+            }
         }
         return stmt;
     }
@@ -1956,16 +1990,6 @@ public class SkylineDocImporter
         }
     }
 
-    /** Assumes the statement is an INSERT with a reselect of the new sequence value */
-    private void insertAndUpdateId(SkylineEntity entity, PreparedStatement stmt) throws SQLException
-    {
-        try (ResultSet rs = TargetedMSManager.getSqlDialect().executeWithResults(stmt))
-        {
-            rs.next();
-            entity.setId(rs.getInt(1));
-        }
-    }
-
     private void insertPrecursorChromInfo(PrecursorChromInfo preChromInfo)
     {
         try
@@ -2011,12 +2035,23 @@ public class SkylineDocImporter
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIonMobilityMs1());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIonMobilityFragment());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIonMobilityWindow());
-            _precursorChromInfoStmt.setString(index, preChromInfo.getIonMobilityType());
+            _precursorChromInfoStmt.setString(index++, preChromInfo.getIonMobilityType());
 
             try (ResultSet rs = TargetedMSManager.getSqlDialect().executeWithResults(_precursorChromInfoStmt))
             {
                 rs.next();
                 preChromInfo.setId(rs.getLong(1));
+            }
+
+            // Persist all of the indices into the chromatograms from the SKYD file separately. We need to retain it
+            // at the PrecursorChromInfo level if we end up not storing the TransitionChromInfos. We will update the
+            // PrecursorChromInfo to include the data if we end up needing it.
+            byte[] indices = preChromInfo.getTransitionChromatogramIndices();
+            if (indices != null)
+            {
+                _precursorChromInfoIndicesStmt.setLong(1, preChromInfo.getId());
+                _precursorChromInfoIndicesStmt.setBinaryStream(2, new ByteArrayInputStream(indices), indices.length);
+                _precursorChromInfoIndicesStmt.execute();
             }
         }
         catch (SQLException e)
@@ -2606,7 +2641,7 @@ public class SkylineDocImporter
         return new OptimizationInfo(insertCEOptmizations, insertDPOptmizations, cePredictor, dpPredictor);
     }
 
-    private class OptimizationInfo
+    private static class OptimizationInfo
     {
         private final boolean _insertCEOptmizations;
         private final boolean _insertDPOptmizations;
@@ -2625,19 +2660,19 @@ public class SkylineDocImporter
     private void adjustProgressParts(ProgressMonitor progress, DataSettings dataSettings, QuantificationSettings quantificationSettings)
     {
         RegressionFit regressionFit = getRegressionFit(quantificationSettings);
-        boolean hasCalCurves = regressionFit != RegressionFit.NONE ? true : false;
+        boolean hasCalCurves = regressionFit != RegressionFit.NONE;
 
         progress.updateProgressParts(dataSettings.getGroupComparisons().size() > 0, hasCalCurves);
     }
 
-    private class ProgressMonitor implements IProgressMonitor
+    private static class ProgressMonitor implements IProgressMonitor
     {
         private final ProgressPart _parserPart;     // Document parsing
         private final ProgressPart _qcCleanupPart;  // QC cleanup - remove redundant samples from older runs
         private final ProgressPart _foldChangePart; // Fold change calculations for group comparisons
         private final ProgressPart _calCurvesPart;  // Calibration curve calculations
 
-        private List<IProgressStatus> _progressParts;
+        private final List<IProgressStatus> _progressParts;
         private final PipelineJob _job;
         private int _lastProgressPerc = 0;
 
@@ -2655,7 +2690,7 @@ public class SkylineDocImporter
             _parserPart = new ProgressPart(isQc ? 60 : 80, this);
             _qcCleanupPart = new ProgressPart(isQc ? 30 : 0, this);
             _foldChangePart = new ProgressPart(isQc ? 4 : 9, this);
-            _calCurvesPart =  new ProgressPart(isQc ? 4 : 9, this);
+            _calCurvesPart = new ProgressPart(isQc ? 4 : 9, this);
 
             _progressParts = Arrays.asList(_parserPart, _qcCleanupPart, _foldChangePart, _calCurvesPart);
         }
@@ -2752,11 +2787,11 @@ public class SkylineDocImporter
         }
 
 
-        private class ProgressPart implements IProgressStatus
+        private static class ProgressPart implements IProgressStatus
         {
             private int _partPercent; // percent share of total progress
             private int _percDone;
-            private IProgressMonitor _progressMonitor;
+            private final IProgressMonitor _progressMonitor;
 
             public ProgressPart(int partPercent, IProgressMonitor progressMonitor)
             {

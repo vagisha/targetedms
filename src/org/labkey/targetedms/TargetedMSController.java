@@ -263,8 +263,10 @@ import static org.labkey.api.targetedms.TargetedMSService.FolderType;
 import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
 import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_DIR;
 import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_TAB;
+import static org.labkey.api.util.DOM.Attribute.height;
 import static org.labkey.api.util.DOM.Attribute.method;
 import static org.labkey.api.util.DOM.Attribute.src;
+import static org.labkey.api.util.DOM.Attribute.width;
 import static org.labkey.api.util.DOM.DIV;
 import static org.labkey.api.util.DOM.TD;
 import static org.labkey.api.util.DOM.TR;
@@ -2752,7 +2754,7 @@ public class TargetedMSController extends SpringActionController
 
         private Integer _chartWidth = null;
         private Integer _chartHeight = null;
-        private int _dpi = SCREEN_RES;
+        private int _dpi = 144;
 
         public int getChartWidth()
         {
@@ -3693,6 +3695,7 @@ public class TargetedMSController extends SpringActionController
             // run anyway
             settings.setContainerFilterName(null);
             settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("PeptideGroupId", "RunId"), form.getId()));
+            settings.setBaseSort(new Sort("Sequence"));
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             return schema.createView(getViewContext(), settings, errors);
         }
@@ -4043,7 +4046,8 @@ public class TargetedMSController extends SpringActionController
             {
                 ActionURL chromURL = new ActionURL(SampleFileChromatogramChartAction.class, getContainer());
                 chromURL.addParameter("id", sampleFileChromInfo.getId());
-                HtmlView chromView = new HtmlView(DOM.IMG(at(src, chromURL.toString())));
+                SampleFileChromInfoForm imgForm = new SampleFileChromInfoForm();
+                HtmlView chromView = new HtmlView(DOM.IMG(at(src, chromURL.toString(), height, imgForm.getChartHeight(), width, imgForm.getChartWidth())));
                 chromView.setFrame(WebPartView.FrameType.PORTAL);
                 chromView.setTitle(sampleFileChromInfo.getTextId());
                 result.addView(chromView);
@@ -4185,16 +4189,20 @@ public class TargetedMSController extends SpringActionController
             summaryChartBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
             summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
             summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
+            int count = 0;
             // Peptide summary charts
             if (peptideCount != null && peptideCount > 0)
             {
+                count += peptideCount.intValue();
                 summaryChartBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(getUser(), getContainer()))));
             }
             // Molecule summary charts
             else if (moleculeCount != null && moleculeCount > 0)
             {
+                count += moleculeCount.intValue();
                 summaryChartBean.setMoleculeList(new ArrayList<>(MoleculeManager.getMoleculesForGroup(group.getId())));
             }
+            summaryChartBean.setInitialWidth(Math.max(600, 100 + count * 30));
             JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp", summaryChartBean);
             summaryChartView.setTitle("Summary Charts");
             summaryChartView.enableExpandCollapse("SummaryChartsView", false);

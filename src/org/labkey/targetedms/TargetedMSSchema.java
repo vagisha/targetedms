@@ -696,6 +696,18 @@ public class TargetedMSSchema extends UserSchema
                                 keys.add(new FieldKey(parentFK, "ExperimentRunLSID"));
                                 keys.add(FieldKey.fromParts("Folder"));
                             }
+
+                            @Override
+                            public boolean isFilterable()
+                            {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean isSortable()
+                            {
+                                return false;
+                            }
                         };
                     }
                 });

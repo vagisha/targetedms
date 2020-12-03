@@ -15,16 +15,12 @@
 
 package org.labkey.targetedms.parser;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-
 /**
  * User: vsharma
  * Date: 4/16/12
  * Time: 3:04 PM
  */
-public class TransitionChromInfo //extends ChromInfo<TransitionChromInfoAnnotation>
+public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation>
 {
     private long _transitionId;
     private long _precursorChromInfoId;
@@ -34,7 +30,6 @@ public class TransitionChromInfo //extends ChromInfo<TransitionChromInfoAnnotati
     private Double _endTime;
     private Double _height;
     private Double _area;
-    private Double _areaNormalized;
     private Double _background;
     private Double _massErrorPPM;
     private Double _fwhm;
@@ -56,81 +51,6 @@ public class TransitionChromInfo //extends ChromInfo<TransitionChromInfoAnnotati
     private Integer Rank;
     private Integer RankByLevel;
     private Boolean ForcedIntegration;
-
-    /** HACK TO UPDATE TO LONG FOR ID COLUMN - ISSUE 40831 */
-    private String _replicateName;
-    private String _skylineSampleFileId;
-    private long _sampleFileId;
-    private List<TransitionChromInfoAnnotation> _annotations = Collections.emptyList();
-    private long _id;
-
-    public String getSkylineSampleFileId()
-    {
-        return _skylineSampleFileId;
-    }
-
-    public void setSkylineSampleFileId(String skylineSampleFileId)
-    {
-        _skylineSampleFileId = skylineSampleFileId;
-    }
-
-    public String getReplicateName()
-    {
-        return _replicateName;
-    }
-
-    public void setReplicateName(String replicateName)
-    {
-        _replicateName = replicateName;
-    }
-
-    public long getSampleFileId()
-    {
-        return _sampleFileId;
-    }
-
-    public void setSampleFileId(long sampleFileId)
-    {
-        _sampleFileId = sampleFileId;
-    }
-
-
-    public long getId()
-    {
-        return _id;
-    }
-    public void setId(long id)
-    {
-        _id = id;
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        TransitionChromInfo that = (TransitionChromInfo) o;
-        return _id == that._id;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(_id, getClass());
-    }
-
-    public List<TransitionChromInfoAnnotation> getAnnotations()
-    {
-        return _annotations;
-    }
-
-    public void setAnnotations(List<TransitionChromInfoAnnotation> annotations)
-    {
-        _annotations = Collections.unmodifiableList(annotations);
-    }
-    /** END HACK TO UPDATE TO LONG FOR ID COLUMN */
-
-
 
     public long getTransitionId()
     {
@@ -200,16 +120,6 @@ public class TransitionChromInfo //extends ChromInfo<TransitionChromInfoAnnotati
     public void setArea(Double area)
     {
         _area = area;
-    }
-
-    public Double getAreaNormalized()
-    {
-        return _areaNormalized;
-    }
-
-    public void setAreaNormalized(Double areaNormalized)
-    {
-        _areaNormalized = areaNormalized;
     }
 
     public Double getBackground()

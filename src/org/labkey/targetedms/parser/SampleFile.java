@@ -15,6 +15,10 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.apache.commons.io.FilenameUtils;
+import org.junit.Assert;
+import org.junit.Test;
+import org.labkey.api.targetedms.ISampleFile;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 
 import java.util.Date;
@@ -24,7 +28,7 @@ import java.util.List;
  * User: jeckels
  * Date: Apr 18, 2012
  */
-public class SampleFile extends SkylineEntity
+public class SampleFile extends SkylineEntity implements ISampleFile
 {
     private long _replicateId;
     private Long _instrumentId;
@@ -57,6 +61,7 @@ public class SampleFile extends SkylineEntity
         _replicateId = replicateId;
     }
 
+    @Override
     public String getFilePath()
     {
         return _filePath;
@@ -67,6 +72,7 @@ public class SampleFile extends SkylineEntity
         _filePath = filePath;
     }
 
+    @Override
     public String getSampleName()
     {
         return _sampleName;
@@ -77,6 +83,7 @@ public class SampleFile extends SkylineEntity
         _sampleName = sampleName;
     }
 
+    @Override
     public Date getAcquiredTime()
     {
         return _acquiredTime;
@@ -87,6 +94,7 @@ public class SampleFile extends SkylineEntity
         _acquiredTime = acquiredTime;
     }
 
+    @Override
     public Date getModifiedTime()
     {
         return _modifiedTime;
@@ -97,6 +105,7 @@ public class SampleFile extends SkylineEntity
         _modifiedTime = modifiedTime;
     }
 
+    @Override
     public Long getInstrumentId()
     {
         return _instrumentId;
@@ -107,6 +116,7 @@ public class SampleFile extends SkylineEntity
         _instrumentId = instrumentId;
     }
 
+    @Override
     public String getSkylineId()
     {
         return _skylineId;
@@ -127,6 +137,7 @@ public class SampleFile extends SkylineEntity
         _instrumentInfoList = instrumentInfoList;
     }
 
+    @Override
     public Double getTicArea()
     {
         return _ticArea;
@@ -137,6 +148,7 @@ public class SampleFile extends SkylineEntity
         _ticArea = ticArea;
     }
 
+    @Override
     public String getInstrumentSerialNumber()
     {
         return _instrumentSerialNumber;
@@ -147,6 +159,7 @@ public class SampleFile extends SkylineEntity
         _instrumentSerialNumber = instrumentSerialNumber;
     }
 
+    @Override
     public String getSampleId()
     {
         return _sampleId;
@@ -157,6 +170,7 @@ public class SampleFile extends SkylineEntity
         _sampleId = sampleId;
     }
 
+    @Override
     public Double getExplicitGlobalStandardArea()
     {
         return _explicitGlobalStandardArea;
@@ -167,6 +181,7 @@ public class SampleFile extends SkylineEntity
         _explicitGlobalStandardArea = explicitGlobalStandardArea;
     }
 
+    @Override
     public String getIonMobilityType()
     {
         return _ionMobilityType;
@@ -200,5 +215,65 @@ public class SampleFile extends SkylineEntity
     public SampleFileInfo toSampleFileInfo()
     {
         return new SampleFileInfo(getId(), getAcquiredTime(), getSampleName(), _guideSetId, _ignoreForAllMetric, getFilePath(), getReplicateId());
+    }
+
+    @Override
+    /**
+     * Returns the filename parsed out from the file path
+     */
+    public String getFileName()
+    {
+        return getFileName(_filePath);
+    }
+
+    private static String getFileName(String path)
+    {
+        if(path != null)
+        {
+            // If the file path has a '?' part remove it
+            // Example: 2017_July_10_bivalves_292.raw?centroid_ms2=true.
+            int idx = path.indexOf('?');
+            path = (idx == -1) ? path : path.substring(0, idx);
+
+            // If the file path has a '|' part for sample name from multi-injection wiff files remove it.
+            // Example: D:\Data\CPTAC_Study9s\Site52_041009_Study9S_Phase-I.wiff|Site52_STUDY9S_PHASEI_6ProtMix_QC_07|6
+            idx = path.indexOf('|');
+            path =  (idx == -1) ? path : path.substring(0, idx);
+
+            return FilenameUtils.getName(path);
+        }
+        return null;
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testGetFileName()
+        {
+            // Skyline tracks centroiding, lockmass settings etc. as part of the file_path attribute of the <sample_file>
+            // element in .sky files. These are appended at the end of the file path as query parameters.
+            // Example: C:\Users\lab\Data\2017_July_10_bivalves_140.raw?centroid_ms1=true&centroid_ms2=true.
+            String fileName = "2017_July_10_bivalves_140.raw";
+            String path = "C:\\Users\\lab\\Data\\2017-Geoduck-SRM-raw\\" + fileName;
+            String pathWithParams = path + "?centroid_ms1=true&centroid_ms2=true";
+
+            assertTrue(fileName.equals(getFileName(path)));
+            assertTrue(fileName.equals(getFileName(pathWithParams)));
+
+            // Skyline stores multi-injection wiff file paths as: <wiff_file_path>|<sample_name>|<sample_index>
+            // Example: C:\Analyst Data\Projects\CPTAC\Site54_STUDY9S_PHASE1_6ProtMix_090919\Site54_190909_Study9S_PHASE-1.wiff|Site54_STUDY9S_PHASE1_6ProtMix_QC_03|2
+            fileName = "Site54_190909_Study9S_PHASE-1.wiff";
+            path = "C:\\Analyst Data\\Projects\\CPTAC\\Site54_STUDY9S_PHASE1_6ProtMix_090919\\" + fileName;
+            String pathWithSampleInfo = path + "|Site54_STUDY9S_PHASE1_6ProtMix_QC_03|2";
+
+            assertTrue(fileName.equals(getFileName(path)));
+            assertTrue(fileName.equals(getFileName(pathWithSampleInfo)));
+
+            // Add a bogus param with a '|' character
+            String pathWithSampleInfoAndParams = pathWithSampleInfo + "?centroid_ms1=true&centroid_ms2=true&madeup_param=a|b";
+
+            assertTrue(fileName.equals(getFileName(path)));
+            assertTrue(fileName.equals(getFileName(pathWithSampleInfoAndParams)));
+        }
     }
 }

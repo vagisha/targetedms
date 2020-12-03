@@ -28,14 +28,18 @@ import org.labkey.remoteapi.query.Rowset;
 import org.labkey.remoteapi.query.Sort;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.components.FilesWebPart;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.EscapeUtil;
 import org.labkey.test.util.Ext4Helper;
+import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
 import org.openqa.selenium.WebElement;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,25 +67,27 @@ public class TargetedMSExperimentTest extends TargetedMSTest
     public void testSteps() throws IOException, CommandException
     {
         setupFolder(FolderType.Experiment);
-        importData(SKY_FILE);
+        int jobCount = 0;
+        importData(SKY_FILE, ++jobCount);
         verifyImportedPeptideData();
         verifyModificationSearch();
-        importData(SKY_FILE2, 2);
+        importData(SKY_FILE2, ++jobCount);
         verifyProteinSearch();
         verifyQueries();
 
         //small molecule
-        importData(SKY_FILE_SMALLMOL_PEP, 3);
+        importData(SKY_FILE_SMALLMOL_PEP, ++jobCount);
         verifyImportedSmallMoleculeData();
         verifyAttributeGroupIdCalcs();
+        testRawFileLinks(SKY_FILE_SMALLMOL_PEP);
 
         // SKYD version 14
-        importData(SKY_FILE_SKYD_14, 4);
+        importData(SKY_FILE_SKYD_14, ++jobCount);
         verifyInstrumentSerialNumber();
 
         // Test peak area ratio calculation
-        importData(SKY_FILE_AREA_RATIOS, 5);
-        importData(SKY_FILE_AREA_RATIOS_2, 6);
+        importData(SKY_FILE_AREA_RATIOS, ++jobCount);
+        importData(SKY_FILE_AREA_RATIOS_2, ++jobCount);
         verifyAreaRatios();
     }
 
@@ -537,6 +543,64 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals(query.getDataAsText(0, "Sequence1"), query.getDataAsText(0, "Sequence1"));
         assertEquals(query.getDataAsText(0, "Protein1"), query.getDataAsText(0, "Protein2"));
         query.clearFilter("Protein1");
+    }
+
+    @LogMethod
+    private void testRawFileLinks(String skyFile)
+    {
+        String testFileDir = "TargetedMS/Raw Data Test/ForSeleniumTests/";
+        String rawZipValid = "13417_02_WAA283_3805_071514.raw.zip";
+        String rawZipInvalid = "13418_02_WAA283_3805_071514.raw.zip";
+        String rawFileInvalid = "13418_03_WAA283_3805_071514.raw";
+        String mzXmlFile = "silac_1_to_4.mzXML";
+
+        String[] files = new String[] {rawZipValid, rawZipInvalid, rawFileInvalid, mzXmlFile};
+
+        clickTab("Raw Data");
+        FileBrowserHelper browser = FilesWebPart.getWebPart(getDriver()).fileBrowser();
+        for(String file: files)
+        {
+            browser.uploadFile(TestFileUtils.getSampleData(testFileDir + file));
+        }
+
+        // Create a raw data folder. Directory-based raw data gets auto-zipped when uploded through the FilesWebPart
+        // but it is possible to upload the directories if copying to a network drive mapped to a LabKey folder.
+        String rawDatadir = "13417_03_WAA283_3805_071514.raw";
+        browser.createFolder(rawDatadir);
+        browser.uploadFile(TestFileUtils.getSampleData(testFileDir + rawDatadir + "/_FUNC001.DAT"));
+        browser.moveFile("_FUNC001.DAT", rawDatadir);
+
+        goToDashboard();
+        clickAndWait(Locator.linkContainingText(skyFile));
+        clickAndWait(Locator.linkContainingText("5 replicates"));
+
+        DataRegionTable drt = new DataRegionTable("Replicate", getDriver());
+        int row = 0;
+        validateReplicateRow(row, rawZipValid.replace(".zip", ""), "127 bytes", drt);
+        validateReplicateRow(++row, rawDatadir, "10 bytes", drt);
+
+        // 13418_02_WAA283_3805_071514.raw.zip is not a valid zip for Waters raw data.  It does not contain a _FUNC*.DAT file
+        // But we do not validate zip contents when showing download links.
+        validateReplicateRow(++row, rawZipInvalid.replace(".zip", ""), "128 bytes", drt);
+
+        // 13418_03_WAA283_3805_071514.raw is a file whereas the instrument associated with the SampleFile is Waters
+        // which has raw data in .raw directories
+        validateReplicateRow(++row, rawFileInvalid, null, drt);
+
+        validateReplicateRow(++row, mzXmlFile, "20 bytes", drt);
+    }
+
+    private void validateReplicateRow(int row, String fileName, String sizeString, DataRegionTable drt)
+    {
+        assertEquals(fileName, drt.getDataAsText(row, "File"));
+        if(sizeString != null)
+        {
+            assertTrue("Unexpected download size", drt.getDataAsText(row, "Download").contains(sizeString));
+        }
+        else
+        {
+            assertEquals("Not available", drt.getDataAsText(row, "Download"));
+        }
     }
 
     @LogMethod

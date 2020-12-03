@@ -556,6 +556,7 @@
                 <formatString>##0.####%</formatString>
                 <description>(sum area of precursors for this peptide in the same sample) / (total area of all precursors for the same grouping in the sample)</description>
             </column>
+            <column columnName="TransitionChromatogramIndices"/>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="GeneralTransition">

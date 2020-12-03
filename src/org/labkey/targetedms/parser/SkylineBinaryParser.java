@@ -119,7 +119,9 @@ public class SkylineBinaryParser
         parseFiles();
         parsePeaks();
         parseTransitions();
+        _log.debug("Starting to load chromatogram headers");
         parseChromatograms();
+        _log.debug("Done loading chromatogram headers");
     }
 
     public static class CachedFile
