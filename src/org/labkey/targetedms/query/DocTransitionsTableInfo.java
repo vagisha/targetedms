@@ -67,13 +67,9 @@ public class DocTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
         sql.append(ExprColumn.STR_TABLE_ALIAS + ".MeasuredIonName");
         sql.append(" END ");
         sql.append(" ELSE ");
-        sql.append("CASE WHEN ");
-        sql.append(ExprColumn.STR_TABLE_ALIAS).append(".MassIndex != 0");
-        sql.append(" THEN ");
-        sql.append(TargetedMSManager.getSqlDialect().concatenate("'M+'","CAST(" + ExprColumn.STR_TABLE_ALIAS+".MassIndex AS VARCHAR)"));
-        sql.append(" ELSE ");
-        sql.append("'M'");
-        sql.append(" END ");
+        sql.append(TargetedMSManager.getSqlDialect().concatenate(
+                "CASE WHEN " + ExprColumn.STR_TABLE_ALIAS + ".MassIndex > 0 THEN 'M+' ELSE 'M' END",
+                "CASE WHEN " + ExprColumn.STR_TABLE_ALIAS + ".MassIndex != 0 THEN CAST(" + ExprColumn.STR_TABLE_ALIAS + ".MassIndex AS VARCHAR) ELSE '' END"));
         sql.append(" END ");
         SQLFragment fragmentSql = new SQLFragment(sql.toString());
         var fragment = new ExprColumn(this, "Fragment", fragmentSql, JdbcType.VARCHAR);
