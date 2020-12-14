@@ -530,6 +530,7 @@
             <column columnName="Note"/>
             <column columnName="MaxHeight"/>
             <column columnName="AverageMassErrorPPM"/>
+            <column columnName="BestMassErrorPPM"/>
             <column columnName="UncompressedSize">
                 <isHidden>true</isHidden>
             </column>

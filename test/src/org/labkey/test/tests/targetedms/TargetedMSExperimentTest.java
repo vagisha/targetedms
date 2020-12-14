@@ -39,7 +39,6 @@ import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
 import org.openqa.selenium.WebElement;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,6 +46,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.labkey.test.util.DataRegionTable.DataRegion;
 
@@ -89,6 +89,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         importData(SKY_FILE_AREA_RATIOS, ++jobCount);
         importData(SKY_FILE_AREA_RATIOS_2, ++jobCount);
         verifyAreaRatios();
+        verifyBestMassErrorPpm();
     }
 
     @LogMethod
@@ -661,5 +662,69 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         // Round to avoid floating point precision false positives
         long ratioL = Math.round(ratio * 10000);
         assertEquals("Wrong area ratio", ratioL, Math.round(((Number)row.getValue("AreaRatio")).doubleValue() * 10000));
+    }
+
+    @LogMethod
+    private void verifyBestMassErrorPpm() throws IOException, CommandException
+    {
+        String docName = SKY_FILE_AREA_RATIOS_2;
+
+        Connection conn = createDefaultConnection();
+        SelectRowsCommand cmd = new SelectRowsCommand("targetedms", "precursorchrominfo");
+        cmd.setRequiredVersion(9.1);
+        cmd.setSorts(List.of(new Sort("SampleFileId/ReplicateId"), new Sort("PrecursorId")));
+        cmd.setColumns(Arrays.asList("SampleFileId/ReplicateId/RunId",
+                "SampleFileId/ReplicateId",
+                "PrecursorId/PeptideId",
+                "PrecursorId",
+                "AverageMassErrorPPM",
+                "BestMassErrorPPM"));
+        cmd.addFilter("SampleFileId/ReplicateId/RunId/FileName", docName, Filter.Operator.EQUAL);
+        String peptide = "NAPLAGFGYGLPISR";
+        cmd.addFilter("PrecursorId/PeptideId/PeptideModifiedSequence", peptide, Filter.Operator.EQUAL);
+
+        SelectRowsResponse response = cmd.execute(conn, getCurrentContainerPath());
+        Rowset rowset = response.getRowset();
+
+        assertEquals("Wrong number of PrecursorChromInfo rows returned for " + docName + " and peptide " + peptide, 6, rowset.getSize());
+        Iterator<Row> iterator = rowset.iterator();
+
+        checkPrecursorChromInfoRow(iterator.next(), docName, "2_1-01", "NAPLAGFGYGLPISR",1.2232006, 1.8);
+        checkPrecursorChromInfoRow(iterator.next(), docName, "2_1-01", "NAPL[+3.0]AGFGYGL[+3.0]PISR", -1.8464184, 0.4);
+
+        checkPrecursorChromInfoRow(iterator.next(), docName, "4_1-01", "NAPLAGFGYGLPISR", 0.9665566, 1.3);
+        checkPrecursorChromInfoRow(iterator.next(), docName, "4_1-01", "NAPL[+3.0]AGFGYGL[+3.0]PISR", null, null);
+
+        // BestMassErrorPpm is not set for the precursor in this replicate since none of the quantitative transitions have a mass error
+        checkPrecursorChromInfoRow(iterator.next(), docName, "6_1-01", "NAPLAGFGYGLPISR", -2.1, null);
+        checkPrecursorChromInfoRow(iterator.next(), docName, "6_1-01", "NAPL[+3.0]AGFGYGL[+3.0]PISR", -3.481539, -6.7);
+    }
+
+    private void checkPrecursorChromInfoRow(Row row, String file,  String replicate, String precursor, Double averageMassErrorPpm, Double bestMassErrorPpm)
+    {
+        assertEquals("Wrong filename", file, row.getDisplayValue("SampleFileId/ReplicateId/RunId"));
+        assertEquals("Wrong replicate", replicate, row.getDisplayValue("SampleFileId/ReplicateId"));
+        assertEquals("Wrong precursor", precursor, row.getDisplayValue("PrecursorId"));
+
+        if(averageMassErrorPpm == null)
+        {
+            assertNull("Expected null AverageMassErrorPPM", row.getDisplayValue("AverageMassErrorPPM"));
+        }
+        else
+        {
+            // Round to avoid floating point precision false positives
+            long massErrorL = Math.round(averageMassErrorPpm * 10000);
+            assertEquals("Wrong AverageMassErrorPPM", massErrorL, Math.round(((Number) row.getValue("AverageMassErrorPPM")).doubleValue() * 10000));
+        }
+        if(bestMassErrorPpm == null)
+        {
+            assertNull("Expected null BestMassErrorPPM", row.getDisplayValue("BestMassErrorPPM"));
+        }
+        else
+        {
+            // Round to avoid floating point precision false positives
+            long massErrorL = Math.round(bestMassErrorPpm * 10000);
+            assertEquals("Wrong BestMassErrorPPM", massErrorL, Math.round(((Number) row.getValue("BestMassErrorPPM")).doubleValue() * 10000));
+        }
     }
 }

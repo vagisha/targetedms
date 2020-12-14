@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
@@ -196,7 +198,7 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     }
 
     // Look at TransitionDocNode.IsQuantitative(SrmSettings settings) in the Skyline code
-    public boolean isQuantitative(TransitionSettings.FullScanSettings settings)
+    public boolean isQuantitative(@Nullable TransitionSettings.FullScanSettings settings)
     {
         if(!explicitQuantitative())
         {

@@ -51,6 +51,7 @@ public class PrecursorChromInfo extends AbstractChromInfo
     private Double _maxFwhm;
     private Double _maxHeight;
     private Double _averageMassErrorPPM;
+    private Double _bestMassErrorPPM;
     private Double _peakCountRatio;
     private Integer _numTruncated;
     private String _identified;
@@ -183,6 +184,16 @@ public class PrecursorChromInfo extends AbstractChromInfo
     public void setAverageMassErrorPPM(Double averageMassErrorPPM)
     {
         _averageMassErrorPPM = averageMassErrorPPM;
+    }
+
+    public Double getBestMassErrorPPM()
+    {
+        return _bestMassErrorPPM;
+    }
+
+    public void setBestMassErrorPPM(Double bestMassErrorPPM)
+    {
+        _bestMassErrorPPM = bestMassErrorPPM;
     }
 
     public Double getPeakCountRatio()
@@ -481,6 +492,7 @@ public class PrecursorChromInfo extends AbstractChromInfo
         TransitionChromInfo dummy = new TransitionChromInfo();
         dummy.setStartTime(getMinStartTime());
         dummy.setEndTime(getMaxEndTime());
+        dummy.setMassErrorPPM(getBestMassErrorPPM());
         dummy.setChromatogramIndex(getTransitionChromatogramIndicesList().get(index));
         return dummy;
     }

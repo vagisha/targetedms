@@ -38,6 +38,7 @@ import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
+import java.text.DecimalFormat;
 import java.util.Map;
 
 /**
@@ -57,6 +58,8 @@ public class LabelFactory
                                                 "--",
                                                 "---"};
 
+    private static final DecimalFormat sign = new DecimalFormat("+0;-0");
+
     private LabelFactory() {}
 
     public static String transitionLabel(Transition transition)
@@ -68,7 +71,7 @@ public class LabelFactory
             Integer massIndex = transition.getMassIndex();
             if(massIndex != null && massIndex != 0)
             {
-                label.append("+").append(transition.getMassIndex());
+                label.append(sign.format(transition.getMassIndex()));
             }
         }
         else if(transition.isCustomIon())

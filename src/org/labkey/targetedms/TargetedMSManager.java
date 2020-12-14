@@ -88,6 +88,7 @@ import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.SampleFileChromInfo;
+import org.labkey.targetedms.parser.TransitionSettings;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
 import org.labkey.targetedms.query.GuideSetTable;
@@ -2411,5 +2412,19 @@ public class TargetedMSManager
         executor.execute("DROP TABLE " + precursorGroupingsTableName);
         executor.execute("DROP TABLE " + moleculeGroupingsTableName);
         executor.execute("DROP TABLE " + areasTableName);
+    }
+
+    /**
+     * Returns the Transition Full Scan setttings for the given run.  This may be null if the settings were not included
+     * in the Skyline document.
+     * @param runId
+     * @return
+     */
+    @Nullable
+    public static TransitionSettings.FullScanSettings getTransitionFullScanSettings(long runId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoTransitionFullScanSettings(),
+                new SimpleFilter(FieldKey.fromParts("runId"), runId), null)
+                .getObject(TransitionSettings.FullScanSettings.class);
     }
 }
