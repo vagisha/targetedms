@@ -1995,7 +1995,7 @@ public class SkylineDocImporter
         try
         {
             _precursorChromInfoStmt = ensureStatement(_precursorChromInfoStmt,
-                    "INSERT INTO targetedms.precursorchrominfo( precursorid, samplefileid, generalmoleculechrominfoid, bestretentiontime, minstarttime, maxendtime, totalarea, totalbackground, maxfwhm, peakcountratio, numtruncated, librarydotp, optimizationstep, note, chromatogram, numtransitions, numpoints, maxheight, isotopedotp, averagemasserrorppm, userset, uncompressedsize, identified, container, chromatogramformat, chromatogramoffset, chromatogramlength, qvalue, zscore, ccs, drifttimems1, drifttimefragment, drifttimewindow, ionmobilityms1, ionmobilityfragment, ionmobilitywindow, ionmobilitytype) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO targetedms.precursorchrominfo( precursorid, samplefileid, generalmoleculechrominfoid, bestretentiontime, minstarttime, maxendtime, totalarea, totalbackground, maxfwhm, peakcountratio, numtruncated, librarydotp, optimizationstep, note, chromatogram, numtransitions, numpoints, maxheight, isotopedotp, averagemasserrorppm, bestmasserrorppm, userset, uncompressedsize, identified, container, chromatogramformat, chromatogramoffset, chromatogramlength, qvalue, zscore, ccs, drifttimems1, drifttimefragment, drifttimewindow, ionmobilityms1, ionmobilityfragment, ionmobilitywindow, ionmobilitytype) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     true);
 
             int index = 1;
@@ -2019,6 +2019,7 @@ public class SkylineDocImporter
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getMaxHeight());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIsotopeDotP());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getAverageMassErrorPPM());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getBestMassErrorPPM());
             _precursorChromInfoStmt.setString(index++, preChromInfo.getUserSet());
             setInteger(_precursorChromInfoStmt, index++, preChromInfo.getUncompressedSize());
             _precursorChromInfoStmt.setString(index++, preChromInfo.getIdentified());

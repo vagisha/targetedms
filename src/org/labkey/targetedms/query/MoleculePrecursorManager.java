@@ -29,7 +29,6 @@ import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.MoleculePrecursor;
-import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.util.HashSet;
@@ -204,7 +203,6 @@ public class MoleculePrecursorManager
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, mol.customIonName, prec.Charge");
-        sql.append(", (SELECT ").append(PrecursorManager.getIsQuantitativeSql()).append(") AS quantitative ");
         sql.append(" FROM ");
         joinTablesForMoleculePrecursorChromInfo(sql, user, container);
         sql.append(" WHERE ");

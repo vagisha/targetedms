@@ -29,14 +29,18 @@ import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChromatogramDataset;
 import org.labkey.targetedms.chart.ChromatogramDataset.RtRange;
+import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
+import org.labkey.targetedms.parser.TransitionSettings;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * User: vsharma
@@ -113,12 +117,7 @@ public class TransitionManager
                                  .getObject(TransitionChromInfo.class);
     }
 
-    public static double getMaxTransitionIntensity(long peptideId)
-    {
-        return getMaxTransitionIntensity(peptideId, Transition.Type.ALL);
-    }
-
-    public static double getMaxTransitionIntensity(long generalMoleculeId, Transition.Type fragmentType)
+    public static Double getMaxTransitionIntensity(long generalMoleculeId, Transition.Type fragmentType)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(tci.Height) FROM ");
         sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
@@ -129,7 +128,7 @@ public class TransitionManager
         if(fragmentType != Transition.Type.ALL)
         {
             sql.append(", ");
-            sql.append(TargetedMSManager.getTableInfoTransition(), "tran");
+            sql.append(TargetedMSManager.getTableInfoGeneralTransition(), "tran");
         }
         sql.append(" WHERE ");
         sql.append("gmci.Id = preci.GeneralMoleculeChromInfoId ");
@@ -156,32 +155,90 @@ public class TransitionManager
 
     /**
      * @param pci a precursor peak from the PrecursorChromInfo table
-     * @return a map where the keys are the index for a transition peak (TransitionChromInfo) into the RT and intensity arrays
-     * for the precursor peak (stored in the "chromatogram" column of PrecursorChromInfo or read from the skyd file).
-     * Values are the value in the "quantitative" column for the corresponding transition. This value will be null if the
-     * transition is quantitative.
+     * @param fullScanSettings Transition full scan settings for the Skyline document
+     * @return a List of TransitionChromInfoAndQuantitative objects that encapsulate a TransitionChromInfo and
+     * a boolean value indicating if the transition is quantitative or not. Whether a transition is quantitative
+     * is determined by GeneralTransition.isQuantitative(@Nullable TransitionSettings.FullScanSettings settings)
      */
     @NotNull
-    public static Map<Integer, Boolean> getTransitionChromatogramIndexes(PrecursorChromInfo pci)
+    public static List<TransitionChromInfoAndQuantitative> getTransitionChromInfoAndQuantitative(PrecursorChromInfo pci, TransitionSettings.FullScanSettings fullScanSettings)
     {
+        List<GeneralTransition> transitions = TransitionManager.getGeneralTransitionsForPrecursor(pci.getPrecursorId());
+        List<TransitionChromInfoAndQuantitative> result = new ArrayList<>();
+
         if (pci.getTransitionChromatogramIndicesList() != null)
         {
-            Map<Integer, Boolean> result = new LinkedHashMap<>();
-            for (Integer index : pci.getTransitionChromatogramIndicesList())
+            if (transitions.size() != pci.getTransitionChromatogramIndicesList().size())
             {
-                result.put(index, true);
+                throw new IllegalStateException("Mismatch in transitions and indices lengths: " + transitions.size() + " vs " + pci.getTransitionChromatogramIndicesList().size());
             }
-            return result;
+            for (int i = 0; i < pci.getTransitionChromatogramIndicesList().size(); i++)
+            {
+                // Transition list is sorted by the 'Id' column so should be in the same order as the chromatogram indices list
+                GeneralTransition transition = transitions.get(i);
+                result.add(new TransitionChromInfoAndQuantitative(pci.makeDummyTransitionChromInfo(i), transition.isQuantitative(fullScanSettings)));
+            }
+        }
+        else
+        {
+            Map<Long, GeneralTransition> transitionMap = transitions.stream().collect(Collectors.toMap(GeneralTransition::getId, Function.identity()));
+            List<TransitionChromInfo> tciList = getTransitionChromInfoList(pci.getId());
+            for(TransitionChromInfo tci: tciList)
+            {
+                GeneralTransition transition = transitionMap.get(tci.getTransitionId());
+                if(transition == null)
+                {
+                    throw new IllegalStateException("Cannot find transtion for TransitionChromInfo. TransitionId is: " + tci.getTransitionId());
+                }
+                result.add(new TransitionChromInfoAndQuantitative(tci, transition.isQuantitative(fullScanSettings)));
+            }
         }
 
-        SQLFragment sql = new SQLFragment("SELECT tci.ChromatogramIndex, gt.Quantitative FROM ")
-                .append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci")
-                .append(" INNER JOIN ")
-                .append(TargetedMSManager.getTableInfoGeneralTransition(), "gt")
-                .append(" ON gt.id = tci.transitionId ")
-                .append(" WHERE tci.PrecursorChromInfoId = ? ORDER BY gt.Id").add(pci.getId());
+        return result;
+    }
 
-        return new SqlSelector(TargetedMSManager.getSchema(), sql).fillValueMap(new LinkedHashMap<>());
+    public static class TransitionChromInfoAndQuantitative
+    {
+        private final TransitionChromInfo _tci;
+        private final boolean _quantitative;
+
+        public TransitionChromInfoAndQuantitative(TransitionChromInfo tci, boolean quantitative)
+        {
+            _tci = tci;
+            _quantitative = quantitative;
+        }
+
+        public int getChromatogramIndex()
+        {
+            return _tci.getChromatogramIndex();
+        }
+
+        public boolean isQuantitative()
+        {
+            return _quantitative;
+        }
+
+        public Double getMassErrorPpm()
+        {
+            return _tci.getMassErrorPPM();
+        }
+
+        public boolean hasHeightAndIsQuantitative()
+        {
+            return isQuantitative() && getHeight() > 0;
+        }
+
+        public double getHeight()
+        {
+            return _tci.getHeight() == null ? 0 : _tci.getHeight();
+        }
+    }
+
+    @NotNull
+    private static List<GeneralTransition> getGeneralTransitionsForPrecursor(long precursorId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoGeneralTransition(),
+                new SimpleFilter(FieldKey.fromParts("GeneralPrecursorId"), precursorId), new Sort("Id")).getArrayList(GeneralTransition.class);
     }
 
     @NotNull
@@ -198,7 +255,7 @@ public class TransitionManager
                                  new SimpleFilter(FieldKey.fromParts("TransitionId"), transitionId), null).getCollection(TransitionChromInfo.class);
     }
 
-    public static RtRange getPrecursorPeakRtRange(long precursorChromInfoId)
+    public static RtRange getTransitionPeakRtRange(long precursorChromInfoId)
     {
         // Get the min start time from the transition peaks
         SQLFragment sql = new SQLFragment("SELECT MIN(startTime) AS minRt, MAX(endTime) AS maxRt FROM ");
@@ -210,25 +267,52 @@ public class TransitionManager
 
     public static RtRange getGeneralMoleculeRtRange(long generalMoleculeId)
     {
-        // Get the min start time and max end time across all the samples for the given general molecule id.
-        // Use the the start and end time set on the transition peaks.
         return getGeneralMoleculeSampleRtSummary(generalMoleculeId, null);
     }
 
     public static RtRange getGeneralMoleculeSampleRtRange(long generalMoleculeId, long sampleFileId)
     {
         // Get the min start time and max end time for the given general molecule id in the given sample
-        // Use the the start and end time set on the transition peaks.
         return TransitionManager.getGeneralMoleculeSampleRtSummary(generalMoleculeId, sampleFileId);
     }
 
-    private static RtRange getGeneralMoleculeSampleRtSummary(long generalMoleculeId, Long sampleFileId)
+    // Get the min start time and max end time for the given general molecule id. Query PrecursorChromInfo first.
+    // If minStart and maxEnd columns are null for all precursors then query TransitionChromInfos.
+    private static RtRange getGeneralMoleculeSampleRtSummary(long generalMoleculeId, @Nullable Long sampleFileId)
     {
-        SQLFragment sql = new SQLFragment("SELECT ").append(" MIN (tci.startTime) AS minRt, MAX(tci.endTime) AS maxRt FROM ");
-        sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
-        sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
-        sql.append(" ON pci.id = tci.precursorChrominfoId ");
+        // First query the PrecursorChromInfo table
+        SQLFragment sql = getGeneralMoleculeSampleRtSummarySql(generalMoleculeId, sampleFileId, false);
+        RtRange rtRange = getRtRange(sql);
+        if(!rtRange.isEmpty())
+        {
+            return rtRange;
+        }
+        else
+        {
+            // Query the TransitionChromInfo table
+            sql = getGeneralMoleculeSampleRtSummarySql(generalMoleculeId, sampleFileId, true);
+            return getRtRange(sql);
+        }
+    }
+
+    private static SQLFragment getGeneralMoleculeSampleRtSummarySql(long generalMoleculeId, @Nullable Long sampleFileId, boolean queryTransitions)
+    {
+        String minStartTimeCol = queryTransitions ? "tci.startTime" : "pci.minStartTime";
+        String maxEndTimecol = queryTransitions ? "tci.endTime" : "pci.maxEndTime";
+
+        SQLFragment sql = new SQLFragment("SELECT ").append(" MIN (").append(minStartTimeCol).append(") AS minRt, MAX(" ).append(maxEndTimecol).append(") AS maxRt FROM ");
+        if(queryTransitions)
+        {
+            sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
+            sql.append(" INNER JOIN ");
+            sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+            sql.append(" ON pci.id = tci.precursorChrominfoId ");
+        }
+        else
+        {
+            sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        }
+
         sql.append(" INNER JOIN ");
         sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
         sql.append(" ON gmci.Id=pci.GeneralMoleculeChromInfoId");
@@ -239,8 +323,7 @@ public class TransitionManager
             sql.append(" AND ");
             sql.append("pci.SampleFileId = ?").add(sampleFileId);
         }
-
-        return getRtRange(sql);
+        return sql;
     }
 
     @NotNull

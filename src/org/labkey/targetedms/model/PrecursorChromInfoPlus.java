@@ -35,9 +35,7 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo implements Precur
 
     private int _isotopeLabelId;
 
-    private Double _minPeakRt;
-    private Double _maxPeakRt;
-    private boolean _quantitative;
+    private ChromatogramDataset.RtRange _peakBoundary;
 
     public String getGroupName()
     {
@@ -113,36 +111,32 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo implements Precur
 
     public double getMinPeakRt()
     {
-        if(_minPeakRt == null)
-        {
-            initPeakRtRange();
-        }
-        return _minPeakRt;
+        initPeakRtRange();
+        return _peakBoundary.getMinRt();
     }
 
     public double getMaxPeakRt()
     {
-        if(_maxPeakRt == null)
-        {
-            initPeakRtRange();
-        }
-        return _maxPeakRt;
+        initPeakRtRange();
+        return _peakBoundary.getMaxRt();
     }
 
     private void initPeakRtRange()
     {
-        ChromatogramDataset.RtRange peakRt = PrecursorManager.getPrecursorPeakRtRange(this);
-        _minPeakRt = peakRt.getMinRt();
-        _maxPeakRt = peakRt.getMaxRt();
+        if(_peakBoundary == null)
+        {
+            _peakBoundary = PrecursorManager.getPrecursorPeakRtRange(this);
+        }
     }
 
-    public boolean isQuantitative()
+    public boolean hasPeakBoundary()
     {
-        return _quantitative;
+        initPeakRtRange();
+        return !_peakBoundary.isEmpty();
     }
 
-    public void setQuantitative(boolean quantitative)
+    public boolean isRtInPeakBoundary(double rt)
     {
-        _quantitative = quantitative;
+        return hasPeakBoundary() &&  rt >= getMinPeakRt() && rt <= getMaxPeakRt();
     }
 }

@@ -1676,7 +1676,57 @@ public class SkylineDocumentParser implements AutoCloseable
 
         _precursorCount++;
 
+        setBestMassErrorPpm(moleculePrecursor);
+
         return moleculePrecursor;
+    }
+
+    // Issue 41973: Populate additional information for rendering chromatograms
+    // Set the BestMassErrorPpm for each PrecursorChromInfo of the given precursor. This is the mass error of the most intense
+    // transition peak in a replicate. Skyline does not give us this value but we need it to label the precursor peaks in
+    // chromatogram charts. We can query it from TransitionChromInfos but we are saving it with the PrecursorChromInfo
+    // because TransitionChromInfos do not get saved for large documents.
+    private void setBestMassErrorPpm(GeneralPrecursor<?> precursor)
+    {
+        TransitionSettings.FullScanSettings fullScanSettings = _transitionSettings == null ? null : _transitionSettings.getFullScanSettings();
+
+        // Key is the replicate name
+        // Value is a List where each member is a Pair of TransitionChromInfo and a Boolean value indicating if the transition is quantitative
+        Map<String, List<Pair<TransitionChromInfo, Boolean>>> replicateToTciListMap = new HashMap<>();
+
+        for (GeneralTransition transition : precursor.getTransitionsList())
+        {
+            List<TransitionChromInfo> tciList = transition.getChromInfoList();
+            Boolean quantitative = transition.isQuantitative(fullScanSettings);
+            for(TransitionChromInfo tci: tciList)
+            {
+                List<Pair<TransitionChromInfo, Boolean>> tcisForReplicate = replicateToTciListMap.computeIfAbsent(tci.getReplicateName(), list -> new ArrayList<>());
+                tcisForReplicate.add(new Pair(tci, quantitative));
+            }
+        }
+
+        for(PrecursorChromInfo pci: precursor.getChromInfoList())
+        {
+            List<Pair<TransitionChromInfo, Boolean>> tciList = replicateToTciListMap.get(pci.getReplicateName());
+            if(tciList != null && !tciList.isEmpty())
+            {
+                double maxHeight = 0.0;
+                Double bestMassError = null;
+                for(Pair<TransitionChromInfo, Boolean> tciInfo: tciList)
+                {
+                    TransitionChromInfo tci = tciInfo.first;
+                    Boolean quantitative = tciInfo.second;
+
+                    Double height = tci.getHeight();
+                    if(quantitative && height != null && height > maxHeight)
+                    {
+                        maxHeight = tci.getHeight();
+                        bestMassError = tci.getMassErrorPPM();
+                    }
+                }
+                pci.setBestMassErrorPPM(bestMassError);
+            }
+        }
     }
 
     private Precursor readPrecursor(XMLStreamReader reader, Peptide peptide, boolean decoy) throws XMLStreamException, IOException
@@ -1797,6 +1847,8 @@ public class SkylineDocumentParser implements AutoCloseable
         populateChromInfoChromatograms(precursor, chromatograms);
 
         _precursorCount++;
+
+        setBestMassErrorPpm(precursor);
         return precursor;
     }
     private Transition transitionProtoToTransition(SkylineDocument.SkylineDocumentProto.Transition transitionProto) {

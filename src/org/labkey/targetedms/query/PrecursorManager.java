@@ -29,7 +29,6 @@ import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableResultSet;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.data.dialect.SqlDialect;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.view.NotFoundException;
@@ -38,14 +37,12 @@ import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChromatogramDataset.RtRange;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
-import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -319,7 +316,6 @@ public class PrecursorManager
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
-        sql.append(", (SELECT ").append(getIsQuantitativeSql()).append(") AS quantitative ");
         sql.append(" FROM ");
         joinTablesForPrecursorChromInfo(sql, user, container);
         sql.append(" WHERE ");
@@ -334,16 +330,6 @@ public class PrecursorManager
         }
 
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
-    }
-
-    static SQLFragment getIsQuantitativeSql()
-    {
-        SqlDialect sqlDialect = TargetedMSManager.getSchema().getSqlDialect();
-        SQLFragment quantitativeSql = new SQLFragment("EXISTS (SELECT 1 FROM ")
-                .append(TargetedMSManager.getTableInfoGeneralTransition(), "gt")
-                .append(" WHERE (quantitative is NULL OR quantitative=" + sqlDialect.getBooleanTRUE() + ") AND generalprecursorid = pci.precursorid) ");
-
-        return sqlDialect.wrapExistsExpression(quantitativeSql);
     }
 
     public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForGeneralMoleculeChromInfo(long gmChromInfoId, long precursorId,
@@ -583,7 +569,15 @@ public class PrecursorManager
         return count != null && count.intValue() == ids.size() ;
     }
 
-    public static double getMaxPrecursorIntensity(long generalMoleculeId)
+    /**
+     * Sum up the value of Height for each TransitionChromInfo for a precursor peak, and return the max sum.
+     * This can be used for estimating the height of the tallest precursor peak for a peptide (generalMolecule)
+     * over all the replicates when we are synchronizing the intensity axis for precursor peak chromatograms.
+     * Getting the actual max intensity would require summing up the intensities across the points of each peak. But this
+     * method should give us a value that is at least as much as the max intensity since we are summing up the tallest
+     * point of each transition.
+     */
+    public static Double getMaxPrecursorIntensityEstimate(long generalMoleculeId)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(precHeight) FROM (");
         sql.append("SELECT SUM(tci.Height) AS precHeight FROM ");
@@ -601,6 +595,26 @@ public class PrecursorManager
         sql.add(generalMoleculeId);
         sql.append(" GROUP BY tci.PrecursorChromInfoId");
         sql.append(" ) a");
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
+    }
+
+    /**
+     * Returns the maximum value of MaxHeight for the Precursors of a peptide (generalMolecule) over all the replicates.
+     * MaxHeight of a PrecursorChromInfo is the height of the tallest transition peak for the precursor in a replicate.
+     * This can be used for getting the height of the tallest transition peak for a peptide over all the replicates
+     * when we are synchronizing the intensity axis for transition peak chromatograms.
+     */
+    public static Double getMaxPrecursorMaxHeight(long generalMoleculeId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT MAX(pci.maxHeight) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
+        sql.append(" ON pci.GeneralMoleculeChromInfoId = gmci.Id");
+        sql.append(" WHERE");
+        sql.append(" gmci.GeneralMoleculeId=?");
+        sql.add(generalMoleculeId);
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
@@ -805,7 +819,7 @@ public class PrecursorManager
             // Min peak start and max peak end times for a precursor chrom info can be null if none of the
             // transitions for the precursor are quantitative. We will try to get the min start and max end
             // retention times from the transition chrom infos instead.
-            return TransitionManager.getPrecursorPeakRtRange(pci.getId());
+            return TransitionManager.getTransitionPeakRtRange(pci.getId());
         }
     }
 
