@@ -1,0 +1,1 @@
+ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN TransitionChromatogramIndices BYTEA;

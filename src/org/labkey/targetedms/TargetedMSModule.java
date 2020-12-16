@@ -56,6 +56,8 @@ import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
+import org.labkey.targetedms.datasource.MsDataSourceUtil;
+import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogParser;
 import org.labkey.targetedms.passport.PassportController;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
@@ -215,7 +217,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public Double getSchemaVersion()
     {
-        return 20.016;
+        return 20.017;
     }
 
     @Override
@@ -543,7 +545,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public Set<Class> getIntegrationTests()
     {
         return Set.of(
-                SkylineAuditLogManager.TestCase.class
+                SkylineAuditLogManager.TestCase.class,
+                MsDataSourceUtil.TestCase.class
         );
     }
 
@@ -556,6 +559,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         set.add(ComparisonCategory.TestCase.class);
         set.add(ReplicateLabelMinimizer.TestCase.class);
         set.add(SkylineAuditLogParser.TestCase.class);
+        set.add(SampleFile.TestCase.class);
         return set;
 
     }

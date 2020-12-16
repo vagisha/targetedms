@@ -377,12 +377,16 @@
     // peak areas graph
     var peakAreasImg = Ext4.create('Ext.Img', {
         src: <%=q(peakAreaUrl)%>,
-        renderTo: Ext4.get('peakAreasGraphImg')
+        renderTo: Ext4.get('peakAreasGraphImg'),
+        width: <%= bean.getInitialWidth() %>,
+        height: <%= bean.getInitialHeight()%>
     });
 
     var retentionTimesImg = Ext4.create('Ext.Img', {
         src: <%=q(retentionTimesUrl)%>,
-        renderTo: Ext4.get('retentionTimesGraphImg')
+        renderTo: Ext4.get('retentionTimesGraphImg'),
+        width: <%= bean.getInitialWidth() %>,
+        height: <%= bean.getInitialHeight()%>
     });
 
     // buttons
@@ -425,6 +429,10 @@
             // change the src of the image
             peakAreasImg.setSrc(pearAreaUrl);
             retentionTimesImg.setSrc(retentionTimesUrl);
+            peakAreasImg.setHeight(parseInt(chartHeightTb.getValue()));
+            peakAreasImg.setWidth(parseInt(chartWidthTb.getValue()));
+            retentionTimesImg.setHeight(parseInt(chartHeightTb.getValue()));
+            retentionTimesImg.setWidth(parseInt(chartWidthTb.getValue()));
         }
     });
 

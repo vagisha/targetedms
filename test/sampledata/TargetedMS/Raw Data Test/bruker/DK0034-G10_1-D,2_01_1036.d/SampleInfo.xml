@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<SampleTable>
+  <SampleTableHeader Version="2" CreationDate="02/01/12" CreationTime="15:11:32" Creator="Dietmar" CreationComputer="MTQ10289" UpdateDate="03/07/15" UpdateTime="16:34:32" UpdateUser="Dietmar" UpdateComputer="IMPACT-00067" Author="Dietmar" Company="UC Davis" Laboratory="Kültz-Lab" Phone="530-752-7322" Fax="530-752-0175" EMail="dkueltz@ucdavis.edu" Description="Trap: Waters Symmetry C18  5um, 180um x 20mm SN 186003514 Lot 02631126920109&#xD;&#xA;Analyt: Waters BEH130 C18 1.7um, 75um x 250mm, 186003545 Lot 01931126619103" NumOfSamples="1" HyStarVersion="3.2.49.9" SampleTablePath="D:\Data\Dietmar\Hystar SampleLists\23Oct2014.xml" />
+  <UserColumnNames>
+    <Column ColumnNumber="0" Name="nanoESI Source" />
+  </UserColumnNames>
+  <AnalysisHeader CreationDateTime="2015-03-07T04:34:32-08:00" FileName="D:\Data\dietmar\msdata\DK0034-G10_1-D,2_01_1036.d" SampleID="DK0034-G10" Method="D:\Data\Dietmar\Methods-Win7\HS-DIA-25Feb15.m" />
+  <Sample Line="1032" CheckToRun="0" Status="2" Injections="1" Volume="2" Amount="0.2" Dilution="1" Weight="0.1" Position="1:D,2" InternalStandard="0" PreRunTime="0" SampleID="DK0034-G10" DataPath="dietmar\msdata" Operator="Dietmar" Company="UC Davis" Laboratory="Kültz Lab." Phone="530-752-7322" Fax="530-752-0175" EMail="dkueltz@ucdavis.edu" Preparation="in-solution trypsin digestion" SampleType="0" ReferenceSampleNum="0" NumOnGel="0" ResultDatafile="D:\Data\dietmar\msdata\DK0034-G10_1-D,2_01_1036.d" NumberInSequence="41" CalibAction="" CalibLevel="" AcquisitionID="0" SaltConc="0" LastLineInGroup="0" InstrumentCalibration="0" RunDAScript="0" SuperMethod="D:\Data\Dietmar\Methods-Win7\HS-DIA-25Feb15.m">
+    <UserData>
+      <Column ColumnNumber="0" Value="" />
+    </UserData>
+  </Sample>
+</SampleTable>

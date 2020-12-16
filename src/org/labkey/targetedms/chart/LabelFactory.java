@@ -133,9 +133,14 @@ public class LabelFactory
     public static String moleculePrecursorLabel(long moleculePrecursorId, User user, Container container)
     {
         MoleculePrecursor moleculePrecursor = MoleculePrecursorManager.getPrecursor(container, moleculePrecursorId, user);
+        String primaryName = moleculePrecursor.getCustomIonName();
+        if (primaryName == null)
+        {
+            primaryName = moleculePrecursor.getIonFormula();
+        }
 
-        return moleculePrecursor.getCustomIonName() +
-                " - " + Formats.f4.format(moleculePrecursor.getMz()) +
+        return (primaryName == null ? "" : (primaryName + " - ")) +
+                Formats.f4.format(moleculePrecursor.getMz()) +
                 getChargeLabel(moleculePrecursor.getCharge());
     }
 
@@ -180,7 +185,7 @@ public class LabelFactory
 
         return generalMoleculeChromInfoChartTitle(pepChromInfo) +
                 '\n' +
-                molecule.getCustomIonName();
+                molecule.getName();
     }
 
     public static String precursorChromInfoChartTitle(PrecursorChromInfo pChromInfo)
