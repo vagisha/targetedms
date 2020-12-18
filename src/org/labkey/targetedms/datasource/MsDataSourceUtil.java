@@ -375,16 +375,9 @@ public class MsDataSourceUtil
         private static final String[] agilentData = new String[] {"pTE219_0 hr_R2.d", "pTE219_0 hr_R2_flatzip.d", "pTE219_0 hr_R2_nestedzip.d"};
 
         @BeforeClass
-        public static void setup()
+        public static void setup() throws ExperimentException
         {
-            try
-            {
-                cleanDatabase();
-            }
-            catch (ExperimentException e)
-            {
-                fail("Failed to clean up database before running tests. Error was: " + e.getMessage());
-            }
+            cleanDatabase();
 
             _user = TestContext.get().getUser();
             _container = ContainerManager.ensureContainer(JunitUtil.getTestContainer(), FOLDER_NAME);
@@ -749,16 +742,10 @@ public class MsDataSourceUtil
         }
 
         @AfterClass
-        public static void cleanup()
+        public static void cleanup() throws ExperimentException
         {
-            try
-            {
-                cleanDatabase();
-            }
-            catch (ExperimentException e)
-            {
-                fail("Failed to clean up database after running tests. Error was: " + e.getMessage());
-            }
+            cleanDatabase();
+            _run = null;
         }
     }
 }
