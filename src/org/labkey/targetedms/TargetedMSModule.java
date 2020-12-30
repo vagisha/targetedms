@@ -18,7 +18,6 @@ package org.labkey.targetedms;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -27,7 +26,6 @@ import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
-import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.DirectoryPattern;
 import org.labkey.api.files.FileContentService;
@@ -72,12 +70,9 @@ import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
 import org.labkey.targetedms.view.passport.ProteinListView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -156,10 +151,10 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         FOLDER_TYPE_PROPERTY.setShowDescriptionInline(true);
         addModuleProperty(FOLDER_TYPE_PROPERTY);
 
-
-        List<ModuleProperty.Option> options = Arrays.asList(
-                        new ModuleProperty.Option("Enabled", Boolean.TRUE.toString()),
-                        new ModuleProperty.Option("Disabled", Boolean.FALSE.toString()));
+        List<ModuleProperty.Option> options = List.of(
+            new ModuleProperty.Option("Enabled", Boolean.TRUE.toString()),
+            new ModuleProperty.Option("Disabled", Boolean.FALSE.toString())
+        );
         // Set up the properties for controlling how chromatograms are managed in DB vs files
         SKIP_CHROMATOGRAM_IMPORT_PROPERTY = new ModuleProperty(this, SKIP_CHROMATOGRAM_IMPORT);
         SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setInputType(ModuleProperty.InputType.combo);
@@ -171,10 +166,10 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         addModuleProperty(SKIP_CHROMATOGRAM_IMPORT_PROPERTY);
 
         //------------------------
-        List<ModuleProperty.Option> auditOptions = Arrays.asList(
-                new ModuleProperty.Option("0 - No Verification", "0"),
-                new ModuleProperty.Option("1 - Hash Verification", "1"),
-                new ModuleProperty.Option("2 - RSA Verification", "2")
+        List<ModuleProperty.Option> auditOptions = List.of(
+            new ModuleProperty.Option("0 - No Verification", "0"),
+            new ModuleProperty.Option("1 - Hash Verification", "1"),
+            new ModuleProperty.Option("2 - RSA Verification", "2")
         );
         // Set up the properties for controlling how chromatograms are managed in DB vs files
         SKYLINE_AUDIT_LEVEL_PROPERTY = new ModuleProperty(this, SKYLINE_AUDIT_LEVEL);
@@ -217,7 +212,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public Double getSchemaVersion()
     {
-        return 20.018;
+        return 21.000;
     }
 
     @Override
@@ -230,210 +225,194 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     protected Collection<WebPartFactory> createWebPartFactories()
     {
-        BaseWebPartFactory setupFactory = new BaseWebPartFactory(TARGETED_MS_SETUP)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+        return List.of(
+            new BaseWebPartFactory(TARGETED_MS_SETUP)
             {
-                JspView view = new JspView("/org/labkey/targetedms/view/folderSetup.jsp");
-                view.setTitle(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER);
-                return view;
-            }
-
-            @Override
-            public String getDisplayName(Container container, String location)
-            {
-                return "Panorama Setup";
-            }
-        };
-
-        BaseWebPartFactory chromatogramLibraryDownload = new BaseWebPartFactory(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                JspView view = new JspView("/org/labkey/targetedms/view/chromatogramLibraryDownload.jsp");
-                view.setTitle(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD);
-                return view;
-            }
-        };
-
-        BaseWebPartFactory precursorView = new BaseWebPartFactory(TARGETED_MS_PRECURSOR_VIEW)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-               return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_LIBRARY_PRECURSOR, "Precursors", "LibraryPrecursors");
-            }
-        };
-
-        BaseWebPartFactory moleculePrecursorView = new BaseWebPartFactory(TARGETED_MS_MOLECULE_PRECURSOR_VIEW)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-               return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_LIBRARY_MOLECULE_PRECURSOR, "Precursors", "LibraryPrecursors");
-            }
-        };
-
-        BaseWebPartFactory peptideView  = new BaseWebPartFactory(TARGETED_MS_PEPTIDE_VIEW)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_PEPTIDE, "Peptides", "LibraryPeptides");
-            }
-        };
-
-        BaseWebPartFactory moleculeView  = new BaseWebPartFactory(TARGETED_MS_MOLECULE_VIEW)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_MOLECULE, "Molecules", "LibraryMolecules");
-            }
-        };
-
-        BaseWebPartFactory peptideGroupView  = new BaseWebPartFactory(TARGETED_MS_PEPTIDE_GROUP_VIEW)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                return new PeptideGroupViewWebPart(portalCtx);
-            }
-        };
-
-        BaseWebPartFactory runsFactory = new BaseWebPartFactory(TARGETED_MS_RUNS_WEBPART_NAME)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                return new TargetedMSRunsWebPartView(portalCtx);
-            }
-        };
-
-        BaseWebPartFactory proteinSearchFactory = new BaseWebPartFactory(TARGETED_MS_PROTEIN_SEARCH)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                return new ProteinSearchWebPart(new ProteinService.ProteinSearchForm()
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
                 {
-                    @Override
-                    public int[] getSeqId()
-                    {
-                        return new int[0];
-                    }
-
-                    @Override
-                    public boolean isExactMatch()
-                    {
-                        return true;
-                    }
-                });
-            }
-        };
-
-        BaseWebPartFactory peptideSearchFactory = new BaseWebPartFactory(TARGETED_MS_PEPTIDE_SEARCH)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                JspView view = new JspView("/org/labkey/targetedms/search/peptideSearch.jsp");
-                view.setTitle("Peptide Search");
-                return view;
-            }
-        };
-
-        BaseWebPartFactory modificationSearchFactory = new BaseWebPartFactory(ModificationSearchWebPart.NAME)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                TargetedMSController.ModificationSearchForm form = TargetedMSController.ModificationSearchForm.createDefault();
-                // When rendering a webpart with LABKEY.WebPart in a wiki page, config.partConfig can be used to set the
-                // configuration parameters for the webpart. Read the parameters from the ViewContext and initialize the
-                // form accordingly.
-                // For example, partConfig: {hideIncludeSubfolder: true, includeSubfolders: true} should hide the
-                // "includeSubfolders" checkbox and set the value of "includeSubfolders" to true.
-                String inclSubFolders = (String)portalCtx.get("includeSubfolders");
-                if(!StringUtils.isBlank(inclSubFolders))
-                {
-                    form.setIncludeSubfolders(Boolean.valueOf(inclSubFolders));
+                    JspView<Void> view = new JspView<>("/org/labkey/targetedms/view/folderSetup.jsp");
+                    view.setTitle(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER);
+                    return view;
                 }
-                String hideIncludeSubfolder = (String)portalCtx.get("hideIncludeSubfolder");
-                if(!StringUtils.isBlank(hideIncludeSubfolder))
+
+                @Override
+                public String getDisplayName(Container container, String location)
                 {
-                    form.setHideIncludeSubfolders(Boolean.valueOf(hideIncludeSubfolder));
+                    return "Panorama Setup";
                 }
-                return new ModificationSearchWebPart(form);
-            }
-        };
+            },
 
-        BaseWebPartFactory qcPlotsFactory = new BaseWebPartFactory(TARGETED_MS_QC_PLOTS)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            new BaseWebPartFactory(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD)
             {
-                JspView result = new JspView("/org/labkey/targetedms/view/qcTrendPlotReport.jsp");
-                result.addClientDependency(ClientDependency.fromPath("Ext4"));
-                result.setTitle("QC Plots");
-                result.setFrame(WebPartView.FrameType.PORTAL);
-                return result;
-            }
-        };
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    JspView<Void> view = new JspView<>("/org/labkey/targetedms/view/chromatogramLibraryDownload.jsp");
+                    view.setTitle(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD);
+                    return view;
+                }
+            },
 
-        BaseWebPartFactory qcSummaryFactory = new BaseWebPartFactory(TARGETED_MS_QC_SUMMARY)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            new BaseWebPartFactory(TARGETED_MS_PRECURSOR_VIEW)
             {
-                return new QCSummaryWebPart(portalCtx, 3);
-            }
-        };
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                   return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_LIBRARY_PRECURSOR, "Precursors", "LibraryPrecursors");
+                }
+            },
 
-        BaseWebPartFactory paretoPlotFactory = new BaseWebPartFactory(TARGETED_MS_PARETO_PLOT)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            new BaseWebPartFactory(TARGETED_MS_MOLECULE_PRECURSOR_VIEW)
             {
-                JspView result = new JspView("/org/labkey/targetedms/view/paretoPlot.jsp");
-                result.addClientDependency(ClientDependency.fromPath("Ext4"));
-                result.setTitle("Pareto Plots");
-                result.setFrame(WebPartView.FrameType.PORTAL);
-                return result;
-            }
-        };
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                   return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_LIBRARY_MOLECULE_PRECURSOR, "Precursors", "LibraryPrecursors");
+                }
+            },
 
-        BaseWebPartFactory passportFactory = new BaseWebPartFactory("Passport")
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            new BaseWebPartFactory(TARGETED_MS_PEPTIDE_VIEW)
             {
-                QueryView v =  ProteinListView.createView(portalCtx);
-                v.setTitle("Passport");
-                v.setFrame(WebPartView.FrameType.PORTAL);
-                return v;
-            }
-        };
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_PEPTIDE, "Peptides", "LibraryPeptides");
+                }
+            },
 
-        List<WebPartFactory> webpartFactoryList = new ArrayList<>();
-        webpartFactoryList.add(setupFactory);
-        webpartFactoryList.add(chromatogramLibraryDownload);
-        webpartFactoryList.add(precursorView);
-        webpartFactoryList.add(moleculePrecursorView);
-        webpartFactoryList.add(peptideView);
-        webpartFactoryList.add(moleculeView);
-        webpartFactoryList.add(peptideGroupView);
-        webpartFactoryList.add(runsFactory);
-        webpartFactoryList.add(proteinSearchFactory);
-        webpartFactoryList.add(peptideSearchFactory);
-        webpartFactoryList.add(modificationSearchFactory);
-        webpartFactoryList.add(qcPlotsFactory);
-        webpartFactoryList.add(qcSummaryFactory);
-        webpartFactoryList.add(paretoPlotFactory);
-        webpartFactoryList.add(passportFactory);
-        return webpartFactoryList;
+            new BaseWebPartFactory(TARGETED_MS_MOLECULE_VIEW)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_MOLECULE, "Molecules", "LibraryMolecules");
+                }
+            },
+
+            new BaseWebPartFactory(TARGETED_MS_PEPTIDE_GROUP_VIEW)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    return new PeptideGroupViewWebPart(portalCtx);
+                }
+            },
+
+            new BaseWebPartFactory(TARGETED_MS_RUNS_WEBPART_NAME)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    return new TargetedMSRunsWebPartView(portalCtx);
+                }
+            },
+
+            new BaseWebPartFactory(TARGETED_MS_PROTEIN_SEARCH)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    return new ProteinSearchWebPart(new ProteinService.ProteinSearchForm()
+                    {
+                        @Override
+                        public int[] getSeqId()
+                        {
+                            return new int[0];
+                        }
+
+                        @Override
+                        public boolean isExactMatch()
+                        {
+                            return true;
+                        }
+                    });
+                }
+            },
+
+            new BaseWebPartFactory(TARGETED_MS_PEPTIDE_SEARCH)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    JspView<Void> view = new JspView<>("/org/labkey/targetedms/search/peptideSearch.jsp");
+                    view.setTitle("Peptide Search");
+                    return view;
+                }
+            },
+
+            new BaseWebPartFactory(ModificationSearchWebPart.NAME)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    TargetedMSController.ModificationSearchForm form = TargetedMSController.ModificationSearchForm.createDefault();
+                    // When rendering a webpart with LABKEY.WebPart in a wiki page, config.partConfig can be used to set the
+                    // configuration parameters for the webpart. Read the parameters from the ViewContext and initialize the
+                    // form accordingly.
+                    // For example, partConfig: {hideIncludeSubfolder: true, includeSubfolders: true} should hide the
+                    // "includeSubfolders" checkbox and set the value of "includeSubfolders" to true.
+                    String inclSubFolders = (String)portalCtx.get("includeSubfolders");
+                    if(!StringUtils.isBlank(inclSubFolders))
+                    {
+                        form.setIncludeSubfolders(Boolean.valueOf(inclSubFolders));
+                    }
+                    String hideIncludeSubfolder = (String)portalCtx.get("hideIncludeSubfolder");
+                    if(!StringUtils.isBlank(hideIncludeSubfolder))
+                    {
+                        form.setHideIncludeSubfolders(Boolean.valueOf(hideIncludeSubfolder));
+                    }
+                    return new ModificationSearchWebPart(form);
+                }
+            },
+
+            new BaseWebPartFactory(TARGETED_MS_QC_PLOTS)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    JspView<Void> result = new JspView<>("/org/labkey/targetedms/view/qcTrendPlotReport.jsp");
+                    result.addClientDependency(ClientDependency.fromPath("Ext4"));
+                    result.setTitle("QC Plots");
+                    result.setFrame(WebPartView.FrameType.PORTAL);
+                    return result;
+                }
+            },
+
+            new BaseWebPartFactory(TARGETED_MS_QC_SUMMARY)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    return new QCSummaryWebPart(portalCtx, 3);
+                }
+            },
+
+            new BaseWebPartFactory(TARGETED_MS_PARETO_PLOT)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    JspView<Void> result = new JspView<>("/org/labkey/targetedms/view/paretoPlot.jsp");
+                    result.addClientDependency(ClientDependency.fromPath("Ext4"));
+                    result.setTitle("Pareto Plots");
+                    result.setFrame(WebPartView.FrameType.PORTAL);
+                    return result;
+                }
+            },
+
+            new BaseWebPartFactory("Passport")
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    QueryView v =  ProteinListView.createView(portalCtx);
+                    v.setTitle("Passport");
+                    v.setFrame(WebPartView.FrameType.PORTAL);
+                    return v;
+                }
+            }
+        );
     }
 
     @NotNull
@@ -481,18 +460,12 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         ExperimentService.get().registerExperimentDataHandler(new TargetedMSDataHandler());
         ExperimentService.get().registerExperimentDataHandler(new SkylineBinaryDataHandler());
 
-        ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
-        {
-            @Override
-            @NotNull
-            public Set<ExperimentRunType> getExperimentRunTypes(@Nullable Container container)
+        ExperimentService.get().registerExperimentRunTypeSource(container -> {
+            if (container == null || container.getActiveModules().contains(TargetedMSModule.this))
             {
-                if (container == null || container.getActiveModules().contains(TargetedMSModule.this))
-                {
-                    return Collections.singleton(EXP_RUN_TYPE);
-                }
-                return Collections.emptySet();
+                return Collections.singleton(EXP_RUN_TYPE);
             }
+            return Collections.emptySet();
         });
 
         //register the Targeted MS folder type
@@ -545,8 +518,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public Set<Class> getIntegrationTests()
     {
         return Set.of(
-                SkylineAuditLogManager.TestCase.class,
-                MsDataSourceUtil.TestCase.class
+            MsDataSourceUtil.TestCase.class,
+            SkylineAuditLogManager.TestCase.class
         );
     }
 
@@ -554,14 +527,13 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public Set<Class> getUnitTests()
     {
-        Set<Class> set = new HashSet<>();
-        set.add(TargetedMSController.TestCase.class);
-        set.add(ComparisonCategory.TestCase.class);
-        set.add(ReplicateLabelMinimizer.TestCase.class);
-        set.add(SkylineAuditLogParser.TestCase.class);
-        set.add(SampleFile.TestCase.class);
-        return set;
-
+        return Set.of(
+            ComparisonCategory.TestCase.class,
+            ReplicateLabelMinimizer.TestCase.class,
+            SampleFile.TestCase.class,
+            SkylineAuditLogParser.TestCase.class,
+            TargetedMSController.TestCase.class
+        );
     }
 
     @Override
