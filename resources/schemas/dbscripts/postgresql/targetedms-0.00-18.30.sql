@@ -1732,3 +1732,8 @@ ALTER TABLE targetedms.JournalExperiment ADD COLUMN PxidRequested BOOLEAN NOT NU
 ALTER TABLE targetedms.JournalExperiment ADD COLUMN KeepPrivate BOOLEAN NOT NULL DEFAULT '1';
 
 ALTER TABLE targetedms.spectrumlibrary ALTER COLUMN Name TYPE VARCHAR(400);
+
+/* targetedms-18.20-18.30.sql */
+
+ALTER TABLE targetedms.experimentannotations ALTER COLUMN Organism TYPE VARCHAR(300);
+ALTER TABLE targetedms.Replicate ADD COLUMN SampleDilutionFactor DOUBLE PRECISION;

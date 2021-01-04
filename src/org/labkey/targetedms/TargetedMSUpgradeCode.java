@@ -29,14 +29,9 @@ import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.UpgradeCode;
-import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExpRun;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.pipeline.PipeRoot;
-import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 
@@ -88,103 +83,6 @@ public class TargetedMSUpgradeCode implements UpgradeCode
         sql.add(name);
         sql.add(color);
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
-    }
-
-    // Called at 18.21 - 18.22
-    @SuppressWarnings({"UnusedDeclaration"})
-    @DeferredUpgrade
-    public void updateExpSkydData(final ModuleContext moduleContext)
-    {
-        String updateRunIdSql = "UPDATE exp.data SET runId=? WHERE rowId=?";;
-        String updateSql = "UPDATE exp.data SET runId=?, container=?, dataFileUrl=? WHERE rowId=?";
-
-        ExperimentService expService = ExperimentService.get();
-        DbSchema expSchema = expService.getSchema();
-
-        TableSelector ts = new TableSelector(TargetedMSManager.getTableInfoRuns(), new SimpleFilter(FieldKey.fromParts("SkydDataId"), null, CompareType.NONBLANK), null);
-        ts.forEachBatch(TargetedMSRun.class, 1000, batch -> {
-            try (DbScope.Transaction transaction = expSchema.getScope().ensureTransaction())
-            {
-                ArrayList<Collection<Object>> runIdParamList = new ArrayList<>();
-                ArrayList<Collection<Object>> paramList = new ArrayList<>();
-
-                for (TargetedMSRun run : batch)
-                {
-                    Integer skydDataId = run.getSkydDataId();
-
-                    ExpRun expRun = expService.getExpRun(run.getExperimentRunLSID());
-                    ExpData expData = expService.getExpData(run.getSkydDataId());
-                    if(expRun != null && expData != null)
-                    {
-                        List<Object> params = new ArrayList<>();
-                        params.add(expRun.getRowId()); // runId
-
-                        if(run.getContainer().equals(expData.getContainer()))
-                        {
-                            params.add(expData.getRowId());
-                            runIdParamList.add(params);
-                        }
-                        else
-                        {
-                            // Run has been moved from the original container.  Update container and datafileurl in exp.data
-                            params.add(run.getContainer()); // container
-
-                            PipeRoot targetRoot = PipelineService.get().findPipelineRoot(run.getContainer());
-                            if(targetRoot != null)
-                            {
-                                PipeRoot sourceRoot = PipelineService.get().findPipelineRoot(expData.getContainer());
-                                if(sourceRoot != null)
-                                {
-                                    // Issue 35812: TargetedMS upgrade code throws exception if run has been moved from and container whose file root is S3
-                                    // Instead of Paths.get() use PipeRoot.resolveToNioPathFromUrl(URL) or PipeRoot.resolveToNioPath(String), because they know how to use the cloud module for S3 paths
-                                    Path sourceFilePath = sourceRoot.resolveToNioPathFromUrl(expData.getDataFileUrl());
-                                    if (sourceFilePath != null)
-                                    {
-                                        Path destFile = targetRoot.getRootNioPath().resolve(sourceFilePath.getParent().getFileName()) // Name of the exploded directory
-                                                                                   .resolve(sourceFilePath.getFileName());            // Name of the .skyd file
-                                        if (Files.exists(destFile))
-                                        {
-                                            params.add(destFile.toUri().toString()); // dataFileUrl
-                                        }
-                                        else
-                                        {
-                                            params.add(expData.getDataFileUrl());
-                                            LOG.warn("Target destination file " + destFile.toString() + " does not exist for exp.data rowId " + expData.getRowId());
-                                        }
-                                    }
-                                    else
-                                    {
-                                        LOG.warn("Cannot resolve dataFileUrl \"" + expData.getDataFileUrl() + "\" for exp.data rowId " + expData.getRowId());
-                                    }
-                                }
-                                else
-                                {
-                                    LOG.warn("Could not get pipeline root for source container " + expData.getContainer().getPath() +", exp.data rowId " + expData.getRowId());
-                                }
-                            }
-                            else
-                            {
-                                LOG.warn("Could not get pipeline root for target container " + run.getContainer().getPath() +", targetedms runId " + run.getId());
-                            }
-
-                            params.add(expData.getRowId());
-                            paramList.add(params);
-                        }
-                    }
-                }
-                if(paramList.size() > 0)
-                {
-                    Table.batchExecute(expSchema, updateSql, paramList);
-                }
-                if(runIdParamList.size() > 0)
-                {
-                    Table.batchExecute(expSchema, updateRunIdSql, runIdParamList);
-                }
-
-                transaction.commit();
-            }
-        });
-
     }
 
     // Called at 18.31 - 18.32

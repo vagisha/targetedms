@@ -1881,3 +1881,8 @@ ALTER TABLE targetedms.JournalExperiment ADD KeepPrivate BIT NOT NULL DEFAULT '1
 
 ALTER TABLE targetedms.spectrumlibrary ALTER COLUMN Name NVARCHAR(400);
 GO
+
+/* targetedms-18.20-18.30.sql */
+
+ALTER TABLE targetedms.experimentannotations ALTER COLUMN Organism NVARCHAR(300);
+ALTER TABLE targetedms.Replicate ADD SampleDilutionFactor DOUBLE PRECISION;
