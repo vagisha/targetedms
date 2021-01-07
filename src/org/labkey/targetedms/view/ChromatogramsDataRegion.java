@@ -175,8 +175,7 @@ public class ChromatogramsDataRegion extends DataRegion
             url.replaceParameter("maxRowSize", rowSize);
 
             boolean checked = rowSize == maxRowSize;
-            NavTree item = pageSizeMenu.addMenuItem(String.valueOf(rowSize) + " per row",
-                                                    url.toString(), null, checked);
+            NavTree item = pageSizeMenu.addMenuItem(rowSize + " per row", url, null, checked);
             item.setId("Row Size:" + rowSize);
         }
 
@@ -217,8 +216,8 @@ public class ChromatogramsDataRegion extends DataRegion
         for (Integer pageSize : sizes)
         {
             boolean checked = pageSize == maxRows;
-            NavTree item = pageSizeMenu.addMenuItem(String.valueOf(pageSize) + " per page", null,
-                    getJavaScriptObjectReference() + ".setMaxRows(" + String.valueOf(pageSize) + ");", checked);
+            NavTree item = pageSizeMenu.addMenuItem(pageSize + " per page", null,
+                    getJavaScriptObjectReference() + ".setMaxRows(" + pageSize + ");", checked);
             item.setId("Page Size:" + pageSize);
         }
 
