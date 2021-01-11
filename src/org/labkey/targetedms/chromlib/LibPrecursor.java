@@ -19,6 +19,8 @@ import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,6 +47,14 @@ public class LibPrecursor extends AbstractLibPrecursor<LibTransition>
         super(precursor, isotopeLabelMap, bestChromInfo, run, sampleFileIdMap);
         setNeutralMass(precursor.getNeutralMass());
         setModifiedSequence(precursor.getModifiedSequence());
+    }
+
+    public LibPrecursor(ResultSet rs) throws SQLException
+    {
+        super(rs);
+        setPeptideId(rs.getInt(Constants.PrecursorColumn.PeptideId.baseColumn().name()));
+        setNeutralMass(rs.getDouble(Constants.PrecursorColumn.NeutralMass.baseColumn().name()));
+        setModifiedSequence(rs.getString(Constants.PrecursorColumn.ModifiedSequence.baseColumn().name()));
     }
 
     public long getPeptideId()
