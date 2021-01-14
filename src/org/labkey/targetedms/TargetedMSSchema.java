@@ -1258,7 +1258,7 @@ public class TargetedMSSchema extends UserSchema
             return result;
         }
 
-        if (TABLE_TRANSITION_ANNOTATION.equalsIgnoreCase(name))
+        if (TABLE_TRANSITION_ANNOTATION.equalsIgnoreCase(name) || TABLE_TRANSITION_OPTIMIZATION.equalsIgnoreCase(name))
         {
             TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.TransitionFK);
             TargetedMSSchema targetedMSSchema = this;
@@ -1458,6 +1458,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_GENERAL_MOLECULE_ANNOTATION);
         hs.add(TABLE_PEPTIDE_AREA_RATIO);
         hs.add(TABLE_TRANSITION_ANNOTATION);
+        hs.add(TABLE_TRANSITION_OPTIMIZATION);
         hs.add(TABLE_TRANSITION_CHROM_INFO);
         hs.add(TABLE_TRANSITION_AREA_RATIO);
         hs.add(TABLE_TRANSITION_FULL_SCAN_SETTINGS);

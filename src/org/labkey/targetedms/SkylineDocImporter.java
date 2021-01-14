@@ -263,6 +263,7 @@ public class SkylineDocImporter
         }
         catch (IOException | XMLStreamException | RuntimeException | PipelineJobException | AuditLogException e)
         {
+            _log.error("Import failed", e);
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
             throw e;
         }
@@ -1326,7 +1327,7 @@ public class SkylineDocImporter
 
             for (MoleculePrecursor moleculePrecursor : molecule.getMoleculePrecursorsList())
             {
-                insertMoleculePrecursor(molecule, moleculePrecursor, skylineIdSampleFileIdMap, modInfo, sampleFileIdGeneralMolChromInfoIdMap, parser);
+                insertMoleculePrecursor(optimizationInfo, molecule, moleculePrecursor, skylineIdSampleFileIdMap, modInfo, sampleFileIdGeneralMolChromInfoIdMap, parser);
             }
         }
 
@@ -1435,8 +1436,8 @@ public class SkylineDocImporter
         Table.insert(_user, TargetedMSManager.getTableInfoPeptideStructuralModification(), mod);
     }
 
-    private void insertMoleculePrecursor(Molecule molecule, MoleculePrecursor moleculePrecursor,
-                                         Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
+    private void insertMoleculePrecursor(OptimizationInfo optimizationInfo, Molecule molecule,
+                                         MoleculePrecursor moleculePrecursor, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                          ModificationInfo modInfo,
                                          Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap, SkylineDocumentParser parser)
     {
@@ -1455,7 +1456,7 @@ public class SkylineDocImporter
 
         for(MoleculeTransition moleculeTransition: moleculePrecursor.getTransitionsList())
         {
-            insertMoleculeTransition(moleculePrecursor, moleculeTransition, skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap, parser);
+            insertMoleculeTransition(optimizationInfo, moleculePrecursor, moleculeTransition, skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap, parser);
         }
     }
 
@@ -1469,8 +1470,8 @@ public class SkylineDocImporter
         }
     }
 
-    private void insertMoleculeTransition(MoleculePrecursor moleculePrecursor, MoleculeTransition moleculeTransition,
-                                          Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
+    private void insertMoleculeTransition(OptimizationInfo optimizationInfo, MoleculePrecursor moleculePrecursor,
+                                          MoleculeTransition moleculeTransition, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                           Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap,
                                           SkylineDocumentParser parser)
     {
@@ -1497,6 +1498,9 @@ public class SkylineDocImporter
 
         //small molecule transition annotations
         insertTransitionAnnotation(moleculeTransition.getAnnotations(), moleculeTransition.getId()); //adding small molecule transition annotation in TransitionAnnotation table. We might need to change this if we decide to have a separate MoleculeTransitionAnnotation table in the future.
+
+        // Insert appropriate CE and DP transition optimizations
+        insertTransitionOptimization(optimizationInfo, moleculeTransition);
 
         insertTransitionChromInfos(gt.getId(), moleculeTransition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap, parser);
     }
@@ -1639,22 +1643,7 @@ public class SkylineDocImporter
         insertTransitionAnnotation(transition.getAnnotations(), transition.getId());
 
         // Insert appropriate CE and DP transition optimizations
-        if (optimizationInfo._insertCEOptmizations && transition.getCollisionEnergy() != null)
-        {
-            TransitionOptimization ceOpt = new TransitionOptimization();
-            ceOpt.setTransitionId(transition.getId());
-            ceOpt.setOptValue(transition.getCollisionEnergy());
-            ceOpt.setOptimizationType("ce");
-            Table.insert(_user, TargetedMSManager.getTableInfoTransitionOptimization(), ceOpt);
-        }
-        if (optimizationInfo._insertDPOptmizations && transition.getDeclusteringPotential() != null)
-        {
-            TransitionOptimization dpOpt = new TransitionOptimization();
-            dpOpt.setTransitionId(transition.getId());
-            dpOpt.setOptValue(transition.getDeclusteringPotential());
-            dpOpt.setOptimizationType("dp");
-            Table.insert(_user, TargetedMSManager.getTableInfoTransitionOptimization(), dpOpt);
-        }
+        insertTransitionOptimization(optimizationInfo, transition);
 
         // transition results
         insertTransitionChromInfos(gt.getId(), transition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap, parser);
@@ -1708,6 +1697,26 @@ public class SkylineDocImporter
                                                 +"; Transition: "+transition.toString()
                                                 +"; Precursor: "+precursor.getModifiedSequence());
             }
+        }
+    }
+
+    private void insertTransitionOptimization(OptimizationInfo optimizationInfo, GeneralTransition transition)
+    {
+        if (optimizationInfo._insertCEOptmizations && transition.getCollisionEnergy() != null)
+        {
+            TransitionOptimization ceOpt = new TransitionOptimization();
+            ceOpt.setTransitionId(transition.getId());
+            ceOpt.setOptValue(transition.getCollisionEnergy());
+            ceOpt.setOptimizationType("ce");
+            Table.insert(_user, TargetedMSManager.getTableInfoTransitionOptimization(), ceOpt);
+        }
+        if (optimizationInfo._insertDPOptmizations && transition.getDeclusteringPotential() != null)
+        {
+            TransitionOptimization dpOpt = new TransitionOptimization();
+            dpOpt.setTransitionId(transition.getId());
+            dpOpt.setOptValue(transition.getDeclusteringPotential());
+            dpOpt.setOptimizationType("dp");
+            Table.insert(_user, TargetedMSManager.getTableInfoTransitionOptimization(), dpOpt);
         }
     }
 

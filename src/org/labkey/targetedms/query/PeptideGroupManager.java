@@ -66,7 +66,7 @@ public class PeptideGroupManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(PeptideGroup.class);
     }
 
-    public static void updateRepresentativeStatus(List<Integer> peptideGroupIds, RepresentativeDataState representativeState)
+    public static void updateRepresentativeStatus(List<Long> peptideGroupIds, RepresentativeDataState representativeState)
     {
         if(peptideGroupIds == null || peptideGroupIds.size() == 0)
             return;
@@ -109,11 +109,11 @@ public class PeptideGroupManager
     // Set to either NotRepresentative or Representative_Deprecated.
     // If the original status was Representative it will be updated to Representative_Deprecated.
     // If the original status was Conflicted it will be update to NotRepresentative.
-    public static void updateStatusToDeprecatedOrNotRepresentative(int[] peptideGroupIds)
+    public static void updateStatusToDeprecatedOrNotRepresentative(long[] peptideGroupIds)
     {
         if(peptideGroupIds == null || peptideGroupIds.length == 0)
             return;
-        List<Integer> peptideGroupIdList = new ArrayList<>(peptideGroupIds.length);
+        List<Long> peptideGroupIdList = new ArrayList<>(peptideGroupIds.length);
         for(int i = 0; i < peptideGroupIds.length; i++)
         {
             peptideGroupIdList.add(peptideGroupIds[i]);
@@ -122,7 +122,7 @@ public class PeptideGroupManager
         updateStatusToDeprecatedOrNotRepresentative(peptideGroupIdList);
     }
 
-    public static void updateStatusToDeprecatedOrNotRepresentative(List<Integer> peptideGroupIds)
+    public static void updateStatusToDeprecatedOrNotRepresentative(List<Long> peptideGroupIds)
     {
         if(peptideGroupIds == null || peptideGroupIds.size() == 0)
             return;
@@ -198,15 +198,15 @@ public class PeptideGroupManager
         return new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
-    public static boolean ensureContainerMembership(List<Integer> peptideGroupIds, Container container)
+    public static boolean ensureContainerMembership(List<Long> peptideGroupIds, Container container)
     {
         if(peptideGroupIds == null || peptideGroupIds.isEmpty())
             return false;
 
-        Set<Integer> uniqueIds = new HashSet<>(peptideGroupIds);
+        Set<Long> uniqueIds = new HashSet<>(peptideGroupIds);
 
         StringBuilder pepGrpIds = new StringBuilder();
-        for(Integer id: uniqueIds)
+        for(Long id: uniqueIds)
         {
             pepGrpIds.append(",").append(id);
         }

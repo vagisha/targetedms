@@ -408,8 +408,8 @@ public class TransitionSettings
         private String _productMassType;
         private String _optimizeBy;
 
-        private long _cePredictorId;
-        private long _dpPredictorId;
+        private Long _cePredictorId;
+        private Long _dpPredictorId;
 
         private Predictor _cePredictor;
         private Predictor _dpPredictor;
@@ -454,22 +454,22 @@ public class TransitionSettings
             _optimizeBy = optimizeBy;
         }
 
-        public long getCePredictorId()
+        public Long getCePredictorId()
         {
             return _cePredictorId;
         }
 
-        public void setCePredictorId(long cePredictorId)
+        public void setCePredictorId(Long cePredictorId)
         {
             _cePredictorId = cePredictorId;
         }
 
-        public long getDpPredictorId()
+        public Long getDpPredictorId()
         {
             return _dpPredictorId;
         }
 
-        public void setDpPredictorId(long dpPredictorId)
+        public void setDpPredictorId(Long dpPredictorId)
         {
             _dpPredictorId = dpPredictorId;
         }
@@ -498,7 +498,7 @@ public class TransitionSettings
     public static final class Predictor extends SkylineEntity
     {
         private String _name;
-        private Float _stepSize;
+        private Double _stepSize;
         private Integer _stepCount;
 
         private List<PredictorSettings> _settings;
@@ -513,12 +513,12 @@ public class TransitionSettings
             _name = name;
         }
 
-        public Float getStepSize()
+        public Double getStepSize()
         {
             return _stepSize;
         }
 
-        public void setStepSize(Float stepSize)
+        public void setStepSize(Double stepSize)
         {
             _stepSize = stepSize;
         }

@@ -16,6 +16,7 @@
 package org.labkey.targetedms.chromlib;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * User: vsharma
@@ -31,6 +32,8 @@ public class LibSampleFile extends AbstractLibEntity
     private String _instrumentIonizationType;
     private String _instrumentAnalyzer;
     private String _instrumentDetector;
+    private Integer _cePredictorId;
+    private Integer _dpPredictorId;
 
     public String getFilePath()
     {
@@ -102,38 +105,46 @@ public class LibSampleFile extends AbstractLibEntity
         _instrumentDetector = instrumentDetector;
     }
 
+    public Integer getCePredictorId()
+    {
+        return _cePredictorId;
+    }
+
+    public void setCePredictorId(Integer cePredictorId)
+    {
+        _cePredictorId = cePredictorId;
+    }
+
+    public Integer getDpPredictorId()
+    {
+        return _dpPredictorId;
+    }
+
+    public void setDpPredictorId(Integer dpPredictorId)
+    {
+        _dpPredictorId = dpPredictorId;
+    }
+
     @Override
     public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         LibSampleFile that = (LibSampleFile) o;
-
-        if (_acquiredTime != null ? !_acquiredTime.equals(that._acquiredTime) : that._acquiredTime != null) return false;
-        if (!_filePath.equals(that._filePath)) return false;
-        if (_instrumentAnalyzer != null ? !_instrumentAnalyzer.equals(that._instrumentAnalyzer) : that._instrumentAnalyzer != null)
-            return false;
-        if (_instrumentDetector != null ? !_instrumentDetector.equals(that._instrumentDetector) : that._instrumentDetector != null)
-            return false;
-        if (_instrumentIonizationType != null ? !_instrumentIonizationType.equals(that._instrumentIonizationType) : that._instrumentIonizationType != null)
-            return false;
-        if (_modifiedTime != null ? !_modifiedTime.equals(that._modifiedTime) : that._modifiedTime != null) return false;
-        if (!_sampleName.equals(that._sampleName)) return false;
-
-        return true;
+        return Objects.equals(_filePath, that._filePath) &&
+                Objects.equals(_sampleName, that._sampleName) &&
+                Objects.equals(_acquiredTime, that._acquiredTime) &&
+                Objects.equals(_modifiedTime, that._modifiedTime) &&
+                Objects.equals(_instrumentIonizationType, that._instrumentIonizationType) &&
+                Objects.equals(_instrumentAnalyzer, that._instrumentAnalyzer) &&
+                Objects.equals(_instrumentDetector, that._instrumentDetector) &&
+                Objects.equals(_cePredictorId, that._cePredictorId) &&
+                Objects.equals(_dpPredictorId, that._dpPredictorId);
     }
 
     @Override
     public int hashCode()
     {
-        int result = _filePath.hashCode();
-        result = 31 * result + _sampleName.hashCode();
-        result = 31 * result + (_acquiredTime != null ? _acquiredTime.hashCode() : 0);
-        result = 31 * result + (_modifiedTime != null ? _modifiedTime.hashCode() : 0);
-        result = 31 * result + (_instrumentIonizationType != null ? _instrumentIonizationType.hashCode() : 0);
-        result = 31 * result + (_instrumentAnalyzer != null ? _instrumentAnalyzer.hashCode() : 0);
-        result = 31 * result + (_instrumentDetector != null ? _instrumentDetector.hashCode() : 0);
-        return result;
+        return Objects.hash(_filePath, _sampleName, _acquiredTime, _modifiedTime, _instrumentIonizationType, _instrumentAnalyzer, _instrumentDetector, _cePredictorId, _dpPredictorId);
     }
 }

@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * User: vsharma
@@ -92,6 +93,8 @@ public class XmlUtil
     {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)
+            return defaultValue;
+        else if (Objects.equals(Double.parseDouble(value.trim()), Double.NaN))
             return defaultValue;
         return Double.parseDouble(value.trim());
     }

@@ -54,6 +54,9 @@ public class ChromatogramLibraryWriter
     private Dao<LibMoleculeList> _moleculeListDao;
     private Dao<LibMolecule> _moleculeDao;
 
+    //Predictor
+    private Dao<LibPredictor> _predictorDao;
+
     // Maps are keyed with the Panorama DB rowId values
     private final Map<Long, LibProtein> _libProteinCache = new LinkedHashMap<>();
     private final Map<Long, LibMoleculeList> _libMoleculeListCache = new LinkedHashMap<>();
@@ -94,17 +97,19 @@ public class ChromatogramLibraryWriter
 
         Dao<LibPrecursor> precursorDao = new LibPrecursorDao(new LibPrecursorIsotopeModificationDao(),
                 new LibPrecursorRetentionTimeDao(Constants.Column.PrecursorId),
-                new LibTransitionDao());
+                new LibTransitionDao(new LibTransitionOptimizationDao()));
         _peptideDao = new LibPeptideDao(new LibPeptideStructuralModDao(), precursorDao);
         _proteinDao = new LibProteinDao(_peptideDao);
 
         Dao<LibMoleculePrecursor> moleculePrecursorDao = new LibMoleculePrecursorDao(
                 new LibPrecursorRetentionTimeDao(Constants.Column.MoleculePrecursorId),
-                new LibMoleculeTransitionDao());
+                new LibMoleculeTransitionDao(new LibMoleculeTransitionOptimizationDao()));
         _moleculeDao = new LibMoleculeDao(moleculePrecursorDao);
         _moleculeListDao = new LibMoleculeListDao(_moleculeDao);
 
         _irtLibraryDao = new LibIrtLibraryDao();
+
+        _predictorDao = new LibPredictorDao();
     }
 
     private Connection getConnection() throws SQLException
@@ -126,8 +131,11 @@ public class ChromatogramLibraryWriter
 
     private void flushCache() throws SQLException
     {
-        flush(_proteinDao, _libProteinCache.values());
-        flush(_moleculeListDao, _libMoleculeListCache.values());
+        if (null != _proteinDao && null != _moleculeListDao)
+        {
+            flush(_proteinDao, _libProteinCache.values());
+            flush(_moleculeListDao, _libMoleculeListCache.values());
+        }
     }
 
     public void writeLibInfo(LibInfo libInfo) throws SQLException
@@ -174,6 +182,11 @@ public class ChromatogramLibraryWriter
                 new LibMoleculeList(PeptideGroupManager.get(id)));
         _moleculeCount++;
         moleculeList.addChild(libMolecule);
+    }
+
+    public void writePredictor(LibPredictor predictor) throws SQLException
+    {
+        saveEntry(_predictorDao, predictor);
     }
 
     public int getProteinCount()

@@ -182,7 +182,7 @@ public class RepresentativeStateManager
     private static int resolveRepresentativeProteinState(Container container, TargetedMSRun run)
     {
         // Get a list of peptide group ids that only have either decoy or standard peptides
-        List<Integer> peptideGroupIdsToExclude = getAllDecoyOrStandardPeptideGroups(run);
+        List<Long> peptideGroupIdsToExclude = getAllDecoyOrStandardPeptideGroups(run);
 
         // Mark everything in this run that doesn't already have representative data in this container as being active
         SQLFragment makeActiveSQL = new SQLFragment("UPDATE " + TargetedMSManager.getTableInfoPeptideGroup());
@@ -261,7 +261,7 @@ public class RepresentativeStateManager
         // "standard" protein (containing only standard peptides) will be marked as representative.
         // If this run has "standard" proteins, mark them as being representative.
         // Older versions of the proteins, from previous runs, will be marked as deprecated.
-        List<Integer> standardPeptideGroupIds = getAllStandardPeptideGroups(run);
+        List<Long> standardPeptideGroupIds = getAllStandardPeptideGroups(run);
         if(standardPeptideGroupIds != null && standardPeptideGroupIds.size() > 0)
         {
             updateStandardPeptideGroups(container, standardPeptideGroupIds);
@@ -275,11 +275,11 @@ public class RepresentativeStateManager
         return conflictCount;
     }
 
-    private static void updateStandardPeptideGroups(Container container, List<Integer> stdPepGrpIdsInRun)
+    private static void updateStandardPeptideGroups(Container container, List<Long> stdPepGrpIdsInRun)
     {
         // Get a list of the current standard peptide group ids in the folder that have the same label
         // as the standard peptide groups in the new run.
-        List<Integer> currentStdPepGrpIds = getCurrentStandardPeptideGroupIds(container, stdPepGrpIdsInRun);
+        List<Long> currentStdPepGrpIds = getCurrentStandardPeptideGroupIds(container, stdPepGrpIdsInRun);
 
         // Set RepresentativeDataState of the new ones to Representative.
         PeptideGroupManager.updateRepresentativeStatus(stdPepGrpIdsInRun, RepresentativeDataState.Representative);
@@ -288,7 +288,7 @@ public class RepresentativeStateManager
         PeptideGroupManager.updateStatusToDeprecatedOrNotRepresentative(currentStdPepGrpIds);
     }
 
-    private static List<Integer> getCurrentStandardPeptideGroupIds(Container container, List<Integer> stdPepGrpIdsInRun)
+    private static List<Long> getCurrentStandardPeptideGroupIds(Container container, List<Long> stdPepGrpIdsInRun)
     {
         SQLFragment sql = new SQLFragment("SELECT pg.Id FROM ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
@@ -304,22 +304,22 @@ public class RepresentativeStateManager
         sql.append(")");
         sql.append(" AND pg.RepresentativeDataState=").append(RepresentativeDataState.Representative.ordinal());
 
-        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Integer.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Long.class);
     }
 
-    private static List<Integer> getAllDecoyOrStandardPeptideGroups(TargetedMSRun run)
+    private static List<Long> getAllDecoyOrStandardPeptideGroups(TargetedMSRun run)
     {
         // Get a list of peptide group ids that only have either decoy or standard peptides
         return getFilteredPeptideGroupIds(run, true, true);
     }
 
-    private static List<Integer> getAllStandardPeptideGroups(TargetedMSRun run)
+    private static List<Long> getAllStandardPeptideGroups(TargetedMSRun run)
     {
         // Get a list of peptide group ids that only have either decoy or standard peptides
         return getFilteredPeptideGroupIds(run, true, false);
     }
 
-    private static List<Integer> getFilteredPeptideGroupIds(TargetedMSRun run, boolean includeStandard, boolean includeDecoy)
+    private static List<Long> getFilteredPeptideGroupIds(TargetedMSRun run, boolean includeStandard, boolean includeDecoy)
     {
         // Get a list of peptide group ids that only have either decoy or standard peptides
         SQLFragment sql = new SQLFragment("SELECT DISTINCT Id FROM " + TargetedMSManager.getTableInfoPeptideGroup());
@@ -348,10 +348,10 @@ public class RepresentativeStateManager
         }
         sql.append(")");
 
-        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Integer.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Long.class);
     }
 
-    private static List<Integer> getStdPrecursorIdsInRun(TargetedMSRun run)
+    private static List<Long> getStdPrecursorIdsInRun(TargetedMSRun run)
     {
         // Get a list of peptide group ids that only have either decoy or standard peptides
         SQLFragment sql = new SQLFragment("SELECT gp.Id FROM ");
@@ -367,10 +367,10 @@ public class RepresentativeStateManager
         sql.append(" ON (pg.Id = gm.PeptideGroupId AND pg.RunId = ?) ");
         sql.add(run.getId());
 
-        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Integer.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Long.class);
     }
 
-    private static List<Integer> getCurrentStandardPrecursorIds(Container container, List<Integer> stdPrecursorIdsInRun, TableInfo precursorTable, BiFunction<String, String, String> joinValue)
+    private static List<Long> getCurrentStandardPrecursorIds(Container container, List<Long> stdPrecursorIdsInRun, TableInfo precursorTable, BiFunction<String, String, String> joinValue)
     {
         if(stdPrecursorIdsInRun == null || stdPrecursorIdsInRun.size() == 0)
         {
@@ -407,7 +407,7 @@ public class RepresentativeStateManager
         sql.add(container);
         sql.append(" WHERE pre1.Id in (").append(StringUtils.join(stdPrecursorIdsInRun, ",")).append(")");
 
-        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Integer.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Long.class);
     }
 
     private static void updatePrecursorRepresentativeState(TargetedMSRun run)
@@ -517,12 +517,12 @@ public class RepresentativeStateManager
         // standard peptides will be marked as representative.
         // If there are standard peptides in this run, we will mark them as representative. Older versions of these
         // peptides, from previous runs, will be marked as deprecated.
-        List<Integer> stdPrecursorIdsInRun = getStdPrecursorIdsInRun(run);
+        List<Long> stdPrecursorIdsInRun = getStdPrecursorIdsInRun(run);
         if(stdPrecursorIdsInRun.size() > 0)
         {
             // Get a list of current representative precursors in the folder that have the same identifier and charge
             // as the standard precursors in the run.
-            List<Integer> currentRepStdPrecursorIds = getCurrentStandardPrecursorIds(container, stdPrecursorIdsInRun, precursorTable, joinValue);
+            List<Long> currentRepStdPrecursorIds = getCurrentStandardPrecursorIds(container, stdPrecursorIdsInRun, precursorTable, joinValue);
 
             PrecursorManager.updateRepresentativeStatus(stdPrecursorIdsInRun, RepresentativeDataState.Representative);
             PrecursorManager.updateStatusToDeprecatedOrNotRepresentative(currentRepStdPrecursorIds);

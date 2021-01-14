@@ -39,6 +39,7 @@ class Constants
     {
         LibInfo,
         IsotopeModification,
+        Predictor,
         SampleFile,
 
         // Proteomics
@@ -51,6 +52,7 @@ class Constants
         PrecursorIsotopeModification,
         PrecursorRetentionTime,
         Transition,
+        TransitionOptimization,
 
         // Small molecule
         MoleculeList,
@@ -58,6 +60,7 @@ class Constants
         MoleculePrecursor,
         MoleculePrecursorRetentionTime,
         MoleculeTransition,
+        MoleculeTransitionOptimization,
 
         IrtLibrary
     }
@@ -85,6 +88,9 @@ class Constants
         InstrumentIonizationType("VARCHAR(100)"),
         InstrumentAnalyzer("VARCHAR(100)"),
         InstrumentDetector("VARCHAR(100)"),
+
+        CePredictorId("INTEGER", Table.Predictor, Id),
+        DpPredictorId("INTEGER", Table.Predictor, Id),
 
         Name,
         AminoAcid,
@@ -172,7 +178,15 @@ class Constants
         PeptideModSeq("TEXT NOT NULL"),
         Irt("DOUBLE"),
         Standard("BOOL"),
-        TimeSource("INT");
+        TimeSource("INT"),
+
+        TransitionId("INTEGER NOT NULL", Table.Transition, Id),
+        OptimizationType("TEXT NOT NULL"),
+        OptimizationValue("DOUBLE NOT NULL"),
+        OptimizationStep("INTEGER"),
+
+        StepSize("DOUBLE"),
+        StepCount("INTEGER");
 
         private final String definition;
         private final Table _fkTable;
@@ -259,7 +273,9 @@ class Constants
         ModifiedTime(Column.ModifiedTime),
         InstrumentIonizationType(Column.InstrumentIonizationType),
         InstrumentAnalyzer(Column.InstrumentAnalyzer),
-        InstrumentDetector(Column.InstrumentDetector);
+        InstrumentDetector(Column.InstrumentDetector),
+        CePredictorId(Column.CePredictorId),
+        DpPredictorId(Column.DpPredictorId);
 
         private final Column _column;
 
@@ -611,7 +627,8 @@ class Constants
         SampleFileId(Column.SampleFileId),
         RetentionTime(Column.RetentionTime),
         StartTime(Column.StartTime),
-        EndTime(Column.EndTime);
+        EndTime(Column.EndTime),
+        OptimizationStep(Column.OptimizationStep);
 
         private final Column _column;
 
@@ -768,7 +785,8 @@ class Constants
         SampleFileId(Column.SampleFileId),
         RetentionTime(Column.RetentionTime),
         StartTime(Column.StartTime),
-        EndTime(Column.EndTime);
+        EndTime(Column.EndTime),
+        OptimizationStep(Column.OptimizationStep);
 
         private final Column _column;
 
@@ -831,8 +849,6 @@ class Constants
         }
     }
 
-
-
     public enum IrtLibraryColumn implements ColumnDef
     {
         Id(Column.Id),
@@ -845,6 +861,94 @@ class Constants
         private final String _definition;
 
         IrtLibraryColumn(Column column)
+        {
+            _column = column;
+            _definition = column.definition;
+        }
+
+        @Override
+        public Column baseColumn()
+        {
+            return _column;
+        }
+
+        @Override
+        public String definition()
+        {
+            return _definition;
+        }
+    }
+
+    public enum TransitionOptimizationColumn implements ColumnDef
+    {
+        Id(Column.Id),
+        TransitionId(Column.TransitionId),
+        OptimizationType(Column.OptimizationType),
+        OptimizationValue(Column.OptimizationValue);
+
+        private final Column _column;
+        private final String _definition;
+
+        TransitionOptimizationColumn(Column column)
+        {
+            _column = column;
+            _definition = column.definition;
+        }
+
+        @Override
+        public Column baseColumn()
+        {
+            return _column;
+        }
+
+        @Override
+        public String definition()
+        {
+            return _definition;
+        }
+    }
+
+    public enum MoleculeTransitionOptimizationColumn implements ColumnDef
+    {
+        Id(Column.Id),
+        TransitionId(Column.TransitionId),
+        OptimizationType(Column.OptimizationType),
+        OptimizationValue(Column.OptimizationValue);
+
+        private final Column _column;
+        private final String _definition;
+
+        MoleculeTransitionOptimizationColumn(Column column)
+        {
+            _column = column;
+            _definition = column.definition;
+        }
+
+
+        @Override
+        public Column baseColumn()
+        {
+            return _column;
+        }
+
+        @Override
+        public String definition()
+        {
+            return _definition;
+        }
+    }
+
+    public enum PredictorColumn implements ColumnDef
+    {
+        Id(Column.Id),
+        Name(Column.Name),
+        StepSize(Column.StepSize),
+        StepCount(Column.StepCount);
+
+        private final Column _column;
+        private final String _definition;
+
+        PredictorColumn(Column column)
         {
             _column = column;
             _definition = column.definition;

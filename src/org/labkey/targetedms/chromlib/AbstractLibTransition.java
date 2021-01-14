@@ -16,6 +16,9 @@ public abstract class AbstractLibTransition extends AbstractLibEntity
     protected Integer _chromatogramIndex;
     protected Double _massErrorPPM;
 
+    private Double _collisionEnergy;
+    private Double _declusteringPotential;
+
     public AbstractLibTransition() {}
 
     public AbstractLibTransition(GeneralTransition transition, TransitionChromInfo tci)
@@ -38,6 +41,15 @@ public abstract class AbstractLibTransition extends AbstractLibEntity
             setArea(0.0);
             setHeight(0.0);
             setFwhm(0.0);
+        }
+
+        if (transition.getCollisionEnergy() != null)
+        {
+            setCollisionEnergy(transition.getCollisionEnergy());
+        }
+        if (transition.getDeclusteringPotential() != null)
+        {
+            setDeclusteringPotential(transition.getDeclusteringPotential());
         }
 
     }
@@ -132,4 +144,23 @@ public abstract class AbstractLibTransition extends AbstractLibEntity
         return _massErrorPPM;
     }
 
+    public Double getCollisionEnergy()
+    {
+        return _collisionEnergy;
+    }
+
+    public void setCollisionEnergy(Double collisionEnergy)
+    {
+        _collisionEnergy = collisionEnergy;
+    }
+
+    public Double getDeclusteringPotential()
+    {
+        return _declusteringPotential;
+    }
+
+    public void setDeclusteringPotential(Double declusteringPotential)
+    {
+        _declusteringPotential = declusteringPotential;
+    }
 }

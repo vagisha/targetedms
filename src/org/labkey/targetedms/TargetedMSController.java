@@ -4872,8 +4872,8 @@ public class TargetedMSController extends SpringActionController
                 return false;
             }
 
-            List<Integer> selectedIds = resolveConflictForm.getSelectedIds();
-            List<Integer> deselectIds = resolveConflictForm.getDeselectedIds();
+            List<Long> selectedIds = resolveConflictForm.getSelectedIds();
+            List<Long> deselectIds = resolveConflictForm.getDeselectedIds();
 
             if (selectedIds == null || selectedIds.isEmpty())
             {
@@ -4980,8 +4980,8 @@ public class TargetedMSController extends SpringActionController
     {
         public String _conflictLevel; // Either 'peptide' or 'protein'
         public String _selectedInputValues;
-        private List<Integer> _selectedIds;
-        private List<Integer> _deselectedIds;
+        private List<Long> _selectedIds;
+        private List<Long> _deselectedIds;
 
         public String getConflictLevel()
         {
@@ -5012,8 +5012,8 @@ public class TargetedMSController extends SpringActionController
                     int idx = value.indexOf('_');
                     if(idx != -1)
                     {
-                        int selected = Integer.parseInt(value.substring(0, idx));
-                        int deselected = Integer.parseInt(value.substring(idx+1));
+                        long selected = Long.parseLong(value.substring(0, idx));
+                        long deselected = Long.parseLong(value.substring(idx+1));
                         _selectedIds.add(selected);
                         _deselectedIds.add(deselected);
                     }
@@ -5021,12 +5021,12 @@ public class TargetedMSController extends SpringActionController
             }
         }
 
-        public List<Integer> getSelectedIds()
+        public List<Long> getSelectedIds()
         {
             return _selectedIds;
         }
 
-        public List<Integer> getDeselectedIds()
+        public List<Long> getDeselectedIds()
         {
             return _deselectedIds;
         }
@@ -5206,7 +5206,7 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(DownloadForm form, BindException errors) throws Exception
         {
             // Check if the folder has any representative data
-            List<Integer> representativeRunIds = TargetedMSManager.getCurrentRepresentativeRunIds(getContainer());
+            List<Long> representativeRunIds = TargetedMSManager.getCurrentRepresentativeRunIds(getContainer());
             if(representativeRunIds.size() == 0)
             {
                 //errors.reject(ERROR_MSG, "Folder "+getContainer().getPath()+" does not contain any representative data.");
@@ -6636,7 +6636,7 @@ public class TargetedMSController extends SpringActionController
     {
         private String _title;
         private String _description;
-        private Integer[] _selectedIds;
+        private Long[] _selectedIds;
 
         public String getTitle()
         {
@@ -6658,12 +6658,12 @@ public class TargetedMSController extends SpringActionController
             return _description;
         }
 
-        public Integer[] getSelectedIds()
+        public Long[] getSelectedIds()
         {
             return _selectedIds;
         }
 
-        public void setSelectedIds(Integer[] selectedIds)
+        public void setSelectedIds(Long[] selectedIds)
         {
             _selectedIds = selectedIds;
         }

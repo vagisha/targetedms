@@ -30,6 +30,7 @@ import org.labkey.targetedms.model.QCMetricExclusion;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.parser.TransitionSettings;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -217,5 +218,12 @@ public class ReplicateManager
         sql.append(" ORDER BY Name, Value");
 
         return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(ReplicateAnnotation.class));
+    }
+
+    public static TransitionSettings.Predictor getReplicatePredictor(long predictorId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoPredictor(),
+                new SimpleFilter(FieldKey.fromParts("Id"), predictorId), null)
+                .getObject(TransitionSettings.Predictor.class);
     }
 }

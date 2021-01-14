@@ -28,6 +28,7 @@ public class LibPrecursorRetentionTime extends AbstractLibEntity
     private Double _retentionTime;
     private Double _startTime;
     private Double _endTime;
+    private Integer _optimizationStep;
 
     public long getPrecursorId()
     {
@@ -77,6 +78,16 @@ public class LibPrecursorRetentionTime extends AbstractLibEntity
     public void setEndTime(Double endTime)
     {
         _endTime = endTime;
+    }
+
+    public Integer getOptimizationStep()
+    {
+        return _optimizationStep;
+    }
+
+    public void setOptimizationStep(Integer optimizationStep)
+    {
+        _optimizationStep = optimizationStep;
     }
 
     @Override

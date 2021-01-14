@@ -181,7 +181,7 @@ public class ChromatogramLibraryUtils
             String panoramaServer = AppProps.getInstance().getBaseServerUrl();
 
             // Get a list of runIds that have active representative data
-            List<Integer> representativeRunIds = TargetedMSManager.getCurrentRepresentativeRunIds(container);
+            List<Long> representativeRunIds = TargetedMSManager.getCurrentRepresentativeRunIds(container);
 
             // Get the latest library revision.
             int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(container, user);

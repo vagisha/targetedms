@@ -863,7 +863,7 @@ public class SkylineDocumentParser implements AutoCloseable
         String stepSize = reader.getAttributeValue(null, "step_size");
         if (stepSize != null)
         {
-            predictor.setStepSize(Float.parseFloat(stepSize));
+            predictor.setStepSize(Double.parseDouble(stepSize));
         }
         String stepCount = reader.getAttributeValue(null, "step_count");
         if (stepCount != null)
@@ -2291,6 +2291,14 @@ public class SkylineDocumentParser implements AutoCloseable
                     transition.setMz(productMz);
                 }
                 // Should we blow up if productMz was null?
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, COLLISION_ENERGY))
+            {
+                transition.setCollisionEnergy(XmlUtil.readDouble(reader, COLLISION_ENERGY));
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, DECLUSTERING_POTENTIAL))
+            {
+                transition.setDeclusteringPotential(Double.parseDouble(reader.getElementText()));
             }
             else if(XmlUtil.isStartElement(reader, evtType, TRANSITION_PEAK))
             {

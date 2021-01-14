@@ -18,11 +18,13 @@ package org.labkey.targetedms.chromlib;
 import org.labkey.targetedms.chromlib.Constants.Table;
 import org.labkey.targetedms.chromlib.Constants.TransitionColumn;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -32,7 +34,14 @@ import java.util.List;
  */
 public class LibTransitionDao extends BaseDaoImpl<LibTransition>
 {
-   @Override
+    private final Dao<LibTransitionOptimization> _transitionOptimizationDao;
+
+    public LibTransitionDao(Dao<LibTransitionOptimization> transitionOptimizationDao)
+    {
+        _transitionOptimizationDao = transitionOptimizationDao;
+    }
+
+    @Override
     protected void setValuesInStatement(LibTransition transition, PreparedStatement stmt) throws SQLException
     {
         int colIndex = 1;
@@ -88,5 +97,40 @@ public class LibTransitionDao extends BaseDaoImpl<LibTransition>
             transitions.add(transition);
         }
         return transitions;
+    }
+
+    @Override
+    public void saveAll(Collection<LibTransition> transitions, Connection connection) throws SQLException
+    {
+        if (transitions.size() > 0)
+        {
+            super.saveAll(transitions, connection);
+
+            List<LibTransitionOptimization> transitionOptimizationList = new ArrayList<>();
+
+            if (_transitionOptimizationDao != null)
+            {
+                transitions.forEach(transition -> {
+                    if (null != transition.getCollisionEnergy())
+                    {
+                        LibTransitionOptimization libTransitionOptimization = new LibTransitionOptimization();
+                        libTransitionOptimization.setTransitionId(transition.getId());
+                        libTransitionOptimization.setOptimizationType("ce");
+                        libTransitionOptimization.setOptimizationValue(transition.getCollisionEnergy());
+                        transitionOptimizationList.add(libTransitionOptimization);
+                    }
+                    if (null != transition.getDeclusteringPotential())
+                    {
+                        LibTransitionOptimization libTransitionOptimization = new LibTransitionOptimization();
+                        libTransitionOptimization.setTransitionId(transition.getId());
+                        libTransitionOptimization.setOptimizationType("dp");
+                        libTransitionOptimization.setOptimizationValue(transition.getDeclusteringPotential());
+                        transitionOptimizationList.add(libTransitionOptimization);
+                    }
+                });
+
+                _transitionOptimizationDao.saveAll(transitionOptimizationList, connection);
+            }
+        }
     }
 }

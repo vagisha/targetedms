@@ -495,7 +495,7 @@ public class PrecursorManager
         return new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
-    public static void updateRepresentativeStatus(List<Integer> precursorIds, RepresentativeDataState representativeState)
+    public static void updateRepresentativeStatus(List<Long> precursorIds, RepresentativeDataState representativeState)
     {
         if(precursorIds == null || precursorIds.size() == 0)
             return;
@@ -513,12 +513,12 @@ public class PrecursorManager
     // Set to either NotRepresentative or Representative_Deprecated.
     // If the original status was Representative it will be updated to Representative_Deprecated.
     // If the original status was Conflicted it will be update to NotRepresentative.
-    public static void updateStatusToDeprecatedOrNotRepresentative(int[] precursorIds)
+    public static void updateStatusToDeprecatedOrNotRepresentative(long[] precursorIds)
     {
         if(precursorIds == null || precursorIds.length == 0)
             return;
 
-        List<Integer> precursorIdList = new ArrayList<>(precursorIds.length);
+        List<Long> precursorIdList = new ArrayList<>(precursorIds.length);
         for(int i = 0; i < precursorIds.length; i++)
         {
             precursorIdList.add(precursorIds[i]);
@@ -526,7 +526,7 @@ public class PrecursorManager
         updateStatusToDeprecatedOrNotRepresentative(precursorIdList);
     }
 
-    public static void updateStatusToDeprecatedOrNotRepresentative(List<Integer> precursorIds)
+    public static void updateStatusToDeprecatedOrNotRepresentative(List<Long> precursorIds)
     {
         if(precursorIds == null || precursorIds.size() == 0)
             return;
@@ -544,12 +544,12 @@ public class PrecursorManager
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
-    public static boolean ensureContainerMembership(List<Integer> precursorIds, Container container)
+    public static boolean ensureContainerMembership(List<Long> precursorIds, Container container)
     {
         if(precursorIds == null || precursorIds.isEmpty())
             return false;
         // Dedupe
-        Set<Integer> ids = new HashSet<>(precursorIds);
+        Set<Long> ids = new HashSet<>(precursorIds);
 
         SQLFragment sql = new SQLFragment("SELECT COUNT(pg.Id) FROM ");
         sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");

@@ -17,11 +17,13 @@ package org.labkey.targetedms.chromlib;
 
 import org.labkey.targetedms.chromlib.Constants.Table;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -31,6 +33,14 @@ import java.util.List;
  */
 public class LibMoleculeTransitionDao extends BaseDaoImpl<LibMoleculeTransition>
 {
+
+    private final Dao<LibMoleculeTransitionOptimization> _moleculeTransitionOptimizationDao;
+
+    public LibMoleculeTransitionDao(Dao<LibMoleculeTransitionOptimization> moleculeTransitionOptimizationDao)
+    {
+        _moleculeTransitionOptimizationDao = moleculeTransitionOptimizationDao;
+    }
+
    @Override
     protected void setValuesInStatement(LibMoleculeTransition transition, PreparedStatement stmt) throws SQLException
     {
@@ -81,5 +91,41 @@ public class LibMoleculeTransitionDao extends BaseDaoImpl<LibMoleculeTransition>
             transitions.add(transition);
         }
         return transitions;
+    }
+
+    @Override
+    public void saveAll(Collection<LibMoleculeTransition> transitions, Connection connection) throws SQLException
+    {
+        if (transitions.size() > 0)
+        {
+            super.saveAll(transitions, connection);
+
+            List<LibMoleculeTransitionOptimization> moleculeTransitionOptimizations = new ArrayList<>();
+
+            if (_moleculeTransitionOptimizationDao != null)
+            {
+                transitions.forEach(transition -> {
+
+                    if (null != transition.getCollisionEnergy())
+                    {
+                        LibMoleculeTransitionOptimization moleculeTransitionOptimization = new LibMoleculeTransitionOptimization();
+                        moleculeTransitionOptimization.setTransitionId(transition.getId());
+                        moleculeTransitionOptimization.setOptimizationType("ce");
+                        moleculeTransitionOptimization.setOptimizationValue(transition.getCollisionEnergy());
+                        moleculeTransitionOptimizations.add(moleculeTransitionOptimization);
+                    }
+                    if (null != transition.getDeclusteringPotential())
+                    {
+                        LibMoleculeTransitionOptimization moleculeTransitionOptimization = new LibMoleculeTransitionOptimization();
+                        moleculeTransitionOptimization.setTransitionId(transition.getId());
+                        moleculeTransitionOptimization.setOptimizationType("dp");
+                        moleculeTransitionOptimization.setOptimizationValue(transition.getDeclusteringPotential());
+                        moleculeTransitionOptimizations.add(moleculeTransitionOptimization);
+                    }
+                });
+
+                _moleculeTransitionOptimizationDao.saveAll(moleculeTransitionOptimizations, connection);
+            }
+        }
     }
 }
