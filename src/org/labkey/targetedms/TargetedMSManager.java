@@ -1471,7 +1471,7 @@ public class TargetedMSManager
         deleteGeneralMoleculeChromInfoDependent(getTableInfoPeptideAreaRatio());
 
         // Delete from TransitionChromInfo
-        deleteGeneralTransitionDependent(getTableInfoTransitionChromInfo(), "TransitionId", whereClause);
+        deleteSampleFileDependent(getTableInfoTransitionChromInfo());
         // Delete from TransitionAnnotation
         deleteGeneralTransitionDependent(getTableInfoTransitionAnnotation(), "TransitionId", whereClause);
         // Delete from TransitionLoss
@@ -1486,7 +1486,7 @@ public class TargetedMSManager
         //Delete GeneralTransition
         deleteGeneralPrecursorDependent(getTableInfoGeneralTransition(), "GeneralPrecursorId");
         // Delete from PrecursorChromInfo
-        deleteGeneralPrecursorDependent(getTableInfoPrecursorChromInfo(), "PrecursorId");
+        deleteSampleFileDependent(getTableInfoPrecursorChromInfo());
         // Delete from PrecursorAnnotation
         deleteGeneralPrecursorDependent(getTableInfoPrecursorAnnotation(), "PrecursorId");
         // Delete from BiblioSpecLibInfo
@@ -1614,22 +1614,21 @@ public class TargetedMSManager
     public static void deleteTransitionChromInfoDependent(TableInfo tableInfo, SQLFragment whereClause)
     {
         execute(new SQLFragment(" DELETE FROM " + tableInfo +
-                " WHERE TransitionChromInfoId IN (SELECT tci.Id FROM " + getTableInfoTransitionChromInfo() + " tci "+
-                " INNER JOIN " + getTableInfoGeneralTransition() + " gt ON tci.TransitionId = gt.Id " +
-                " INNER JOIN " + getTableInfoGeneralPrecursor() + " gp ON gt.GeneralPrecursorId = gp.Id "+
-                " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON gp.GeneralMoleculeId = gm.Id " +
-                " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
-                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id ").append(whereClause).append(")"));
+                " WHERE TransitionChromInfoId IN (SELECT tci.Id FROM " + getTableInfoTransitionChromInfo() + " tci " +
+                " INNER JOIN " + getTableInfoSampleFile() + " s ON tci.SampleFileId = s.Id " +
+                " INNER JOIN " + getTableInfoReplicate() + " rep ON s.ReplicateId = rep.Id " +
+                " INNER JOIN " + getTableInfoRuns() + " r ON rep.RunId = r.Id ").
+                append(whereClause).
+                append(")"));
     }
 
     public static void deletePrecursorChromInfoDependent(TableInfo tableInfo)
     {
         execute(" DELETE FROM " + tableInfo +
                 " WHERE PrecursorChromInfoId IN (SELECT pci.Id FROM " + getTableInfoPrecursorChromInfo() + " pci "+
-                " INNER JOIN " + getTableInfoGeneralPrecursor() + " gp ON pci.PrecursorId = gp.Id "+
-                " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON gp.GeneralMoleculeId = gm.Id " +
-                " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
-                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
+                " INNER JOIN " + getTableInfoSampleFile() + " s ON pci.SampleFileId = s.Id " +
+                " INNER JOIN " + getTableInfoReplicate() + " rep ON s.ReplicateId = rep.Id " +
+                " INNER JOIN " + getTableInfoRuns() + " r ON rep.RunId = r.Id " +
                 " WHERE r.Deleted = ?)", true);
     }
 
@@ -1637,9 +1636,9 @@ public class TargetedMSManager
     {
         execute(" DELETE FROM " + tableInfo +
                 " WHERE PeptideChromInfoId IN (SELECT mci.Id FROM " + getTableInfoGeneralMoleculeChromInfo() + " mci "+
-                " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON mci.GeneralMoleculeId = gm.Id " +
-                " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
-                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
+                " INNER JOIN " + getTableInfoSampleFile() + " s ON mci.SampleFileId = s.Id " +
+                " INNER JOIN " + getTableInfoReplicate() + " rep ON s.ReplicateId = rep.Id " +
+                " INNER JOIN " + getTableInfoRuns() + " r ON rep.RunId = r.Id " +
                 " WHERE r.Deleted = ?)", true);
     }
 
