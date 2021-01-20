@@ -88,16 +88,12 @@ public class LibMoleculePrecursorDao extends BaseDaoImpl<LibMoleculePrecursor>
         stmt.setInt(colIndex++, precursor.getUncompressedSize());
         stmt.setInt(colIndex++, precursor.getChromatogramFormat());
 
-        stmt.setObject(colIndex++, precursor.getExplicitIonMobility(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getMassMonoisotopic(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getMassAverage(), Types.DOUBLE);
         stmt.setString(colIndex++, precursor.getIonFormula());
         stmt.setString(colIndex++, precursor.getCustomIonName());
 
-        stmt.setObject(colIndex++, precursor.getCcs(), Types.DOUBLE);
-        stmt.setObject(colIndex++, precursor.getIonMobilityMS1(), Types.DOUBLE);
-        stmt.setObject(colIndex++, precursor.getIonMobilityFragment(), Types.DOUBLE);
-        stmt.setString(colIndex++, precursor.getIonMobilityType());
+        colIndex = setIonMobilityColumns(stmt, colIndex, precursor);
     }
 
     @Override
@@ -155,31 +151,7 @@ public class LibMoleculePrecursorDao extends BaseDaoImpl<LibMoleculePrecursor>
         List<LibMoleculePrecursor> precursors = new ArrayList<>();
         while(rs.next())
         {
-            LibMoleculePrecursor precursor = new LibMoleculePrecursor();
-            precursor.setId(rs.getInt(Constants.MoleculePrecursorColumn.Id.baseColumn().name()));
-            precursor.setMoleculeId(rs.getInt(Constants.MoleculePrecursorColumn.MoleculeId.baseColumn().name()));
-            precursor.setIsotopeLabel(rs.getString(Constants.MoleculePrecursorColumn.IsotopeLabel.baseColumn().name()));
-            precursor.setMz(rs.getDouble(Constants.MoleculePrecursorColumn.Mz.baseColumn().name()));
-            precursor.setCharge(rs.getInt(Constants.MoleculePrecursorColumn.Charge.baseColumn().name()));
-            precursor.setCollisionEnergy(readDouble(rs, Constants.MoleculePrecursorColumn.CollisionEnergy.baseColumn().name()));
-            precursor.setDeclusteringPotential(readDouble(rs, Constants.MoleculePrecursorColumn.DeclusteringPotential.baseColumn().name()));
-            precursor.setTotalArea(rs.getDouble(Constants.MoleculePrecursorColumn.TotalArea.baseColumn().name()));
-            precursor.setNumTransitions(rs.getInt(Constants.MoleculePrecursorColumn.NumTransitions.baseColumn().name()));
-            precursor.setNumPoints(rs.getInt(Constants.MoleculePrecursorColumn.NumPoints.baseColumn().name()));
-            precursor.setAverageMassErrorPPM(rs.getDouble(Constants.MoleculePrecursorColumn.AverageMassErrorPPM.baseColumn().name()));
-            precursor.setSampleFileId(rs.getInt(Constants.MoleculePrecursorColumn.SampleFileId.baseColumn().name()));
-            precursor.setChromatogram(rs.getBytes(Constants.MoleculePrecursorColumn.Chromatogram.baseColumn().name()));
-            precursor.setExplicitIonMobility(readDouble(rs, Constants.MoleculePrecursorColumn.ExplicitIonMobility.baseColumn().name()));
-            precursor.setMassMonoisotopic(readDouble(rs, Constants.MoleculePrecursorColumn.MassMonoisotopic.baseColumn().name()));
-            precursor.setMassAverage(readDouble(rs, Constants.MoleculePrecursorColumn.MassAverage.baseColumn().name()));
-            precursor.setIonFormula(rs.getString(Constants.MoleculePrecursorColumn.IonFormula.baseColumn().name()));
-            precursor.setCustomIonName(rs.getString(Constants.MoleculePrecursorColumn.CustomIonName.baseColumn().name()));
-            precursor.setCcs(readDouble(rs, Constants.MoleculePrecursorColumn.CCS.baseColumn().name()));
-            precursor.setIonMobilityMS1(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityMS1.baseColumn().name()));
-            precursor.setIonMobilityFragment(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityFragment.baseColumn().name()));
-            precursor.setIonMobilityWindow(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityWindow.baseColumn().name()));
-            precursor.setIonMobilityType(rs.getString(Constants.MoleculePrecursorColumn.IonMobilityType.baseColumn().name()));
-
+            LibMoleculePrecursor precursor = new LibMoleculePrecursor(rs);
             precursors.add(precursor);
         }
         return precursors;

@@ -4,7 +4,11 @@ import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Map;
+
+import static org.labkey.targetedms.chromlib.BaseDaoImpl.readDouble;
 
 public class LibMoleculePrecursor extends AbstractLibPrecursor<LibMoleculeTransition>
 {
@@ -25,6 +29,16 @@ public class LibMoleculePrecursor extends AbstractLibPrecursor<LibMoleculeTransi
         setCustomIonName(p.getCustomIonName());
         setMassMonoisotopic(p.getMassMonoisotopic());
         setMassAverage(p.getMassAverage());
+    }
+
+    public LibMoleculePrecursor(ResultSet rs) throws SQLException
+    {
+        super(rs);
+        setMoleculeId(rs.getInt(Constants.MoleculePrecursorColumn.MoleculeId.baseColumn().name()));
+        setMassMonoisotopic(readDouble(rs, Constants.MoleculePrecursorColumn.MassMonoisotopic.baseColumn().name()));
+        setMassAverage(readDouble(rs, Constants.MoleculePrecursorColumn.MassAverage.baseColumn().name()));
+        setIonFormula(rs.getString(Constants.MoleculePrecursorColumn.IonFormula.baseColumn().name()));
+        setCustomIonName(rs.getString(Constants.MoleculePrecursorColumn.CustomIonName.baseColumn().name()));
     }
 
     public long getMoleculeId()

@@ -153,6 +153,13 @@ class Constants
         IonMobilityFragment("DOUBLE"),
         IonMobilityWindow("DOUBLE"),
         IonMobilityType("VARCHAR(200)"),
+        ExplicitIonMobilityUnits("VARCHAR(200)"),
+        ExplicitCcsSqa("DOUBLE"),
+        ExplicitCompensationVoltage("DOUBLE"),
+        PrecursorConcentration("DOUBLE"),
+        DriftTimeMs1("DOUBLE"),
+        DriftTimeFragment("DOUBLE"),
+        DriftTimeWindow("DOUBLE"),
 
         PrecursorId("INTEGER NOT NULL", Table.Precursor, Id),
         IsotopeModId("INTEGER NOT NULL", Table.IsotopeModification, Id),
@@ -564,7 +571,14 @@ class Constants
         IonMobilityMS1(Column.IonMobilityMS1),
         IonMobilityFragment(Column.IonMobilityFragment),
         IonMobilityWindow(Column.IonMobilityWindow),
-        IonMobilityType(Column.IonMobilityType);
+        IonMobilityType(Column.IonMobilityType),
+        ExplicitIonMobilityUnits(Column.ExplicitIonMobilityUnits),
+        ExplicitCcsSqa(Column.ExplicitCcsSqa),
+        ExplicitCompensationVoltage(Column.ExplicitCompensationVoltage),
+        PrecursorConcentration(Column.PrecursorConcentration),
+        DriftTimeMs1(Column.DriftTimeMs1),
+        DriftTimeFragment(Column.DriftTimeFragment),
+        DriftTimeWindow(Column.DriftTimeWindow);
 
         private final Column _column;
         private final String _definition;
@@ -740,16 +754,23 @@ class Constants
         Chromatogram(Column.Chromatogram),
         UncompressedSize(Column.UncompressedSize),
         ChromatogramFormat(Column.ChromatogramFormat),
-        ExplicitIonMobility(Column.ExplicitIonMobility),
         MassMonoisotopic(Column.MassMonoisotopic),
         MassAverage(Column.MassAverage),
         IonFormula(Column.IonFormula),
         CustomIonName(Column.CustomIonName),
+        ExplicitIonMobility(Column.ExplicitIonMobility),
         CCS(Column.CCS),
         IonMobilityMS1(Column.IonMobilityMS1),
         IonMobilityFragment(Column.IonMobilityFragment),
         IonMobilityWindow(Column.IonMobilityWindow),
-        IonMobilityType(Column.IonMobilityType);
+        IonMobilityType(Column.IonMobilityType),
+        ExplicitIonMobilityUnits(Column.ExplicitIonMobilityUnits),
+        ExplicitCcsSqa(Column.ExplicitCcsSqa),
+        ExplicitCompensationVoltage(Column.ExplicitCompensationVoltage),
+        PrecursorConcentration(Column.PrecursorConcentration),
+        DriftTimeMs1(Column.DriftTimeMs1),
+        DriftTimeFragment(Column.DriftTimeFragment),
+        DriftTimeWindow(Column.DriftTimeWindow);
 
         private final Column _column;
         private final String _definition;

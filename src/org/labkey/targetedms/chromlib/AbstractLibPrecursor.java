@@ -4,10 +4,14 @@ import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.GeneralPrecursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static org.labkey.targetedms.chromlib.BaseDaoImpl.readDouble;
 
 public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> extends AbstractLibEntity
 {
@@ -33,6 +37,13 @@ public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> 
     protected Integer _numTransitions;
     protected Integer _numPoints;
     protected Double _averageMassErrorPPM;
+    private String _explicitIonMobilityUnits;
+    private Double _explicitCcsSqa;
+    private Double _explicitCompensationVoltage;
+    private Double _precursorConcentration;
+    private Double _driftTimeMs1;
+    private Double _driftTimeFragment;
+    private Double _driftTimeWindow;
 
     public AbstractLibPrecursor() {}
 
@@ -49,8 +60,13 @@ public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> 
         setCharge(p.getCharge());
         setCollisionEnergy(p.getCollisionEnergy());
         setDeclusteringPotential(p.getDeclusteringPotential());
+        setExplicitIonMobility(p.getExplicitIonMobility());
+        setExplicitIonMobilityUnits(p.getExplicitIonMobilityUnits());
+        setExplicitCcsSqa(p.getExplicitCcsSqa());
+        setExplicitCompensationVoltage(p.getExplicitCompensationVoltage());
+        setPrecursorConcentration(p.getPrecursorConcentration());
 
-        if(bestChromInfo != null)
+        if (bestChromInfo != null)
         {
             setTotalArea(bestChromInfo.getTotalArea() == null ? 0.0 : bestChromInfo.getTotalArea());
             setChromatogram(bestChromInfo.getChromatogramBytes(run));
@@ -59,6 +75,14 @@ public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> 
             setNumTransitions(bestChromInfo.getNumTransitions());
             setNumPoints(bestChromInfo.getNumPoints());
             setAverageMassErrorPPM(bestChromInfo.getAverageMassErrorPPM());
+            setCcs(bestChromInfo.getCcs());
+            setIonMobilityFragment(bestChromInfo.getIonMobilityFragment());
+            setIonMobilityMS1(bestChromInfo.getIonMobilityMs1());
+            setIonMobilityType(bestChromInfo.getIonMobilityType());
+            setIonMobilityWindow(bestChromInfo.getIonMobilityWindow());
+            setDriftTimeMs1(bestChromInfo.getDriftTimeMs1());
+            setDriftTimeWindow(bestChromInfo.getDriftTimeWindow());
+            setDriftTimeFragment(bestChromInfo.getDriftTimeFragment());
 
             long sampleFileId = bestChromInfo.getSampleFileId();
             Integer libSampleFileId = sampleFileIdMap.get(sampleFileId);
@@ -80,6 +104,35 @@ public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> 
     protected List<LibPrecursorRetentionTime> _retentionTimes;
 
     protected List<TransitionType> _transitions;
+
+    public AbstractLibPrecursor(ResultSet rs) throws SQLException
+    {
+        setId(rs.getInt(Constants.PrecursorColumn.Id.baseColumn().name()));
+        setIsotopeLabel(rs.getString(Constants.MoleculePrecursorColumn.IsotopeLabel.baseColumn().name()));
+        setMz(rs.getDouble(Constants.PrecursorColumn.Mz.baseColumn().name()));
+        setCharge(rs.getInt(Constants.PrecursorColumn.Charge.baseColumn().name()));
+        setCollisionEnergy(readDouble(rs, Constants.MoleculePrecursorColumn.CollisionEnergy.baseColumn().name()));
+        setDeclusteringPotential(readDouble(rs, Constants.MoleculePrecursorColumn.DeclusteringPotential.baseColumn().name()));
+        setTotalArea(rs.getDouble(Constants.MoleculePrecursorColumn.TotalArea.baseColumn().name()));
+        setNumTransitions(rs.getInt(Constants.MoleculePrecursorColumn.NumTransitions.baseColumn().name()));
+        setNumPoints(rs.getInt(Constants.MoleculePrecursorColumn.NumPoints.baseColumn().name()));
+        setAverageMassErrorPPM(rs.getDouble(Constants.MoleculePrecursorColumn.AverageMassErrorPPM.baseColumn().name()));
+        setSampleFileId(rs.getInt(Constants.MoleculePrecursorColumn.SampleFileId.baseColumn().name()));
+        setChromatogram(rs.getBytes(Constants.MoleculePrecursorColumn.Chromatogram.baseColumn().name()));
+        setExplicitIonMobility(readDouble(rs, Constants.MoleculePrecursorColumn.ExplicitIonMobility.baseColumn().name()));
+        setCcs(readDouble(rs, Constants.MoleculePrecursorColumn.CCS.baseColumn().name()));
+        setIonMobilityMS1(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityMS1.baseColumn().name()));
+        setIonMobilityFragment(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityFragment.baseColumn().name()));
+        setIonMobilityWindow(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityWindow.baseColumn().name()));
+        setIonMobilityType(rs.getString(Constants.MoleculePrecursorColumn.IonMobilityType.baseColumn().name()));
+        setExplicitIonMobilityUnits(rs.getString(Constants.MoleculePrecursorColumn.ExplicitIonMobilityUnits.baseColumn().name()));
+        setExplicitCcsSqa(readDouble(rs, Constants.MoleculePrecursorColumn.ExplicitCcsSqa.baseColumn().name()));
+        setExplicitCompensationVoltage(readDouble(rs, Constants.MoleculePrecursorColumn.ExplicitCompensationVoltage.baseColumn().name()));
+        setPrecursorConcentration(readDouble(rs, Constants.MoleculePrecursorColumn.PrecursorConcentration.baseColumn().name()));
+        setDriftTimeWindow(readDouble(rs, Constants.MoleculePrecursorColumn.DriftTimeWindow.baseColumn().name()));
+        setDriftTimeFragment(readDouble(rs, Constants.MoleculePrecursorColumn.DriftTimeFragment.baseColumn().name()));
+        setDriftTimeMs1(readDouble(rs, Constants.MoleculePrecursorColumn.DriftTimeMs1.baseColumn().name()));
+    }
 
     public String getIsotopeLabel()
     {
@@ -314,5 +367,75 @@ public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> 
                 getTransitions().stream().mapToInt(AbstractLibEntity::getCacheSize).sum() +
                 getRetentionTimes().stream().mapToInt(AbstractLibEntity::getCacheSize).sum();
 
+    }
+
+    public void setExplicitIonMobilityUnits(String explicitIonMobilityUnits)
+    {
+        _explicitIonMobilityUnits = explicitIonMobilityUnits;
+    }
+
+    public String getExplicitIonMobilityUnits()
+    {
+        return _explicitIonMobilityUnits;
+    }
+
+    public void setExplicitCcsSqa(Double explicitCcsSqa)
+    {
+        _explicitCcsSqa = explicitCcsSqa;
+    }
+
+    public Double getExplicitCcsSqa()
+    {
+        return _explicitCcsSqa;
+    }
+
+    public void setExplicitCompensationVoltage(Double explicitCompensationVoltage)
+    {
+        _explicitCompensationVoltage = explicitCompensationVoltage;
+    }
+
+    public Double getExplicitCompensationVoltage()
+    {
+        return _explicitCompensationVoltage;
+    }
+
+    public void setPrecursorConcentration(Double precursorConcentration)
+    {
+        _precursorConcentration = precursorConcentration;
+    }
+
+    public Double getPrecursorConcentration()
+    {
+        return _precursorConcentration;
+    }
+
+    public Double getDriftTimeMs1()
+    {
+        return _driftTimeMs1;
+    }
+
+    public void setDriftTimeMs1(Double driftTimeMs1)
+    {
+        _driftTimeMs1 = driftTimeMs1;
+    }
+
+    public Double getDriftTimeFragment()
+    {
+        return _driftTimeFragment;
+    }
+
+    public void setDriftTimeFragment(Double driftTimeFragment)
+    {
+        _driftTimeFragment = driftTimeFragment;
+    }
+
+    public Double getDriftTimeWindow()
+    {
+        return _driftTimeWindow;
+    }
+
+    public void setDriftTimeWindow(Double driftTimeWindow)
+    {
+        _driftTimeWindow = driftTimeWindow;
     }
 }

@@ -24,6 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.Collection;
 import java.util.List;
 
@@ -212,7 +213,7 @@ public abstract class BaseDaoImpl<T extends AbstractLibEntity> implements Dao<T>
         }
     }
 
-    public Double readDouble(ResultSet rs, String columnName) throws SQLException
+    public static Double readDouble(ResultSet rs, String columnName) throws SQLException
     {
         double value = rs.getDouble(columnName);
         if(!rs.wasNull())
@@ -275,4 +276,20 @@ public abstract class BaseDaoImpl<T extends AbstractLibEntity> implements Dao<T>
 
     protected abstract ColumnDef[] getColumns();
 
+    protected int setIonMobilityColumns(PreparedStatement stmt, int colIndex, AbstractLibPrecursor precursor) throws SQLException
+    {
+        stmt.setObject(colIndex++, precursor.getExplicitIonMobility(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getCcs(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getIonMobilityMS1(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getIonMobilityFragment(), Types.DOUBLE);
+        stmt.setString(colIndex++, precursor.getIonMobilityType());
+        stmt.setString(colIndex++, precursor.getExplicitIonMobilityUnits());
+        stmt.setObject(colIndex++, precursor.getExplicitCcsSqa(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getExplicitCompensationVoltage(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getPrecursorConcentration(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getDriftTimeMs1(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getDriftTimeFragment(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getDriftTimeWindow(), Types.DOUBLE);
+        return colIndex;
+    }
 }

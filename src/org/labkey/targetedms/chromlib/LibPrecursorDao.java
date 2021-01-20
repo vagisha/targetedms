@@ -102,12 +102,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         stmt.setInt(colIndex++, precursor.getUncompressedSize());
         stmt.setInt(colIndex++, precursor.getChromatogramFormat());
 
-        stmt.setObject(colIndex++, precursor.getExplicitIonMobility(), Types.DOUBLE);
-        stmt.setObject(colIndex++, precursor.getCcs(), Types.DOUBLE);
-        stmt.setObject(colIndex++, precursor.getIonMobilityMS1(), Types.DOUBLE);
-        stmt.setObject(colIndex++, precursor.getIonMobilityFragment(), Types.DOUBLE);
-        stmt.setString(colIndex++, precursor.getIonMobilityType());
-
+        colIndex = setIonMobilityColumns(stmt, colIndex, precursor);
     }
 
     @Override
@@ -178,29 +173,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         List<LibPrecursor> precursors = new ArrayList<>();
         while(rs.next())
         {
-            LibPrecursor precursor = new LibPrecursor();
-            precursor.setId(rs.getInt(PrecursorColumn.Id.baseColumn().name()));
-            precursor.setPeptideId(rs.getInt(PrecursorColumn.PeptideId.baseColumn().name()));
-            precursor.setIsotopeLabel(rs.getString(PrecursorColumn.IsotopeLabel.baseColumn().name()));
-            precursor.setMz(rs.getDouble(PrecursorColumn.Mz.baseColumn().name()));
-            precursor.setCharge(rs.getInt(PrecursorColumn.Charge.baseColumn().name()));
-            precursor.setNeutralMass(rs.getDouble(PrecursorColumn.NeutralMass.baseColumn().name()));
-            precursor.setModifiedSequence(rs.getString(PrecursorColumn.ModifiedSequence.baseColumn().name()));
-            precursor.setCollisionEnergy(readDouble(rs, PrecursorColumn.CollisionEnergy.baseColumn().name()));
-            precursor.setDeclusteringPotential(readDouble(rs, PrecursorColumn.DeclusteringPotential.baseColumn().name()));
-            precursor.setTotalArea(rs.getDouble(PrecursorColumn.TotalArea.baseColumn().name()));
-            precursor.setNumTransitions(rs.getInt(PrecursorColumn.NumTransitions.baseColumn().name()));
-            precursor.setNumPoints(rs.getInt(PrecursorColumn.NumPoints.baseColumn().name()));
-            precursor.setAverageMassErrorPPM(rs.getDouble(PrecursorColumn.AverageMassErrorPPM.baseColumn().name()));
-            precursor.setSampleFileId(rs.getInt(PrecursorColumn.SampleFileId.baseColumn().name()));
-            precursor.setChromatogram(rs.getBytes(PrecursorColumn.Chromatogram.baseColumn().name()));
-            precursor.setExplicitIonMobility(readDouble(rs, Constants.MoleculePrecursorColumn.ExplicitIonMobility.baseColumn().name()));
-            precursor.setCcs(readDouble(rs, Constants.MoleculePrecursorColumn.CCS.baseColumn().name()));
-            precursor.setIonMobilityMS1(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityMS1.baseColumn().name()));
-            precursor.setIonMobilityFragment(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityFragment.baseColumn().name()));
-            precursor.setIonMobilityWindow(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityWindow.baseColumn().name()));
-            precursor.setIonMobilityType(rs.getString(Constants.MoleculePrecursorColumn.IonMobilityType.baseColumn().name()));
-
+            LibPrecursor precursor = new LibPrecursor(rs);
             precursors.add(precursor);
         }
         return precursors;
