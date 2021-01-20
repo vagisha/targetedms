@@ -141,8 +141,9 @@ public class AuditLogMessageExpander
         boolean hasMatches = false;
         int lastPos = 0;
         while(match.find()){
-            resultBuilder.append(s.substring(lastPos, match.start()));
-            resultBuilder.append( String.format("%%%s$s", match.group(1)));
+            resultBuilder.append(s, lastPos, match.start());
+            // Issue 42281: C# is zero-based, Java is one-based
+            resultBuilder.append( String.format("%%%s$s", Integer.parseInt(match.group(1)) + 1));
             lastPos = match.end();
             hasMatches = true;
         }
