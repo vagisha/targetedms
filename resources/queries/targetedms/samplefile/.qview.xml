@@ -1,12 +1,15 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView">
     <columns>
+        <column name="ReplicateId/RunId">
+            <properties>
+                <property name="columnTitle" value="Skyline Document"/>
+            </properties>
+        </column>
+        <column name="AcquiredTime" />
         <column name="ReplicateId" />
         <column name="FilePath" />
         <column name="SampleName" />
-        <column name="SkylineId" />
-        <column name="AcquiredTime" />
         <column name="ModifiedTime" />
-        <column name="InstrumentId" />
     </columns>
     <sorts>
         <sort column="AcquiredTime" descending="true" />

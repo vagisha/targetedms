@@ -1,0 +1,15 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="QCInstrumentSummary" tableDbType="TABLE">
+                <columns>
+                    <column columnName="QCFolders">
+                        <displayColumnFactory>
+                            <className>org.labkey.targetedms.query.QCFolderDisplayColumnFactory</className>
+                        </displayColumnFactory>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

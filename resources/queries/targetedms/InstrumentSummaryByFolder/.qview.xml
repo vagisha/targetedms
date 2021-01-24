@@ -1,0 +1,16 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="Container/Path">
+            <properties>
+                <property name="columnTitle" value="Folder"/>
+            </properties>
+        </column>
+        <column name="FirstAcquisition" />
+        <column name="LastAcquisition" />
+        <column name="ReplicateCount" />
+        <column name="SkylineDocumentCount" />
+    </columns>
+    <sorts>
+        <sort column="LastAcquisition" descending="true" />
+    </sorts>
+</customView>

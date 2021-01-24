@@ -211,6 +211,7 @@ import org.labkey.targetedms.view.DocumentPrecursorsView;
 import org.labkey.targetedms.view.DocumentTransitionsView;
 import org.labkey.targetedms.view.DocumentView;
 import org.labkey.targetedms.view.GroupComparisonView;
+import org.labkey.targetedms.view.InstrumentSummaryWebPart;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 import org.labkey.targetedms.view.MoleculePrecursorChromatogramsView;
 import org.labkey.targetedms.view.PeptidePrecursorChromatogramsView;
@@ -3139,6 +3140,8 @@ public class TargetedMSController extends SpringActionController
         return runSummaryView;
     }
 
+    //
+
     @RequiresPermission(ReadPermission.class)
     public class ShowVersionsAction extends SimpleViewAction<RunDetailsForm>
     {
@@ -3408,6 +3411,7 @@ public class TargetedMSController extends SpringActionController
         {
             VBox vBox = new VBox();
             vBox.addView(getSummaryView(form, _run));
+            vBox.addView(new InstrumentSummaryWebPart(form.getViewContext()));
 
             VIEWTYPE view;
 
@@ -3594,6 +3598,85 @@ public class TargetedMSController extends SpringActionController
                     new TargetedMSSchema(getUser(), getContainer()),
                     form,
                     forExport, dataRegion);
+        }
+    }
+
+    public static class InstrumentForm extends QueryViewAction.QueryExportForm
+    {
+        private String _serialNumber;
+
+        public String getSerialNumber()
+        {
+            return _serialNumber;
+        }
+
+        public void setSerialNumber(String serialNumber)
+        {
+            _serialNumber = serialNumber;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowInstrumentAction extends QueryViewAction<InstrumentForm, QueryView>
+    {
+        public ShowInstrumentAction()
+        {
+            super(InstrumentForm.class);
+        }
+
+        private static final String FOLDER_SUMMARY = "FolderSummary";
+
+        private InstrumentForm _form;
+
+        @Override
+        public void addNavTrail(NavTree root)
+        {
+            root.addChild("Instrument " + (_form == null ? "" : _form.getSerialNumber()));
+        }
+
+        @Override
+        protected QueryView createQueryView(InstrumentForm form, BindException errors, boolean forExport, @Nullable String dataRegion) throws Exception
+        {
+            if (TargetedMSSchema.TABLE_SAMPLE_FILE.equalsIgnoreCase(dataRegion))
+            {
+                QuerySettings settings = new QuerySettings(getViewContext(), TargetedMSSchema.TABLE_SAMPLE_FILE, TargetedMSSchema.TABLE_SAMPLE_FILE);
+                Sort sort = new Sort();
+                sort.appendSortColumn(FieldKey.fromParts("AcquiredTime"), Sort.SortDirection.DESC, false);
+                settings.setBaseSort(sort);
+                settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("InstrumentSerialNumber"), form.getSerialNumber()));
+                settings.setContainerFilterName(ContainerFilter.Type.AllFolders.name());
+                TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+                return schema.createView(getViewContext(), settings, errors);
+            }
+            if (FOLDER_SUMMARY.equalsIgnoreCase(dataRegion))
+            {
+                QuerySettings settings = new QuerySettings(getViewContext(), FOLDER_SUMMARY, "InstrumentSummaryByFolder");
+                settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("InstrumentSerialNumber"), form.getSerialNumber()));
+                settings.setContainerFilterName(ContainerFilter.Type.AllFolders.name());
+                TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+                return schema.createView(getViewContext(), settings, errors);
+            }
+            throw new NotFoundException("Unknown dataRegion: " + dataRegion);
+        }
+
+        @Override
+        public ModelAndView getView(InstrumentForm form, BindException errors) throws Exception
+        {
+            if (form.getSerialNumber() == null)
+            {
+                throw new NotFoundException("No instrument serial number specified");
+            }
+            _form = form;
+
+            QueryView folderSummaryView = createQueryView(form, errors, false, FOLDER_SUMMARY);
+            folderSummaryView.setTitle("Data in this Server");
+            folderSummaryView.setFrame(WebPartView.FrameType.PORTAL);
+
+            QueryView sampleFileView = createQueryView(form, errors, false, TargetedMSSchema.TABLE_SAMPLE_FILE);
+            sampleFileView.setTitle("Data from this Instrument");
+            sampleFileView.setFrame(WebPartView.FrameType.PORTAL);
+
+            return new VBox(folderSummaryView, sampleFileView);
         }
     }
 

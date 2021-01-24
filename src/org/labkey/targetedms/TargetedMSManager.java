@@ -834,6 +834,19 @@ public class TargetedMSManager
         throw new IllegalArgumentException("More than one TargetedMS runs found for LSID "+lsid);
     }
 
+    public static List<Long> getRunIdsByInstrument(String serialNumber)
+    {
+        SQLFragment sql = new SQLFragment("SELECT DISTINCT r.Id FROM ");
+        sql.append(getTableInfoReplicate(), "rep");
+        sql.append(", ");
+        sql.append(getTableInfoSampleFile(), "sf");
+        sql.append(", ");
+        sql.append(getTableInfoRuns(), "r");
+        sql.append(" WHERE rep.Id = sf.ReplicateId AND rep.RunId = r.Id AND sf.instrumentSerialNumber = ? ");
+        sql.add(serialNumber);
+        return new SqlSelector(getSchema(), sql).getArrayList(Long.class);
+    }
+
     @NotNull
     private static TargetedMSRun[] getRuns(String whereClause, Object... params)
     {

@@ -56,6 +56,7 @@ import java.io.Writer;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,6 +113,9 @@ public class SampleFileTable extends TargetedMSTable
         downloadCol.setKeyField(false);
         downloadCol.setTextAlign("left");
         downloadCol.setDisplayColumnFactory(colInfo -> new DownloadLinkColumn(colInfo));
+
+        DetailsURL instrumentURL = new DetailsURL(new ActionURL(TargetedMSController.ShowInstrumentAction.class, getContainer()), Collections.singletonMap("serialNumber", "InstrumentSerialNumber"));
+        getMutableColumn("InstrumentSerialNumber").setURL(instrumentURL);
     }
 
     @Override
@@ -124,7 +128,8 @@ public class SampleFileTable extends TargetedMSTable
                     FieldKey.fromParts("ReplicateId"),
                     FieldKey.fromParts("File"),
                     FieldKey.fromParts("Download"),
-                    FieldKey.fromParts("AcquiredTime")));
+                    FieldKey.fromParts("AcquiredTime"),
+                    FieldKey.fromParts("InstrumentSerialNumber")));
 
             // Find the columns that have values for the run of interest, and include them in the set of columns in the default
             // view. We don't really care what the value is for the columns, just that it exists, so we arbitrarily use

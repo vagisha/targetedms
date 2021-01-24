@@ -312,7 +312,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         // There are many regions within one transitions_view region -- all with the same region name.
         // Lookup the elements manually and point to a specific region to examine.
-        DataRegionTable drt = DataRegion(getDriver()).index(1).find();
+        DataRegionTable drt = DataRegion(getDriver()).index(2).find();
         assertEquals("heavy", drt.getDataAsText(5, "Label"));
         assertEquals("1353.7491", drt.getDataAsText(5, "Precursor Neutral Mass"));
         assertEquals("677.8818", drt.getDataAsText(5, "Q1 m/z"));
