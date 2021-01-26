@@ -203,9 +203,9 @@ public class MsDataSourceUtil
         {
             // We can get more than one source type by filename extension lookup. e.g. .raw extension is used both by Thermo and Waters
             // Try to resolve by looking up the instrument on which the data was acquired.
-            Instrument instrument = InstrumentManager.getInstrument(sampleFile.getInstrumentId());
-            if(instrument != null)
+            if(sampleFile.getInstrumentId() != null)
             {
+                Instrument instrument = InstrumentManager.getInstrument(sampleFile.getInstrumentId());
                 MsDataSource source = getSourceForInstrument(instrument);
                 if(source != null)
                 {
