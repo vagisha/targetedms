@@ -53,6 +53,7 @@ import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.admin.AdminUrls;
 import org.labkey.api.analytics.AnalyticsService;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.CompareType;
@@ -496,7 +497,6 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void validateCommand(ChromatogramCrawlerForm target, Errors errors)
         {
-
         }
 
         @Override
@@ -518,13 +518,13 @@ public class TargetedMSController extends SpringActionController
         @Override
         public URLHelper getSuccessURL(ChromatogramCrawlerForm form)
         {
-            return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
+            return urlProvider(PipelineUrls.class).urlBegin(getContainer());
         }
 
         @Override
         public void addNavTrail(NavTree root)
         {
-            root.addChild("Chromatogram Crawler");
+            urlProvider(AdminUrls.class).addAdminNavTrail(root, "Chromatogram Crawler", new ActionURL(getClass(), getContainer()));
         }
     }
 
@@ -555,7 +555,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public URLHelper getSuccessURL(Object o)
         {
-            return PageFlowUtil.urlProvider(ProjectUrls.class).getBeginURL(getContainer(), RAW_FILES_TAB);
+            return urlProvider(ProjectUrls.class).getBeginURL(getContainer(), RAW_FILES_TAB);
         }
     }
 
@@ -3071,7 +3071,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ActionURL getSuccessURL(SkylinePipelinePathForm form)
         {
-            return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
+            return urlProvider(PipelineUrls.class).urlBegin(getContainer());
         }
     }
 
@@ -4519,7 +4519,7 @@ public class TargetedMSController extends SpringActionController
                     peptideSequences.add(peptide.getSequence());
                 }
                 ProteinService proteinService = ProteinService.get();
-                ActionURL searchURL = PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer());
+                ActionURL searchURL = urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer());
                 searchURL.addParameter("seqId", group.getSequenceId().intValue());
                 searchURL.addParameter("identifier", group.getLabel());
                 getViewContext().getResponse().getWriter().write("<a href=\"" + searchURL + "\">Search for other references to this protein</a><br/>");
@@ -7081,8 +7081,9 @@ public class TargetedMSController extends SpringActionController
     {
         public static TargetedMSUrlsImpl get()
         {
-            return (TargetedMSUrlsImpl) PageFlowUtil.urlProvider(TargetedMSUrls.class);
+            return (TargetedMSUrlsImpl) urlProvider(TargetedMSUrls.class);
         }
+
         @Override
         public ActionURL getDownloadDocumentUrl(Container container, long runId)
         {
