@@ -20,9 +20,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
-import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSModule;
+
+import javax.annotation.Nullable;
 
 /**
  * This class determines security level of the current Skyline document upload operation
@@ -41,29 +43,17 @@ public class SkylineAuditLogSecurityManager
 
     }
 
-    private INTEGRITY_LEVEL _verificationLevel;
-    private Container _container;
-    private Logger _logger;
+    private final INTEGRITY_LEVEL _verificationLevel;
+    private static final Logger LOG = LogManager.getLogger(SkylineAuditLogSecurityManager.class);
+    private final Logger _jobLogger;
 
-    public SkylineAuditLogSecurityManager(Container pContainer, User pUser) throws AuditLogException
+    public SkylineAuditLogSecurityManager(Container container, @Nullable Logger jobLogger)
     {
-        _container = pContainer;
-        _logger = LogManager.getLogger(this.getClass());
+        _jobLogger = jobLogger;
 
-        TargetedMSModule targetedMSModule = null;
-        for (Module m : _container.getActiveModules())
-        {
-            if (m instanceof TargetedMSModule)
-            {
-                targetedMSModule = (TargetedMSModule) m;
-            }
-        }
-        if (targetedMSModule == null)
-        {
-            throw new AuditLogException("Cannot upload into a non-Panorama container"); // theoretically this should never happen.
-        }
+        TargetedMSModule targetedMSModule = ModuleLoader.getInstance().getModule(TargetedMSModule.class);
         ModuleProperty logLevelProperty = targetedMSModule.getModuleProperties().get(TargetedMSModule.SKYLINE_AUDIT_LEVEL);
-        int propIndex = Integer.parseInt(logLevelProperty.getEffectiveValue(_container));
+        int propIndex = Integer.parseInt(logLevelProperty.getEffectiveValue(container));
         _verificationLevel = INTEGRITY_LEVEL.values()[propIndex];
     }
 
@@ -83,10 +73,16 @@ public class SkylineAuditLogSecurityManager
      */
 
 
-    public void reportErrorForIntegrityLevel(String pMessage, INTEGRITY_LEVEL minTolerateLevel, Throwable e) throws AuditLogException
+    public void reportErrorForIntegrityLevel(String pMessage, INTEGRITY_LEVEL minTolerateLevel, @Nullable Throwable e) throws AuditLogException
     {
         if(getIntegrityLevel().getValue() <= minTolerateLevel.getValue())
-            _logger.warn(pMessage, e);
+        {
+            LOG.warn(pMessage, e);
+            if (_jobLogger != null)
+            {
+                LOG.warn(pMessage, e);
+            }
+        }
         else
             throw new AuditLogException(pMessage, e);
     }

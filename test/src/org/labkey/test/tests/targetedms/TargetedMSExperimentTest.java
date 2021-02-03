@@ -33,7 +33,6 @@ import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.FilesWebPart;
 import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.EscapeUtil;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
@@ -445,7 +444,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
                 "PeptideGroupId.RunId.File,\n" +
                 "PeptideGroupId.Label\n" +
                 "FROM peptide";
-        createQuery(EscapeUtil.encode(getProjectName()), "query_peptide", "targetedms", querySql, null, false);
+        createQuery(getProjectName(), "query_peptide", "targetedms", querySql, null, false);
         navigateToQuery("targetedms", "query_peptide");
         waitForElement(Locator.paginationText(45));
         DataRegionTable query = new DataRegionTable("query", this);
@@ -476,7 +475,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
                 "PeptideId.Rank,\n" +
                 "IsotopeLabelId.Name\n" +
                 "FROM precursor";
-        createQuery(EscapeUtil.encode(getProjectName()), "query_precursor", "targetedms", querySql, null, false);
+        createQuery(getProjectName(), "query_precursor", "targetedms", querySql, null, false);
         navigateToQuery("targetedms", "query_precursor");
         waitForElement(Locator.paginationText(89));
         query = new DataRegionTable("query", this);
@@ -511,7 +510,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
                 "PrecursorId.Mz AS PrecursorIdMz,\n" +
                 "PrecursorId.Charge AS PrecursorIdCharge\n" +
                 "FROM transition";
-        createQuery(EscapeUtil.encode(getProjectName()), "query_transition", "targetedms", querySql, null, false);
+        createQuery(getProjectName(), "query_transition", "targetedms", querySql, null, false);
         navigateToQuery("targetedms", "query_transition");
         waitForElement(Locator.paginationText(1, 100, 299));
         query = new DataRegionTable("query", this);
@@ -533,7 +532,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
                 "PeptideId.Sequence AS Sequence2,\n" +
                 "PeptideId.PeptideGroupId.Label AS Protein2\n" +
                 "FROM librarydocprecursor";
-        createQuery(EscapeUtil.encode(getProjectName()), "query_librarydocprecursor", "targetedms", querySql, null, false);
+        createQuery(getProjectName(), "query_librarydocprecursor", "targetedms", querySql, null, false);
         navigateToQuery("targetedms", "query_librarydocprecursor");
         waitForElement(Locator.paginationText(89));
         query = new DataRegionTable("query", this);

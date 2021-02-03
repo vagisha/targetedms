@@ -1112,7 +1112,7 @@ public class TargetedMSManager
 
         try
         {   //deleting audit log data for these runs.
-            SkylineAuditLogManager auditMgr = new SkylineAuditLogManager(c, user);
+            SkylineAuditLogManager auditMgr = new SkylineAuditLogManager(c, null);
             for(Long runId : runIds)
                 auditMgr.deleteDocumentVersionLog(runId);
         }

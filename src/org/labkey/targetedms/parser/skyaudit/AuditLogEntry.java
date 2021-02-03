@@ -26,8 +26,9 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DecimalFormat;
@@ -43,6 +44,7 @@ import java.util.List;
 
 public class AuditLogEntry
 {
+    private final BigDecimal _documentFormatVersion;
     private Integer _entryId;
     private Long _versionId;
     private LocalDateTime _createTimestamp;
@@ -56,6 +58,18 @@ public class AuditLogEntry
     protected GUID _documentGUID;
 
     byte[] _calculatedHashBytes;
+
+    private static final BigDecimal SEQUENTIAL_LOG_HASH_MIN_VERSION = new BigDecimal("20.21");
+
+    public AuditLogEntry()
+    {
+        this(null);
+    }
+
+    public AuditLogEntry(BigDecimal documentFormatVersion)
+    {
+        _documentFormatVersion = documentFormatVersion;
+    }
 
     public static AuditLogEntry retrieve(int pEntryId, ViewContext viewContext)
     {
@@ -167,9 +181,10 @@ public class AuditLogEntry
         return bytesToHash;
     }
 
-    public byte[] getTimezoneHashingBytes(){
+    public byte[] getTimezoneHashingBytes()
+    {
         DecimalFormat dd = new DecimalFormat("##.#");
-        return dd.format(_timezoneOffsetMinutes/60.).getBytes(Charset.forName("UTF8"));
+        return dd.format(_timezoneOffsetMinutes/60.).getBytes(StandardCharsets.UTF_8);
     }
 
     //--------------------------------------------------------------------------------
@@ -195,6 +210,7 @@ public class AuditLogEntry
         return _extraInfo;
     }
 
+    /** @return the hash from the .skyl XML file */
     public String getEntryHash()
     {
         return _entryHash;
@@ -206,43 +222,63 @@ public class AuditLogEntry
     }
 
     public byte[] getHashBytes() {return _calculatedHashBytes;}
-    public String getHashString() {
-        return new String(Base64.getEncoder().encode(_calculatedHashBytes), Charset.forName("US-ASCII"));
+
+    /** @return the Panorama-calculated hash based on the audit entry */
+    public String getHashString()
+    {
+        return new String(Base64.getEncoder().encode(_calculatedHashBytes), StandardCharsets.US_ASCII);
     }
 
     /***
      * Verifies if entry hash is correct
      * @return Returns true if hash of this entry matches with calculated hash
      */
-    public boolean verifyHash() throws NoSuchAlgorithmException{
-            return this.calculateHash().equals(_entryHash);
+    public boolean verifyHash()
+    {
+        String calculatedHash = this.calculateHash();
+        return calculatedHash.equals(_entryHash);
     }
 
     /***
     Calculates entry hash based on the entry data
     */
-    public String calculateHash() throws NoSuchAlgorithmException
+    public String calculateHash()
     {
-        var utf8 = Charset.forName("UTF8");
-        MessageDigest digest;
-        digest = MessageDigest.getInstance("SHA1");
+        var utf8 = StandardCharsets.UTF_8;
+        try
+        {
+            MessageDigest digest = MessageDigest.getInstance("SHA1");
+            digest.update(_userName.getBytes(utf8));
+            if (_extraInfo != null)
+                digest.update(_extraInfo.getBytes(utf8));
+            if (_reason != null)
+                digest.update(_reason.getBytes(utf8));
 
-        digest.update(_userName.getBytes(utf8));
-        if(_extraInfo != null)
-            digest.update(_extraInfo.getBytes(utf8));
-        if(_reason != null)
-            digest.update(_reason.getBytes(utf8));
+            for (AuditLogMessage msg : _allInfoMessage)
+                digest.update(msg.getHashBytes(utf8));
 
-        for(AuditLogMessage msg : _allInfoMessage)
-            digest.update(msg.getHashBytes(utf8));
+            digest.update(_formatVersion.getBytes(utf8));
+            digest.update(getTimestampHashingBytes());
+            digest.update(getTimezoneHashingBytes());
 
-        digest.update(_formatVersion.getBytes(utf8));
-        digest.update(getTimestampHashingBytes());
-        digest.update(getTimezoneHashingBytes());
+            if (_documentFormatVersion == null)
+            {
+                throw new IllegalStateException("Can't calculate the hash without knowing the document format version");
+            }
 
-        _calculatedHashBytes = digest.digest();
+            if (_parentEntryHash != null && _documentFormatVersion.compareTo(SEQUENTIAL_LOG_HASH_MIN_VERSION) >= 0)
+            {
+                digest.update(Base64.getDecoder().decode(_parentEntryHash));
+            }
 
-        return new String(Base64.getEncoder().encode(_calculatedHashBytes), Charset.forName("US-ASCII"));
+            _calculatedHashBytes = digest.digest();
+
+            return new String(Base64.getEncoder().encode(_calculatedHashBytes), StandardCharsets.US_ASCII);
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            throw new IllegalStateException("Couldn't find hash algorithm", e);
+        }
     }
 
     /***

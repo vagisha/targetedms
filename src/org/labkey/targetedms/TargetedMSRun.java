@@ -243,7 +243,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
 
     public boolean isZipFile()
     {
-       return _fileName.toLowerCase().endsWith(".zip");
+       return _fileName != null && _fileName.toLowerCase().endsWith(".zip");
     }
     /**
      * Do not use this directly to delete a run - use TargetedMSManager.deleteRuns

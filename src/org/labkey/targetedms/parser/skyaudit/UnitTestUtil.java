@@ -16,6 +16,7 @@
 package org.labkey.targetedms.parser.skyaudit;
 
 import org.apache.commons.io.FileExistsException;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.BaseSelector;
 import org.labkey.api.data.CompareType;
@@ -127,19 +128,9 @@ public class UnitTestUtil
 
         if (zipDir.exists())
         {
-            String[] children = zipDir.list();
-            if(children == null) return null;
-            boolean res = false;    //this variable is here for debug purposes: to inspect the result of deletion operation
-            for(String child : children){
-                File f = new File(zipDir, child);
-                if(f.exists())
-                {
-                    res = f.delete();
-                    pLogger.debug(String.format("The file %s exists. Deletion attempt status %s.", f.toString(), res));
-                }
-
-            }
+            FileUtils.deleteDirectory(zipDir);
         }
+
         List<File> files = ZipUtil.unzipToDirectory(pZip, zipDir, pLogger);
         for(File file : files){
             String ext = FileUtil.getExtension(file.getName());
