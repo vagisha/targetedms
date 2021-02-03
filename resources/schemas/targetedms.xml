@@ -1059,7 +1059,7 @@
             <column columnName="structuralmodlossid"/>
         </columns>
     </table>
-    <table tableName="transitionoptimization" tableDbType="TABLE">
+    <table tableName="TransitionOptimization" tableDbType="TABLE">
         <columns>
             <column columnName="Id">
                 <isHidden>true</isHidden>
