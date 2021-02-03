@@ -17,28 +17,20 @@ SELECT
   cc.Id AS CalibrationCurve,
   hpci.Id AS HeavyPrecursorChromInfo,
   hpci.SampleFileId,
-  hpre.Charge,
+  hpci.MoleculePrecursorId.Charge,
   lpci.Id AS LightPrecursorChromInfo,
-  CASE WHEN hpci.TotalArea <> 0 THEN
-    (lpci.TotalArea / hpci.TotalArea) ELSE NULL END AS Ratio
-FROM
-  targetedms.Molecule hmol
-INNER JOIN
-  targetedms.MoleculePrecursor hpre
-ON hpre.GeneralMoleculeId = hmol.Id AND hpre.IsotopeLabelId.name = 'heavy'
-INNER JOIN
-  targetedms.PrecursorChromInfo hpci
-ON hpci.MoleculePrecursorId = hpre.Id
-INNER JOIN
-  targetedms.CalibrationCurve cc
-ON cc.GeneralMoleculeId = hmol.Id
+  CASE WHEN hpci.TotalArea <> 0 THEN (lpci.TotalArea / hpci.TotalArea) END AS Ratio
 
-INNER JOIN
-  targetedms.Molecule lmol
-ON cc.GeneralMoleculeId = lmol.Id
-INNER JOIN
-  targetedms.MoleculePrecursor lpre
-ON lpre.GeneralMoleculeId = lmol.Id AND lpre.IsotopeLabelId.name = 'light'
-INNER JOIN
-  targetedms.PrecursorChromInfo lpci
-ON lpci.MoleculePrecursorId = lpre.Id AND hpci.SampleFileId = lpci.SampleFileId AND hpre.Charge = lpre.Charge
+FROM
+    targetedms.PrecursorChromInfo hpci
+    INNER JOIN targetedms.CalibrationCurve cc
+    ON
+        cc.GeneralMoleculeId = hpci.MoleculePrecursorId.MoleculeId AND
+        hpci.MoleculePrecursorId.IsotopeLabelId.name = 'heavy'
+
+    INNER JOIN targetedms.PrecursorChromInfo lpci
+    ON
+        cc.GeneralMoleculeId = lpci.MoleculePrecursorId.MoleculeId AND
+        hpci.SampleFileId = lpci.SampleFileId AND
+        hpci.MoleculePrecursorId.Charge = lpci.MoleculePrecursorId.Charge AND
+        lpci.MoleculePrecursorId.IsotopeLabelId.name = 'light'

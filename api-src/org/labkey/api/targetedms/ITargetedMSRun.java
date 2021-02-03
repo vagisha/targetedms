@@ -34,4 +34,5 @@ public interface ITargetedMSRun
     public long getId();
     public Integer getDataId();
     public Integer getSkydDataId();
+    public String getSoftwareVersion();
 }

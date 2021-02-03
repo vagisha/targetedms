@@ -375,6 +375,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _iRTscaleId = iRTscaleId;
     }
 
+    @Override
     public String getSoftwareVersion()
     {
         return _softwareVersion;
