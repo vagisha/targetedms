@@ -90,8 +90,7 @@ public class LibMoleculePrecursorDao extends BaseDaoImpl<LibMoleculePrecursor>
 
         stmt.setObject(colIndex++, precursor.getMassMonoisotopic(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getMassAverage(), Types.DOUBLE);
-        stmt.setString(colIndex++, precursor.getIonFormula());
-        stmt.setString(colIndex++, precursor.getCustomIonName());
+        stmt.setString(colIndex++, precursor.getAdduct());
 
         colIndex = setIonMobilityColumns(stmt, colIndex, precursor);
     }

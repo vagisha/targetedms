@@ -287,9 +287,6 @@ public abstract class BaseDaoImpl<T extends AbstractLibEntity> implements Dao<T>
         stmt.setObject(colIndex++, precursor.getExplicitCcsSqa(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getExplicitCompensationVoltage(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getPrecursorConcentration(), Types.DOUBLE);
-        stmt.setObject(colIndex++, precursor.getDriftTimeMs1(), Types.DOUBLE);
-        stmt.setObject(colIndex++, precursor.getDriftTimeFragment(), Types.DOUBLE);
-        stmt.setObject(colIndex++, precursor.getDriftTimeWindow(), Types.DOUBLE);
         return colIndex;
     }
 }

@@ -67,9 +67,6 @@ public class PrecursorChromInfo extends AbstractChromInfo
     private int _numTransitions;
 
     private Double _ccs;
-    private Double _driftTimeMs1;
-    private Double _driftTimeFragment;
-    private Double _driftTimeWindow;
     private Double _ionMobilityMs1;
     private Double _ionMobilityFragment;
     private Double _ionMobilityWindow;
@@ -309,36 +306,6 @@ public class PrecursorChromInfo extends AbstractChromInfo
     public void setCcs(Double ccs)
     {
         _ccs = ccs;
-    }
-
-    public Double getDriftTimeMs1()
-    {
-        return _driftTimeMs1;
-    }
-
-    public void setDriftTimeMs1(Double driftTimeMs1)
-    {
-        _driftTimeMs1 = driftTimeMs1;
-    }
-
-    public Double getDriftTimeFragment()
-    {
-        return _driftTimeFragment;
-    }
-
-    public void setDriftTimeFragment(Double driftTimeFragment)
-    {
-        _driftTimeFragment = driftTimeFragment;
-    }
-
-    public Double getDriftTimeWindow()
-    {
-        return _driftTimeWindow;
-    }
-
-    public void setDriftTimeWindow(Double driftTimeWindow)
-    {
-        _driftTimeWindow = driftTimeWindow;
     }
 
     public Double getIonMobilityMs1()

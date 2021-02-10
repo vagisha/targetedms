@@ -569,8 +569,8 @@ public class ContainerChromatogramLibraryWriter
     private LibMolecule makeLibMolecule(Molecule molecule)
     {
         LibMolecule libMolecule = new LibMolecule();
-        libMolecule.setIonFormula(molecule.getIonFormula());
-        libMolecule.setCustomIonName(molecule.getCustomIonName());
+        libMolecule.setChemicalFormula(molecule.getIonFormula());
+        libMolecule.setMoleculeName(molecule.getCustomIonName());
         libMolecule.setMassMonoisotopic(molecule.getMassMonoisotopic());
         libMolecule.setMassAverage(molecule.getMassAverage());
         libMolecule.setMoleculeAccession(molecule.getMoleculeId());
@@ -608,12 +608,7 @@ public class ContainerChromatogramLibraryWriter
 
         // Add transitions.
         Collection<Transition> transitions = TransitionManager.getTransitionsForPrecursor(precursor.getId(), _user, _container);
-        addTransitions(libPrecursor, transitions, bestChromInfo, (t, tci) -> {
-                LibTransition transitionToSave = new LibTransition(t, tci);
-                _transitionCount++;
-                return transitionToSave;
-        });
-
+        addTransitions(libPrecursor, transitions, bestChromInfo, (t, tci) -> new LibTransition(t, tci, precursor));
         _precursorCount++;
         return libPrecursor;
     }
@@ -628,7 +623,7 @@ public class ContainerChromatogramLibraryWriter
 
         Collection<MoleculeTransition> transitions = MoleculeTransitionManager.getTransitionsForPrecursor(precursor.getId(), _user, _container);
         // Add transitions.
-        addTransitions(libPrecursor, transitions, bestChromInfo, LibMoleculeTransition::new);
+        addTransitions(libPrecursor, transitions, bestChromInfo, (t, tci) -> new LibMoleculeTransition(t, tci, precursor));
         _precursorCount++;
         return libPrecursor;
     }

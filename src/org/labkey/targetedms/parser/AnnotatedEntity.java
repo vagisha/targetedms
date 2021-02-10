@@ -15,6 +15,9 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.apache.commons.lang3.StringUtils;
+
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,5 +37,38 @@ public abstract class AnnotatedEntity<AnnotationType extends AbstractAnnotation>
     public void setAnnotations(List<AnnotationType> annotations)
     {
         _annotations = Collections.unmodifiableList(annotations);
+    }
+
+    /** Utility for small molecules to separate adducts from the rest of the formula */
+    @Nullable
+    protected String extractAdduct(String ionFormula)
+    {
+        if (StringUtils.stripToNull(ionFormula) == null)
+        {
+            return null;
+        }
+        if (!ionFormula.contains("[") || !ionFormula.endsWith("]"))
+        {
+            throw new IllegalStateException("Invalid ion formula: " + ionFormula);
+        }
+        // Pull out the text between the brackets at the end
+        String adduct = ionFormula.substring(ionFormula.lastIndexOf("[") + 1);
+        return adduct.substring(0, adduct.length() - 1);
+    }
+
+    /** Utilities for small molecules to drop the adducts from the rest of the formula */
+    @Nullable
+    protected String stripAdduct(String ionFormula)
+    {
+        if (StringUtils.stripToNull(ionFormula) == null)
+        {
+            return null;
+        }
+        if (!ionFormula.contains("[") || !ionFormula.endsWith("]"))
+        {
+            throw new IllegalStateException("Invalid ion formula: " + ionFormula);
+        }
+        // Pull out the text before the last bracket
+        return ionFormula.substring(0, ionFormula.lastIndexOf("["));
     }
 }

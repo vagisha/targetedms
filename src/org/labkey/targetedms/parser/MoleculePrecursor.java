@@ -71,6 +71,11 @@ public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
         _massAverage = massAverage;
     }
 
+    public String getAdduct()
+    {
+        return extractAdduct(_ionFormula);
+    }
+
     @Override
     public String toString()
     {

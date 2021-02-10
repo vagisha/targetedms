@@ -546,9 +546,6 @@
             <column columnName="qvalue"/>
             <column columnName="zscore"/>
             <column columnName="Ccs"/>
-            <column columnName="DriftTimeMs1"/>
-            <column columnName="DriftTimeFragment"/>
-            <column columnName="DriftTimeWindow"/>
             <column columnName="IonMobilityMs1"/>
             <column columnName="IonMobilityFragment"/>
             <column columnName="IonMobilityWindow"/>
@@ -695,8 +692,6 @@
             <column columnName="MassErrorPPM"/>
             <column columnName="PointsAcrossPeak"/>
             <column columnName="Ccs"/>
-            <column columnName="DriftTime"/>
-            <column columnName="DriftTimeWindow"/>
             <column columnName="IonMobility"/>
             <column columnName="IonMobilityWindow"/>
             <column columnName="IonMobilityType"/>

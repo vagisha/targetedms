@@ -121,8 +121,8 @@ class Constants
         CalcNeutralMass("DOUBLE NOT NULL"),
         NumMissedCleavages("INTEGER NOT NULL"),
 
-        IonFormula("VARCHAR(100)"),
-        CustomIonName("VARCHAR(100)"),
+        ChemicalFormula("VARCHAR(100)"),
+        MoleculeName("VARCHAR(100)"),
         MassMonoisotopic("DOUBLE"),
         MassAverage("DOUBLE"),
 
@@ -147,6 +147,7 @@ class Constants
         Chromatogram("BLOB"),
         UncompressedSize("INTEGER"),
         ChromatogramFormat("INTEGER"),
+        Adduct("VARCHAR(200)"),
         ExplicitIonMobility("DOUBLE"),
         CCS("DOUBLE"),
         IonMobilityMS1("DOUBLE"),
@@ -157,9 +158,6 @@ class Constants
         ExplicitCcsSqa("DOUBLE"),
         ExplicitCompensationVoltage("DOUBLE"),
         PrecursorConcentration("DOUBLE"),
-        DriftTimeMs1("DOUBLE"),
-        DriftTimeFragment("DOUBLE"),
-        DriftTimeWindow("DOUBLE"),
 
         PrecursorId("INTEGER NOT NULL", Table.Precursor, Id),
         IsotopeModId("INTEGER NOT NULL", Table.IsotopeModification, Id),
@@ -180,6 +178,7 @@ class Constants
         Fwhm("DOUBLE"),
         MassErrorPPM("DOUBLE"),
         ChromatogramIndex("INTEGER"),
+        FragmentName("VARCHAR(100)"),
 
         IrtLibraryId("INTEGER NOT NULL", Table.IrtLibrary, Id),
         PeptideModSeq("TEXT NOT NULL"),
@@ -188,6 +187,7 @@ class Constants
         TimeSource("INT"),
 
         TransitionId("INTEGER NOT NULL", Table.Transition, Id),
+        MoleculeTransitionId("INTEGER NOT NULL", Table.MoleculeTransition, Id),
         OptimizationType("TEXT NOT NULL"),
         OptimizationValue("DOUBLE NOT NULL"),
         OptimizationStep("INTEGER"),
@@ -575,10 +575,7 @@ class Constants
         ExplicitIonMobilityUnits(Column.ExplicitIonMobilityUnits),
         ExplicitCcsSqa(Column.ExplicitCcsSqa),
         ExplicitCompensationVoltage(Column.ExplicitCompensationVoltage),
-        PrecursorConcentration(Column.PrecursorConcentration),
-        DriftTimeMs1(Column.DriftTimeMs1),
-        DriftTimeFragment(Column.DriftTimeFragment),
-        DriftTimeWindow(Column.DriftTimeWindow);
+        PrecursorConcentration(Column.PrecursorConcentration);
 
         private final Column _column;
         private final String _definition;
@@ -710,8 +707,8 @@ class Constants
     {
         Id(Column.Id),
         MoleculeListId(Column.MoleculeListId),
-        IonFormula(Column.IonFormula),
-        CustomIonName(Column.CustomIonName),
+        ChemicalFormula(Column.ChemicalFormula),
+        MoleculeName(Column.MoleculeName),
         MassMonoisotopic(Column.MassMonoisotopic),
         MassAverage(Column.MassAverage),
         MoleculeAccession(Column.MoleculeAccession);
@@ -756,8 +753,7 @@ class Constants
         ChromatogramFormat(Column.ChromatogramFormat),
         MassMonoisotopic(Column.MassMonoisotopic),
         MassAverage(Column.MassAverage),
-        IonFormula(Column.IonFormula),
-        CustomIonName(Column.CustomIonName),
+        Adduct(Column.Adduct),
         ExplicitIonMobility(Column.ExplicitIonMobility),
         CCS(Column.CCS),
         IonMobilityMS1(Column.IonMobilityMS1),
@@ -767,10 +763,7 @@ class Constants
         ExplicitIonMobilityUnits(Column.ExplicitIonMobilityUnits),
         ExplicitCcsSqa(Column.ExplicitCcsSqa),
         ExplicitCompensationVoltage(Column.ExplicitCompensationVoltage),
-        PrecursorConcentration(Column.PrecursorConcentration),
-        DriftTimeMs1(Column.DriftTimeMs1),
-        DriftTimeFragment(Column.DriftTimeFragment),
-        DriftTimeWindow(Column.DriftTimeWindow);
+        PrecursorConcentration(Column.PrecursorConcentration);
 
         private final Column _column;
         private final String _definition;
@@ -833,6 +826,9 @@ class Constants
     {
         Id(Column.Id),
         MoleculePrecursorId(Column.MoleculePrecursorId),
+        FragmentName(Column.FragmentName),
+        ChemicalFormula(Column.ChemicalFormula),
+        Adduct(Column.Adduct),
         Mz(Column.Mz, "DOUBLE"),
         Charge(Column.Charge, "INTEGER"),
         FragmentType(Column.FragmentType),
@@ -932,7 +928,7 @@ class Constants
     public enum MoleculeTransitionOptimizationColumn implements ColumnDef
     {
         Id(Column.Id),
-        TransitionId(Column.TransitionId),
+        MoleculeTransitionId(Column.MoleculeTransitionId),
         OptimizationType(Column.OptimizationType),
         OptimizationValue(Column.OptimizationValue);
 

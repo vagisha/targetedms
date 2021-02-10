@@ -41,9 +41,6 @@ public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> 
     private Double _explicitCcsSqa;
     private Double _explicitCompensationVoltage;
     private Double _precursorConcentration;
-    private Double _driftTimeMs1;
-    private Double _driftTimeFragment;
-    private Double _driftTimeWindow;
 
     public AbstractLibPrecursor() {}
 
@@ -80,9 +77,6 @@ public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> 
             setIonMobilityMS1(bestChromInfo.getIonMobilityMs1());
             setIonMobilityType(bestChromInfo.getIonMobilityType());
             setIonMobilityWindow(bestChromInfo.getIonMobilityWindow());
-            setDriftTimeMs1(bestChromInfo.getDriftTimeMs1());
-            setDriftTimeWindow(bestChromInfo.getDriftTimeWindow());
-            setDriftTimeFragment(bestChromInfo.getDriftTimeFragment());
 
             long sampleFileId = bestChromInfo.getSampleFileId();
             Integer libSampleFileId = sampleFileIdMap.get(sampleFileId);
@@ -129,9 +123,6 @@ public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> 
         setExplicitCcsSqa(readDouble(rs, Constants.MoleculePrecursorColumn.ExplicitCcsSqa.baseColumn().name()));
         setExplicitCompensationVoltage(readDouble(rs, Constants.MoleculePrecursorColumn.ExplicitCompensationVoltage.baseColumn().name()));
         setPrecursorConcentration(readDouble(rs, Constants.MoleculePrecursorColumn.PrecursorConcentration.baseColumn().name()));
-        setDriftTimeWindow(readDouble(rs, Constants.MoleculePrecursorColumn.DriftTimeWindow.baseColumn().name()));
-        setDriftTimeFragment(readDouble(rs, Constants.MoleculePrecursorColumn.DriftTimeFragment.baseColumn().name()));
-        setDriftTimeMs1(readDouble(rs, Constants.MoleculePrecursorColumn.DriftTimeMs1.baseColumn().name()));
     }
 
     public String getIsotopeLabel()
@@ -407,35 +398,5 @@ public class AbstractLibPrecursor<TransitionType extends AbstractLibTransition> 
     public Double getPrecursorConcentration()
     {
         return _precursorConcentration;
-    }
-
-    public Double getDriftTimeMs1()
-    {
-        return _driftTimeMs1;
-    }
-
-    public void setDriftTimeMs1(Double driftTimeMs1)
-    {
-        _driftTimeMs1 = driftTimeMs1;
-    }
-
-    public Double getDriftTimeFragment()
-    {
-        return _driftTimeFragment;
-    }
-
-    public void setDriftTimeFragment(Double driftTimeFragment)
-    {
-        _driftTimeFragment = driftTimeFragment;
-    }
-
-    public Double getDriftTimeWindow()
-    {
-        return _driftTimeWindow;
-    }
-
-    public void setDriftTimeWindow(Double driftTimeWindow)
-    {
-        _driftTimeWindow = driftTimeWindow;
     }
 }

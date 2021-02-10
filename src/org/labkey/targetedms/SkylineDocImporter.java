@@ -1965,7 +1965,7 @@ public class SkylineDocImporter
         try
         {
             _transitionChromInfoStmt = ensureStatement(_transitionChromInfoStmt,
-                    "INSERT INTO targetedms.transitionchrominfo(transitionid, samplefileid, precursorchrominfoid, retentiontime, starttime, endtime, height, area, background, fwhm, fwhmdegenerate, truncated, peakrank, optimizationstep, note, chromatogramindex, masserrorppm, userset, identified, pointsacrosspeak, ccs, drifttime, drifttimewindow, ionmobility, ionmobilitywindow, ionmobilitytype, rank, rankbylevel, forcedintegration) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO targetedms.transitionchrominfo(transitionid, samplefileid, precursorchrominfoid, retentiontime, starttime, endtime, height, area, background, fwhm, fwhmdegenerate, truncated, peakrank, optimizationstep, note, chromatogramindex, masserrorppm, userset, identified, pointsacrosspeak, ccs, ionmobility, ionmobilitywindow, ionmobilitytype, rank, rankbylevel, forcedintegration) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     true);
 
             int index = 1;
@@ -1990,8 +1990,6 @@ public class SkylineDocImporter
             _transitionChromInfoStmt.setString(index++, transChromInfo.getIdentified());
             setInteger(_transitionChromInfoStmt, index++, transChromInfo.getPointsAcrossPeak());
             setDouble(_transitionChromInfoStmt, index++, transChromInfo.getCcs());
-            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getDriftTime());
-            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getDriftTimeWindow());
             setDouble(_transitionChromInfoStmt, index++, transChromInfo.getIonMobility());
             setDouble(_transitionChromInfoStmt, index++, transChromInfo.getIonMobilityWindow());
             _transitionChromInfoStmt.setString(index++, transChromInfo.getIonMobilityType());
@@ -2016,7 +2014,7 @@ public class SkylineDocImporter
         try
         {
             _precursorChromInfoStmt = ensureStatement(_precursorChromInfoStmt,
-                    "INSERT INTO targetedms.precursorchrominfo( precursorid, samplefileid, generalmoleculechrominfoid, bestretentiontime, minstarttime, maxendtime, totalarea, totalbackground, maxfwhm, peakcountratio, numtruncated, librarydotp, optimizationstep, note, chromatogram, numtransitions, numpoints, maxheight, isotopedotp, averagemasserrorppm, bestmasserrorppm, userset, uncompressedsize, identified, container, chromatogramformat, chromatogramoffset, chromatogramlength, qvalue, zscore, ccs, drifttimems1, drifttimefragment, drifttimewindow, ionmobilityms1, ionmobilityfragment, ionmobilitywindow, ionmobilitytype) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO targetedms.precursorchrominfo( precursorid, samplefileid, generalmoleculechrominfoid, bestretentiontime, minstarttime, maxendtime, totalarea, totalbackground, maxfwhm, peakcountratio, numtruncated, librarydotp, optimizationstep, note, chromatogram, numtransitions, numpoints, maxheight, isotopedotp, averagemasserrorppm, bestmasserrorppm, userset, uncompressedsize, identified, container, chromatogramformat, chromatogramoffset, chromatogramlength, qvalue, zscore, ccs, ionmobilityms1, ionmobilityfragment, ionmobilitywindow, ionmobilitytype) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     true);
 
             int index = 1;
@@ -2051,9 +2049,6 @@ public class SkylineDocImporter
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getQvalue());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getZscore());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getCcs());
-            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getDriftTimeMs1());
-            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getDriftTimeFragment());
-            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getDriftTimeWindow());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIonMobilityMs1());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIonMobilityFragment());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIonMobilityWindow());

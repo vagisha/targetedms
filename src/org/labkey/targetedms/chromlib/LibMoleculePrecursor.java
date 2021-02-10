@@ -16,8 +16,7 @@ public class LibMoleculePrecursor extends AbstractLibPrecursor<LibMoleculeTransi
 
     private Double _massMonoisotopic;
     private Double _massAverage;
-    private String _ionFormula;
-    private String _customIonName;
+    private String _adduct;
 
     public LibMoleculePrecursor() {}
 
@@ -25,8 +24,7 @@ public class LibMoleculePrecursor extends AbstractLibPrecursor<LibMoleculeTransi
                                 TargetedMSRun run, Map<Long, Integer> sampleFileIdMap)
     {
         super(p, isotopeLabelMap, chromInfo, run, sampleFileIdMap);
-        setIonFormula(p.getIonFormula());
-        setCustomIonName(p.getCustomIonName());
+        setAdduct(p.getAdduct());
         setMassMonoisotopic(p.getMassMonoisotopic());
         setMassAverage(p.getMassAverage());
     }
@@ -37,8 +35,7 @@ public class LibMoleculePrecursor extends AbstractLibPrecursor<LibMoleculeTransi
         setMoleculeId(rs.getInt(Constants.MoleculePrecursorColumn.MoleculeId.baseColumn().name()));
         setMassMonoisotopic(readDouble(rs, Constants.MoleculePrecursorColumn.MassMonoisotopic.baseColumn().name()));
         setMassAverage(readDouble(rs, Constants.MoleculePrecursorColumn.MassAverage.baseColumn().name()));
-        setIonFormula(rs.getString(Constants.MoleculePrecursorColumn.IonFormula.baseColumn().name()));
-        setCustomIonName(rs.getString(Constants.MoleculePrecursorColumn.CustomIonName.baseColumn().name()));
+        setAdduct(rs.getString(Constants.MoleculePrecursorColumn.Adduct.baseColumn().name()));
     }
 
     public long getMoleculeId()
@@ -71,23 +68,13 @@ public class LibMoleculePrecursor extends AbstractLibPrecursor<LibMoleculeTransi
         _massAverage = massAverage;
     }
 
-    public String getIonFormula()
+    public String getAdduct()
     {
-        return _ionFormula;
+        return _adduct;
     }
 
-    public void setIonFormula(String ionFormula)
+    public void setAdduct(String adduct)
     {
-        _ionFormula = ionFormula;
-    }
-
-    public String getCustomIonName()
-    {
-        return _customIonName;
-    }
-
-    public void setCustomIonName(String customIonName)
-    {
-        _customIonName = customIonName;
+        _adduct = adduct;
     }
 }

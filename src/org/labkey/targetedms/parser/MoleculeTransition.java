@@ -57,6 +57,16 @@ public class MoleculeTransition extends GeneralTransition
         _ionFormula = ionFormula;
     }
 
+    public String getAdduct()
+    {
+        return extractAdduct(_ionFormula);
+    }
+
+    public String getChemicalFormula()
+    {
+        return stripAdduct(_ionFormula);
+    }
+
     public String getCustomIonName()
     {
         return _customIonName;

@@ -33,7 +33,6 @@ import java.util.List;
  */
 public class LibMoleculeTransitionDao extends BaseDaoImpl<LibMoleculeTransition>
 {
-
     private final Dao<LibMoleculeTransitionOptimization> _moleculeTransitionOptimizationDao;
 
     public LibMoleculeTransitionDao(Dao<LibMoleculeTransitionOptimization> moleculeTransitionOptimizationDao)
@@ -46,6 +45,9 @@ public class LibMoleculeTransitionDao extends BaseDaoImpl<LibMoleculeTransition>
     {
         int colIndex = 1;
         stmt.setLong(colIndex++, transition.getMoleculePrecursorId());
+        stmt.setString(colIndex++, transition.getFragmentName());
+        stmt.setString(colIndex++, transition.getChemicalFormula());
+        stmt.setString(colIndex++, transition.getAdduct());
         stmt.setObject(colIndex++, transition.getMz(), Types.DOUBLE);
         stmt.setObject(colIndex++, transition.getCharge(), Types.INTEGER);
         stmt.setString(colIndex++, transition.getFragmentType());
@@ -78,6 +80,9 @@ public class LibMoleculeTransitionDao extends BaseDaoImpl<LibMoleculeTransition>
             LibMoleculeTransition transition = new LibMoleculeTransition();
             transition.setId(rs.getInt(Constants.MoleculeTransitionColumn.Id.baseColumn().name()));
             transition.setMoleculePrecursorId(rs.getInt(Constants.MoleculeTransitionColumn.MoleculePrecursorId.baseColumn().name()));
+            transition.setFragmentName(rs.getString(Constants.MoleculeTransitionColumn.FragmentName.baseColumn().name()));
+            transition.setChemicalFormula(rs.getString(Constants.MoleculeTransitionColumn.ChemicalFormula.baseColumn().name()));
+            transition.setAdduct(rs.getString(Constants.MoleculeTransitionColumn.Adduct.baseColumn().name()));
             transition.setMz(readDouble(rs, Constants.MoleculeTransitionColumn.Mz.baseColumn().name()));
             transition.setCharge(readInteger(rs, Constants.MoleculeTransitionColumn.Charge.baseColumn().name()));
             transition.setFragmentType(rs.getString(Constants.MoleculeTransitionColumn.FragmentType.baseColumn().name()));

@@ -43,8 +43,6 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     private int _chromatogramIndex;
     private Integer _pointsAcrossPeak;
     private Double _ccs;
-    private Double _driftTime;
-    private Double _driftTimeWindow;
     private Double _ionMobility;
     private Double _ionMobilityWindow;
     private String _ionMobilityType;
@@ -255,26 +253,6 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     public void setCcs(Double ccs)
     {
         _ccs = ccs;
-    }
-
-    public Double getDriftTime()
-    {
-        return _driftTime;
-    }
-
-    public void setDriftTime(Double driftTime)
-    {
-        _driftTime = driftTime;
-    }
-
-    public Double getDriftTimeWindow()
-    {
-        return _driftTimeWindow;
-    }
-
-    public void setDriftTimeWindow(Double driftTimeWindow)
-    {
-        _driftTimeWindow = driftTimeWindow;
     }
 
     public Double getIonMobility()

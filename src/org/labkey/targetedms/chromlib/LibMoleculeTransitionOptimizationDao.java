@@ -16,9 +16,9 @@ public class LibMoleculeTransitionOptimizationDao extends BaseDaoImpl<LibMolecul
         while (rs.next())
         {
             LibMoleculeTransitionOptimization moleculeTransitionOptimization = new LibMoleculeTransitionOptimization();
-            moleculeTransitionOptimization.setTransitionId(rs.getInt(Constants.TransitionOptimizationColumn.TransitionId.name()));
-            moleculeTransitionOptimization.setOptimizationValue(readDouble(rs, Constants.TransitionOptimizationColumn.OptimizationValue.name()));
-            moleculeTransitionOptimization.setOptimizationType(rs.getString(Constants.TransitionOptimizationColumn.OptimizationType.name()));
+            moleculeTransitionOptimization.setTransitionId(rs.getInt(Constants.MoleculeTransitionOptimizationColumn.MoleculeTransitionId.name()));
+            moleculeTransitionOptimization.setOptimizationValue(readDouble(rs, Constants.MoleculeTransitionOptimizationColumn.OptimizationValue.name()));
+            moleculeTransitionOptimization.setOptimizationType(rs.getString(Constants.MoleculeTransitionOptimizationColumn.OptimizationType.name()));
 
             moleculeTransitionOptimizations.add(moleculeTransitionOptimization);
         }

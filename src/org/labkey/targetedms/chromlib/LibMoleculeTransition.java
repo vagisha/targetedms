@@ -15,8 +15,8 @@
  */
 package org.labkey.targetedms.chromlib;
 
+import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.MoleculeTransition;
-import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
 /**
@@ -27,12 +27,18 @@ import org.labkey.targetedms.parser.TransitionChromInfo;
 public class LibMoleculeTransition extends AbstractLibTransition
 {
     private long _moleculePrecursorId;
+    private String _fragmentName;
+    private String _chemicalFormula;
+    private String _adduct;
 
     public LibMoleculeTransition() {}
 
-    public LibMoleculeTransition(MoleculeTransition transition, TransitionChromInfo tci)
+    public LibMoleculeTransition(MoleculeTransition transition, TransitionChromInfo tci, MoleculePrecursor precursor)
     {
-        super(transition, tci);
+        super(transition, tci, precursor);
+        setFragmentName(transition.getCustomIonName());
+        setChemicalFormula(transition.getChemicalFormula());
+        setAdduct(transition.getAdduct());
     }
 
     public long getMoleculePrecursorId()
@@ -43,6 +49,36 @@ public class LibMoleculeTransition extends AbstractLibTransition
     public void setMoleculePrecursorId(long moleculePrecursorId)
     {
         _moleculePrecursorId = moleculePrecursorId;
+    }
+
+    public String getFragmentName()
+    {
+        return _fragmentName;
+    }
+
+    public void setFragmentName(String fragmentName)
+    {
+        _fragmentName = fragmentName;
+    }
+
+    public String getChemicalFormula()
+    {
+        return _chemicalFormula;
+    }
+
+    public void setChemicalFormula(String chemicalFormula)
+    {
+        _chemicalFormula = chemicalFormula;
+    }
+
+    public String getAdduct()
+    {
+        return _adduct;
+    }
+
+    public void setAdduct(String adduct)
+    {
+        _adduct = adduct;
     }
 
     @Override
@@ -66,6 +102,9 @@ public class LibMoleculeTransition extends AbstractLibTransition
         if (_massIndex != null ? !_massIndex.equals(that._massIndex) : that._massIndex != null) return false;
         if (_mz != null ? !_mz.equals(that._mz) : that._mz != null) return false;
         if (_massErrorPPM != null ? !_massErrorPPM.equals(that._massErrorPPM) : that._massErrorPPM != null) return false;
+        if (_chemicalFormula != null ? !_chemicalFormula.equals(that._chemicalFormula) : that._chemicalFormula != null) return false;
+        if (_fragmentName != null ? !_fragmentName.equals(that._fragmentName) : that._fragmentName != null) return false;
+        if (_adduct != null ? !_adduct.equals(that._adduct) : that._adduct != null) return false;
 
         return true;
     }
@@ -84,6 +123,9 @@ public class LibMoleculeTransition extends AbstractLibTransition
         result = 31 * result + _fwhm.hashCode();
         result = 31 * result + (_chromatogramIndex != null ? _chromatogramIndex.hashCode() : 0);
         result = 31 * result + (_massErrorPPM != null ? _massErrorPPM.hashCode() : 0);
+        result = 31 * result + (_chemicalFormula != null ? _chemicalFormula.hashCode() : 0);
+        result = 31 * result + (_fragmentName != null ? _fragmentName.hashCode() : 0);
+        result = 31 * result + (_adduct != null ? _adduct.hashCode() : 0);
         return result;
     }
 }

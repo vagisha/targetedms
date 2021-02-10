@@ -64,8 +64,8 @@ public class LibMoleculeDao extends BaseDaoImpl<LibMolecule>
     {
         int colIndex = 1;
         stmt.setObject(colIndex++, molecule.getMoleculeListId(), Types.INTEGER);
-        stmt.setObject(colIndex++, molecule.getIonFormula(), Types.VARCHAR);
-        stmt.setObject(colIndex++, molecule.getCustomIonName(), Types.VARCHAR);
+        stmt.setObject(colIndex++, molecule.getChemicalFormula(), Types.VARCHAR);
+        stmt.setObject(colIndex++, molecule.getMoleculeName(), Types.VARCHAR);
         stmt.setObject(colIndex++, molecule.getMassMonoisotopic(), Types.DOUBLE);
         stmt.setObject(colIndex++, molecule.getMassAverage(), Types.DOUBLE);
         stmt.setString(colIndex, molecule.getMoleculeAccession());
@@ -122,8 +122,8 @@ public class LibMoleculeDao extends BaseDaoImpl<LibMolecule>
         {
             LibMolecule molecule = new LibMolecule();
             molecule.setId(rs.getInt(PeptideColumn.Id.baseColumn().name()));
-            molecule.setIonFormula(rs.getString(Constants.MoleculeColumn.IonFormula.baseColumn().name()));
-            molecule.setCustomIonName(rs.getString(Constants.MoleculeColumn.CustomIonName.baseColumn().name()));
+            molecule.setChemicalFormula(rs.getString(Constants.MoleculeColumn.ChemicalFormula.baseColumn().name()));
+            molecule.setMoleculeName(rs.getString(Constants.MoleculeColumn.MoleculeName.baseColumn().name()));
             molecule.setMassMonoisotopic(readDouble(rs, Constants.MoleculeColumn.MassMonoisotopic.baseColumn().name()));
             molecule.setMassAverage(readDouble(rs, Constants.MoleculeColumn.MassAverage.baseColumn().name()));
             molecule.setMoleculeAccession(rs.getString(Constants.MoleculeColumn.MoleculeAccession.baseColumn().name()));

@@ -1,5 +1,6 @@
 package org.labkey.targetedms.chromlib;
 
+import org.labkey.targetedms.parser.GeneralPrecursor;
 import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
@@ -21,10 +22,17 @@ public abstract class AbstractLibTransition extends AbstractLibEntity
 
     public AbstractLibTransition() {}
 
-    public AbstractLibTransition(GeneralTransition transition, TransitionChromInfo tci)
+    public AbstractLibTransition(GeneralTransition transition, TransitionChromInfo tci, GeneralPrecursor<?> precursor)
     {
         setMz(transition.getMz());
-        setCharge(transition.getCharge());
+        if (transition.getCharge() == null)
+        {
+            setCharge(precursor.getCharge());
+        }
+        else
+        {
+            setCharge(transition.getCharge());
+        }
         setFragmentType(transition.getFragmentType());
         setMassIndex(transition.getMassIndex());
 

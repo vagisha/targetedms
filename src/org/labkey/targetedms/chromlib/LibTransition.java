@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.chromlib;
 
+import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
@@ -32,13 +33,12 @@ public class LibTransition extends AbstractLibTransition
 
     public LibTransition() {}
 
-    public LibTransition(Transition transition, TransitionChromInfo transitionChromInfo)
+    public LibTransition(Transition transition, TransitionChromInfo transitionChromInfo, Precursor precursor)
     {
-        super(transition, transitionChromInfo);
+        super(transition, transitionChromInfo, precursor);
         setNeutralMass(transition.getNeutralMass());
         setNeutralLossMass(transition.getNeutralLossMass());
         setFragmentOrdinal(transition.getFragmentOrdinal());
-
     }
 
     public long getPrecursorId()
