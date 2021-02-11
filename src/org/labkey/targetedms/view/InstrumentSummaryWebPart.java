@@ -1,6 +1,7 @@
 package org.labkey.targetedms.view;
 
-import org.labkey.api.query.QueryParam;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.view.ViewContext;
@@ -11,7 +12,17 @@ public class InstrumentSummaryWebPart extends QueryView
     public InstrumentSummaryWebPart (ViewContext viewContext)
     {
         super(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()));
-        setSettings(new QuerySettings(getViewContext(), "InstrumentSummary", "QCInstrumentSummary"));
+        QuerySettings instrumentSummaryQS = new QuerySettings(getViewContext(), "InstrumentSummary", "QCInstrumentSummary");
+        var propertyValues = getBindPropertyValues();
+        if (null != propertyValues)
+        {
+            var runId = propertyValues.getPropertyValue("id");
+            if (null != runId)
+            {
+                instrumentSummaryQS.setBaseFilter(new SimpleFilter(FieldKey.fromString("runId"), Long.valueOf(runId.getValue().toString())));
+            }
+        }
+        setSettings(instrumentSummaryQS);
         setTitle("Instruments Summary");
         setShowDetailsColumn(false);
 

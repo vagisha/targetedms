@@ -184,10 +184,21 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             this.endDate = this.formatDate(this.calculateEndDateByOffset());
         }
 
-        // initialize the form panel toolbars and display the plot
-        this.add(this.initPlotFormToolbars());
+        this.getExpRunRangeDetails();
+    },
 
-        this.displayTrendPlot();
+    getExpRunRangeDetails: function() {
+        var urlParams = LABKEY.ActionURL.getParameters();
+        this.showExpRunRange = urlParams['RunId'] !== undefined && urlParams['RunId'] !== "";
+
+        if (this.showExpRunRange) {
+            this.getExperimentRunDetails(urlParams['RunId'])
+        }
+        else {
+            // initialize the form panel toolbars and display the plot
+            this.add(this.initPlotFormToolbars());
+            this.displayTrendPlot();
+        }
     },
 
     initPlotFormToolbars : function()
@@ -198,7 +209,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             { tbar: this.getFirstPlotOptionsToolbar() },
             { tbar: this.getSecondPlotOptionsToolbar() },
             { tbar: this.getThirdPlotOptionsToolbar() },
-            { tbar: this.getGuideSetMessageToolbar() }
+            { tbar: this.getGuideSetMessageToolbar() },
+            { tbar: this.getExperimentRunDateRangeToolbar() }
         ];
 
         if(this.replicateAnnotationsNodes.length > 0)
@@ -541,6 +553,35 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
 
         return this.guideSetMessageToolbar;
+    },
+
+    getExperimentRunDateRangeToolbar : function()
+    {
+        if (!this.experimentRunDateRangeToolbar)
+        {
+            var hidden = !this.showExpRunRange;
+            var returnUrl = LABKEY.ActionURL.getReturnUrl();
+            var htmlStr = this.showExpRunRange
+                    ? "<a href=" + Ext4.String.htmlEncode(returnUrl) + ">"
+                    + Ext4.String.htmlEncode(this.expRunDetails.fileName) + " : "
+                    + Ext4.String.htmlEncode(this.formatDate(this.expRunDetails.startDate)) + " through "
+                    + Ext4.String.htmlEncode(this.formatDate(this.expRunDetails.endDate))
+                    + "</a>"
+                    : "";
+            this.experimentRunDateRangeToolbar = Ext4.create('Ext.toolbar.Toolbar', {
+                ui: 'footer',
+                cls: 'expDateRange-toolbar-msg',
+                hidden: hidden,
+                layout: { pack: 'center' },
+                items: [{
+                    xtype: 'box',
+                    itemId: 'ExpreimentRunDateRangeToolBar',
+                    html: htmlStr
+                }]
+            });
+        }
+
+        return this.experimentRunDateRangeToolbar;
     },
 
     isValidQCPlotType: function(plotType)
@@ -1529,20 +1570,65 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             }
         }, this);
 
+        var binWidth = (plot.grid.rightEdge - plot.grid.leftEdge) / (plot.scales.x.scale.domain().length);
+        var yRange = plot.scales.yLeft.range;
+
+        var xAcc = function (d) {
+            return plot.scales.x.scale(d.StartIndex) - (binWidth/2);
+        };
+
+        var widthAcc = function (d) {
+            return plot.scales.x.scale(d.EndIndex) - plot.scales.x.scale(d.StartIndex) + binWidth;
+        };
+
+        if (this.showExpRunRange) {
+            // determine the start index and end index for exp region to be highlighted
+            this.calculatePlotIndicesBetweenDates(precursorInfo);
+
+            if (this.expRunDetails && this.expRunDetails.startIndex !== undefined && this.expRunDetails.endIndex !== undefined) {
+                var startIndex = this.expRunDetails.startIndex;
+                var endIndex = this.expRunDetails.endIndex;
+                var pointsData = precursorInfo.data;
+                var expDataArr = [];
+
+                for (var i = startIndex; i <= endIndex; i++) {
+                    expDataArr.push(pointsData[i].value);
+                }
+
+                var expMean = me.formatNumeric(LABKEY.vis.Stat.getMean(expDataArr));
+                var expStdDev = me.formatNumeric(LABKEY.vis.Stat.getStdDev(expDataArr));
+                var expPercentCV = me.formatNumeric((expStdDev / expMean) * 100);
+
+                var expRangeData = [];
+                expRangeData.push({
+                    'EndIndex': endIndex,
+                    'StartIndex': startIndex
+                })
+                var expRange = me.getSvgElForPlot(plot).selectAll("rect.expRange").data(expRangeData)
+                        .enter().append("rect").attr("class", "expRange")
+                        .attr('x', xAcc).attr('y', yRange[1])
+                        .attr('width', widthAcc).attr('height', yRange[0] - yRange[1])
+                        .attr('stroke', '#557098').attr('stroke-opacity', 0.1)
+                        .attr('fill', '#557098').attr('fill-opacity', 0.1);
+
+                // TODO: look into setting background color of title tooltip
+                expRange.append("title").text(function (d) {
+                    return "Skyline File: " + Ext4.String.htmlEncode(me.expRunDetails.fileName)
+                            + ", \nSerial No: " + Ext4.String.htmlEncode(me.expRunDetails.serialNumber)
+                            + ", \nInstrument Name: " + Ext4.String.htmlEncode(me.expRunDetails.instrumentName)
+                            + ", \nStart: " + Ext4.String.htmlEncode(me.formatDate(Ext4.Date.parse(me.expRunDetails.startDate, LABKEY.Utils.getDateTimeFormatWithMS()), true))
+                            + ", \nEnd: " + Ext4.String.htmlEncode(me.formatDate(Ext4.Date.parse(me.expRunDetails.endDate, LABKEY.Utils.getDateTimeFormatWithMS()), true))
+                            + ", \nMean: " + Ext4.String.htmlEncode(expMean)
+                            + ", \nStd Dev: " + Ext4.String.htmlEncode(expStdDev)
+                            + ", \n%CV: " + Ext4.String.htmlEncode(expPercentCV);
+                });
+            }
+
+        }
+
+        // add a "shaded" rect to indicate which points in the plot are part of the guide set training range
         if (guideSetTrainingData.length > 0)
         {
-            // add a "shaded" rect to indicate which points in the plot are part of the guide set training range
-            var binWidth = (plot.grid.rightEdge - plot.grid.leftEdge) / (plot.scales.x.scale.domain().length);
-            var yRange = plot.scales.yLeft.range;
-
-            var xAcc = function (d) {
-                return plot.scales.x.scale(d.StartIndex) - (binWidth/2);
-            };
-
-            var widthAcc = function (d) {
-                return plot.scales.x.scale(d.EndIndex) - plot.scales.x.scale(d.StartIndex) + binWidth;
-            };
-
             var guideSetTrainingRange = this.getSvgElForPlot(plot).selectAll("rect.training").data(guideSetTrainingData)
                 .enter().append("rect").attr("class", "training")
                 .attr('x', xAcc).attr('y', yRange[1])
@@ -1560,18 +1646,18 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 if (showGuideSetStats)
                 {
                     mean = me.formatNumeric(seriesGuideSetInfo.Mean);
-                    stdDev = me.formatNumeric(seriesGuideSetInfo.StandardDev);
+                    stdDev = me.formatNumeric(seriesGuideSetInfo.StdDev);
                     percentCV = me.formatNumeric((stdDev / mean) * 100);
                 }
 
-                return "Guide Set ID: " + d.GuideSetId + ","
-                    + "\nStart: " + me.formatDate(Ext4.Date.parse(guideSetInfo.TrainingStart, LABKEY.Utils.getDateTimeFormatWithMS()), true)
-                    + ",\nEnd: " + me.formatDate(Ext4.Date.parse(guideSetInfo.TrainingEnd, LABKEY.Utils.getDateTimeFormatWithMS()), true)
-                    + (showGuideSetStats ? ",\n# Runs: " + numRecs : "")
-                    + (showGuideSetStats ? ",\nMean: " + mean : "")
-                    + (showGuideSetStats ? ",\nStd Dev: " + stdDev : "")
-                    + (showGuideSetStats ? ",\n%CV: " + percentCV : "")
-                    + (guideSetInfo.Comment ? (",\nComment: " + guideSetInfo.Comment) : "");
+                return "Guide Set ID: " + Ext4.String.htmlEncode(d.GuideSetId) + ","
+                    + "\nStart: " + Ext4.String.htmlEncode(me.formatDate(Ext4.Date.parse(guideSetInfo.TrainingStart, LABKEY.Utils.getDateTimeFormatWithMS()), true))
+                    + ",\nEnd: " + Ext4.String.htmlEncode(me.formatDate(Ext4.Date.parse(guideSetInfo.TrainingEnd, LABKEY.Utils.getDateTimeFormatWithMS()), true))
+                    + (showGuideSetStats ? ",\n# Runs: " + Ext4.String.htmlEncode(numRecs) : "")
+                    + (showGuideSetStats ? ",\nMean: " + Ext4.String.htmlEncode(mean) : "")
+                    + (showGuideSetStats ? ",\nStd Dev: " + Ext4.String.htmlEncode(stdDev) : "")
+                    + (showGuideSetStats ? ",\n%CV: " + Ext4.String.htmlEncode(percentCV) : "")
+                    + (guideSetInfo.Comment ? (",\nComment: " + Ext4.String.htmlEncode(guideSetInfo.Comment)) : "");
             });
         }
 
@@ -1724,6 +1810,16 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
             this.setBrushingEnabled(false);
             this.displayTrendPlot();
+
+            // reset expRunDetails highlighted region startIndex and endIndex
+            if (this.showExpRunRange && this.expRunDetails) {
+                if (this.expRunDetails.startIndex) {
+                    this.expRunDetails.startIndex = undefined;
+                }
+                if (this.expRunDetails.endIndex) {
+                    this.expRunDetails.endIndex = undefined;
+                }
+            }
         }
     },
 

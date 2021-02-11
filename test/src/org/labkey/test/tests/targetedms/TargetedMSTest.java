@@ -176,7 +176,12 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
 
     protected void setupFolder(FolderType folderType)
     {
-        _containerHelper.createProject(getProjectName(), "Panorama");
+       setUpFolder(getProjectName(),folderType);
+    }
+
+    protected void setUpFolder(String folderName, FolderType folderType )
+    {
+        _containerHelper.createProject(folderName, "Panorama");
         waitForElement(Locator.linkContainingText("Save"));
         clickAndWait(Locator.linkContainingText("Next"));
         selectFolderType(folderType);

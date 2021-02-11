@@ -3140,8 +3140,6 @@ public class TargetedMSController extends SpringActionController
         return runSummaryView;
     }
 
-    //
-
     @RequiresPermission(ReadPermission.class)
     public class ShowVersionsAction extends SimpleViewAction<RunDetailsForm>
     {
@@ -3411,7 +3409,6 @@ public class TargetedMSController extends SpringActionController
         {
             VBox vBox = new VBox();
             vBox.addView(getSummaryView(form, _run));
-            vBox.addView(new InstrumentSummaryWebPart(form.getViewContext()));
 
             VIEWTYPE view;
 
@@ -3683,7 +3680,8 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class ShowReplicatesAction extends ShowRunSingleDetailsAction<RunDetailsForm>
     {
-        private static final String DATA_REGION_NAME = "Replicate";
+        private static final String REPLICATE_DATA_REGION_NAME = "Replicate";
+        private static final String INSTRUMENT_SUMMARY_DATA_REGION_NAME = "InstrumentSummary";
 
         public ShowReplicatesAction()
         {
@@ -3693,10 +3691,25 @@ public class TargetedMSController extends SpringActionController
         @Override
         protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
-            QuerySettings settings = new QuerySettings(getViewContext(), DATA_REGION_NAME, TargetedMSSchema.SAMPLE_FILE_RUN_PREFIX + _run.getRunId());
-            settings.setBaseSort(new Sort(FieldKey.fromParts("ReplicateId", "Name")));
-            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
-            return schema.createView(getViewContext(), settings, errors);
+            if (dataRegion.equalsIgnoreCase(INSTRUMENT_SUMMARY_DATA_REGION_NAME))
+            {
+                return new InstrumentSummaryWebPart(getViewContext());
+            }
+            else
+            {
+                QuerySettings settings = new QuerySettings(getViewContext(), REPLICATE_DATA_REGION_NAME, TargetedMSSchema.SAMPLE_FILE_RUN_PREFIX + _run.getRunId());
+                settings.setBaseSort(new Sort(FieldKey.fromParts("ReplicateId", "Name")));
+                TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+                return schema.createView(getViewContext(), settings, errors);
+            }
+        }
+
+        @Override
+        protected ModelAndView getHtmlView(RunDetailsForm form, BindException errors) throws Exception
+        {
+            VBox vBox = (VBox) super.getHtmlView(form, errors);
+            vBox.addView(createQueryView(form, errors, true, INSTRUMENT_SUMMARY_DATA_REGION_NAME), 1);
+            return vBox;
         }
     }
 

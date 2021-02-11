@@ -297,6 +297,80 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return !this.largePlot && this.plotTypes.length > 1 ? width / 2 : width;
     },
 
+    getExperimentRunDetails: function (runId) {
+        var sql = "Select MIN(sf.AcquiredTime) AS StartDate,\n" +
+                "       MAX(sf.AcquiredTime) AS EndDate,\n" +
+                "       r.FileName,\n" +
+                "       sf.InstrumentSerialNumber,\n" +
+                "       sf.InstrumentId.model\n" +
+                "FROM targetedms.Replicate rep\n" +
+                "INNER JOIN targetedms.SampleFile sf ON rep.Id = sf.ReplicateId\n" +
+                "INNER JOIN targetedms.Runs r on r.Id = rep.RunId\n" +
+                "where rep.RunId ='" + runId + "'\n" +
+                "GROUP BY r.FileName, sf.InstrumentSerialNumber, sf.InstrumentId.model";
+
+        LABKEY.Query.executeSql({
+            schemaName: 'targetedms',
+            sql: sql,
+            containerFilter: LABKEY.Query.containerFilter.allFolders,
+            scope: this,
+            success: function (response) {
+
+                var runDetails = response.rows[0];
+                this.expRunDetails = {};
+                this.expRunDetails['instrumentName'] = runDetails.model;
+                this.expRunDetails['serialNumber'] = runDetails.InstrumentSerialNumber;
+                this.expRunDetails['fileName'] = runDetails.FileName;
+                this.expRunDetails['startDate'] = runDetails.StartDate;
+                this.expRunDetails['endDate'] = runDetails.EndDate;
+                // initialize the form panel toolbars and display the plot
+                this.add(this.initPlotFormToolbars());
+                this.displayTrendPlot();
+            },
+            failure: this.failureHandler
+        });
+    },
+
+    calculatePlotIndicesBetweenDates: function (precursorInfo) {
+        var startDate = new Date(this.expRunDetails.startDate);
+        var endDate = new Date(this.expRunDetails.endDate);
+        var startIndex;
+        var endIndex;
+
+        if (precursorInfo) {
+            // fragmentPlotData has plot data separated by series labels
+            var data = precursorInfo.data;
+
+            for (var index = 0; index < data.length; index++) {
+                var pointDate = new Date(data[index].fullDate)
+                if (pointDate >= startDate && pointDate < endDate) {
+                    if (startIndex === undefined) {
+                        startIndex = data[index].seqValue;
+                    }
+                }
+
+                if (pointDate >= endDate) {
+                    if (!endIndex) {
+                        endIndex = data[index].seqValue;
+                    }
+                }
+                // this happens for custom date range shorter than exp date range
+                else if (index === data.length - 1 && endIndex === undefined && startIndex !== undefined) {
+                    endIndex = data[data.length - 1].seqValue;
+                }
+
+                var foundIndices = startIndex !== undefined && endIndex !== undefined;
+
+                if (foundIndices) {
+                    this.expRunDetails['startIndex'] = startIndex;
+                    this.expRunDetails['endIndex'] = endIndex;
+                    break;
+                }
+            }
+
+        }
+    },
+
     // TODO: Move this to tests
     testVals: {
         a: {fragment:'', dataType: 'Peptide', result: ''},
