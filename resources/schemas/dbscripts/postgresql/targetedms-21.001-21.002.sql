@@ -8,7 +8,9 @@ UPDATE targetedms.PrecursorChromInfo SET IonMobilityFragment = DriftTimeFragment
 UPDATE targetedms.PrecursorChromInfo SET IonMobilityWindow = DriftTimeWindow
     WHERE IonMobilityWindow IS NULL AND DriftTimeWindow IS NOT NULL;
 
-ALTER TABLE targetedms.PrecursorChromInfo DROP COLUMN DriftTimeMS1, DriftTimeFragment, DriftTimeWindow;
+ALTER TABLE targetedms.PrecursorChromInfo DROP COLUMN DriftTimeMS1,
+                                          DROP COLUMN DriftTimeFragment,
+                                          DROP COLUMN DriftTimeWindow;
 
 UPDATE targetedms.TransitionChromInfo SET IonMobilityType = 'drift_time_ms'
     WHERE IonMobilityType IS NULL AND (DriftTime IS NOT NULL OR DriftTimeWindow IS NOT NULL);
@@ -17,4 +19,5 @@ UPDATE targetedms.TransitionChromInfo SET IonMobility = DriftTime
 UPDATE targetedms.TransitionChromInfo SET IonMobilityWindow = DriftTimeWindow
     WHERE IonMobilityWindow IS NULL AND DriftTimeWindow IS NOT NULL;
 
-ALTER TABLE targetedms.TransitionChromInfo DROP COLUMN DriftTime, DriftTimeWindow;
+ALTER TABLE targetedms.TransitionChromInfo DROP COLUMN DriftTime,
+                                           DROP COLUMN DriftTimeWindow;
