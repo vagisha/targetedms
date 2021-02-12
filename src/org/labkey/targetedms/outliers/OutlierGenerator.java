@@ -91,7 +91,7 @@ public class OutlierGenerator
         return sql.toString();
     }
 
-    private String queryContainerSampleFileRawData(List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups)
+    private String queryContainerSampleFileRawData(List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups, boolean showExcluded)
     {
         StringBuilder sql = new StringBuilder();
 
@@ -169,13 +169,17 @@ public class OutlierGenerator
         {
             sql.append("\nWHERE sf.AcquiredTime IS NOT NULL");
         }
+        if (!showExcluded)
+        {
+            sql.append(" AND sf.Excluded = false");
+        }
 
         return sql.toString();
     }
 
-    public List<RawMetricDataSet> getRawMetricDataSets(Container container, User user, List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups)
+    public List<RawMetricDataSet> getRawMetricDataSets(Container container, User user, List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups, boolean showExcluded)
     {
-        String labkeySQL = queryContainerSampleFileRawData(configurations, startDate, endDate, annotationGroups);
+        String labkeySQL = queryContainerSampleFileRawData(configurations, startDate, endDate, annotationGroups, showExcluded);
 
         return QueryService.get().selector(
                 new TargetedMSSchema(user, container),

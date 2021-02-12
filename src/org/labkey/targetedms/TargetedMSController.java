@@ -1113,7 +1113,7 @@ public class TargetedMSController extends SpringActionController
             List<GuideSet> guideSets = TargetedMSManager.getGuideSets(getContainer(), getUser());
             Map<Integer, QCMetricConfiguration> metricMap = enabledQCMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
 
-            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(getContainer(), getUser(), enabledQCMetricConfigurations, null, null, Collections.emptyList());
+            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(getContainer(), getUser(), enabledQCMetricConfigurations, null, null, Collections.emptyList(), true);
 
             Map<GuideSetKey, GuideSetStats> stats = OutlierGenerator.get().getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
 
@@ -1136,6 +1136,7 @@ public class TargetedMSController extends SpringActionController
         private Date _startDate;
         private Date _endDate;
         private List<OutlierGenerator.AnnotationGroup> _selectedAnnotations;
+        private boolean _showExcluded;
 
         public int getMetricId()
         {
@@ -1216,6 +1217,16 @@ public class TargetedMSController extends SpringActionController
         {
             _selectedAnnotations = selectedAnnotations;
         }
+
+        public boolean isShowExcluded()
+        {
+            return _showExcluded;
+        }
+
+        public void setShowExcluded(boolean showExcluded)
+        {
+            _showExcluded = showExcluded;
+        }
     }
 
     /**
@@ -1251,7 +1262,7 @@ public class TargetedMSController extends SpringActionController
                     .stream()
                     .filter(qcMetricConfiguration -> qcMetricConfiguration.getId() == passedMetricId)
                     .collect(Collectors.toList());
-            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, form.getStartDate(), form.getEndDate(), form.getSelectedAnnotations());
+            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, form.getStartDate(), form.getEndDate(), form.getSelectedAnnotations(), form.isShowExcluded());
             Map<GuideSetKey, GuideSetStats> stats = generator.getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
             Map<Integer, QCMetricConfiguration> metricMap = qcMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
             List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, getContainer(), null);

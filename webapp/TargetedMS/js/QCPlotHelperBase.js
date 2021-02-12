@@ -107,6 +107,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         plotsConfig.includeMR = this.showMovingRangePlot();
         plotsConfig.includeMeanCusum = this.showMeanCUSUMPlot();
         plotsConfig.includeVariableCusum = this.showVariableCUSUMPlot();
+        plotsConfig.showExcluded = this.showExcluded;
 
         var config = this.getReportConfig()
 
