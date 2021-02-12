@@ -17,9 +17,13 @@ public class InstrumentSummaryWebPart extends QueryView
         if (null != propertyValues)
         {
             var runId = propertyValues.getPropertyValue("id");
-            if (null != runId)
+            if (null != runId && runId.getValue() != null)
             {
-                instrumentSummaryQS.setBaseFilter(new SimpleFilter(FieldKey.fromString("runId"), Long.valueOf(runId.getValue().toString())));
+                try
+                {
+                    instrumentSummaryQS.setBaseFilter(new SimpleFilter(FieldKey.fromString("runId"), Long.valueOf(runId.getValue().toString())));
+                }
+                catch (NumberFormatException ignored) {}
             }
         }
         setSettings(instrumentSummaryQS);
