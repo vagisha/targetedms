@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.security.User;
+import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
@@ -80,6 +81,11 @@ public class CalibrationCurveChart
                 if (_molecule == null)
                 {
                     _molecule = MoleculeManager.getMolecule(_container, calibrationCurve.getGeneralMoleculeId());
+                }
+
+                if (_molecule == null)
+                {
+                    throw new NotFoundException("Can't resolve molecule ID: " + calibrationCurve.getGeneralMoleculeId() + " for curve " + calibrationCurve.getId());
                 }
 
                 List<GeneralMoleculeChromInfo> chromInfos = new ArrayList<>();

@@ -75,7 +75,10 @@ public class AuditLogEntry
     {
         TargetedMSSchema schema = new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer());
         TableSelector sel =  new TableSelector(schema.getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_ENTRY), new SimpleFilter(FieldKey.fromParts("EntryId"), pEntryId), null);
-        return sel.getObject(AuditLogEntry.class);
+        List<AuditLogEntry> results = sel.getArrayList(AuditLogEntry.class);
+        // Possible to get more than one match if two documents share an audit history. In this case, we don't care
+        // which we use
+        return results.isEmpty() ? null : results.get(0);
     }
 
     public AuditLogTree getTreeEntry(){

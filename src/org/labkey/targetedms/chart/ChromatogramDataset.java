@@ -542,9 +542,10 @@ public abstract class ChromatogramDataset
             XYSeries series = new XYSeries(label);
 
             List<TransitionChromInfoAndQuantitative> chromInfoList = TransitionManager.getTransitionChromInfoAndQuantitative(pChromInfo, _fullScanSettings);
-            // Key in the map is the chromatogram index; used to index into the RT and intensity arrays of the chromatogram
-            Map<Integer, TransitionChromInfoAndQuantitative> transitionChromIndexMap = chromInfoList.stream().collect(Collectors.toMap(TransitionChromInfoAndQuantitative::getChromatogramIndex,
-                    Function.identity()));
+            // Key in the map is the chromatogram index; used to index into the RT and intensity arrays of the chromatogram.
+            // Issue 42518 - May have duplicates for a given index - just choose one
+            Map<Integer, TransitionChromInfoAndQuantitative> transitionChromIndexMap = chromInfoList.stream().collect(
+                    Collectors.toMap(TransitionChromInfoAndQuantitative::getChromatogramIndex, Function.identity(), (x, y) -> x));
 
             // We will consider the precursor peak to be "quantitative" if any of its transition peaks are quantitative.
             boolean isQuantitativePrecursor = chromInfoList.stream().anyMatch(TransitionChromInfoAndQuantitative::isQuantitative);
