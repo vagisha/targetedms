@@ -35,7 +35,7 @@ import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.datasource.MsDataSourceUtil;
 import org.labkey.targetedms.parser.SampleFile;
-import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
+import org.labkey.targetedms.parser.speclib.BlibSpectrumReader;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
 

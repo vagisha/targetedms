@@ -20,7 +20,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.security.User;
-import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
+import org.labkey.targetedms.parser.speclib.LibSpectrumReader;
 
 import java.beans.PropertyChangeEvent;
 import java.util.Collection;
@@ -65,7 +65,7 @@ public class TargetedMSListener implements ContainerManager.ContainerListener
         new SqlExecutor(TargetedMSManager.getSchema()).execute("DELETE FROM " + TargetedMSManager.getTableInfoQCMetricConfiguration() + " WHERE Container = ?", c);
 
 
-        BlibSpectrumReader.clearBlibCache(c);
+        LibSpectrumReader.clearLibCache(c);
     }
 
     @Override

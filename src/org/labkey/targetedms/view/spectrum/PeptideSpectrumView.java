@@ -27,9 +27,9 @@ import org.springframework.validation.BindException;
 public class PeptideSpectrumView extends JspView<LibrarySpectrumMatch>
 {
 
-    public PeptideSpectrumView(LibrarySpectrumMatch specMatch, BindException errors)
+    public PeptideSpectrumView(LibrarySpectrumMatch specMatch)
     {
-        super("/org/labkey/targetedms/view/spectrum/spectrumView.jsp", specMatch, errors);
+        super("/org/labkey/targetedms/view/spectrum/spectrumView.jsp", specMatch);
         setTitle(String.format("%s, Charge %d %s",
                 specMatch.getModifiedSequence(),
                 specMatch.getCharge(),
