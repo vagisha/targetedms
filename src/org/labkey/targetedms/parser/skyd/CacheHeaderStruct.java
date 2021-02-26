@@ -146,6 +146,11 @@ public class CacheHeaderStruct
         return 108;
     }
 
+    public int getChromTransitionSize()
+    {
+        return chromTransitionSize;
+    }
+
     public static StructSerializer<CacheHeaderStruct> getStructSerializer(CacheFormatVersion cacheFormatVersion) {
         return new StructSerializer<CacheHeaderStruct>(
                 CacheHeaderStruct.class, getStructSize(CacheFormatVersion.CURRENT), getStructSize(cacheFormatVersion))
