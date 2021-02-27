@@ -37,6 +37,7 @@ public class ChromatogramChartMakerFactory
     private boolean _syncRt;
     private boolean _splitGraph;
     private boolean _showOptimizationPeaks;
+    private boolean _legend = true;
 
     public void setSyncIntensity(boolean syncIntensity)
     {
@@ -58,6 +59,11 @@ public class ChromatogramChartMakerFactory
         _showOptimizationPeaks = showOptimizationPeaks;
     }
 
+    public void setLegend(boolean legend)
+    {
+        _legend = legend;
+    }
+
     public JFreeChart createTransitionChromChart(TransitionChromInfo tChromInfo, PrecursorChromInfo pChromInfo, User user, Container container)
     {
         return new ChromatogramChartMaker().make(new ChromatogramDataset.TransitionDataset(pChromInfo, tChromInfo, user, container));
@@ -74,12 +80,11 @@ public class ChromatogramChartMakerFactory
         {
             // Split graph setting will be ignored if we are showing optimization peaks.
             return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorOptimizationPeakDataset(pChromInfo,
-                    _syncIntensity, _syncRt, user, container));
-
+                    _syncIntensity, _syncRt, user, container), _legend);
         }
         else if(!_splitGraph)
         {
-            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container));
+            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container), _legend);
         }
         else
         {
@@ -92,7 +97,7 @@ public class ChromatogramChartMakerFactory
                     return jfreePrecIonDataset != null ? jfreePrecIonDataset.getSeriesCount() : 0;
                 }
             };
-            return new ChromatogramChartMaker().make(precursorIonDataset, productIonDataset);
+            return new ChromatogramChartMaker().make(precursorIonDataset, productIonDataset, _legend);
         }
     }
 
@@ -137,7 +142,7 @@ public class ChromatogramChartMakerFactory
                     return jfreePrecIonDataset != null ? jfreePrecIonDataset.getSeriesCount() : 0;
                 }
             };
-            return new ChromatogramChartMaker().make(precursorIonDataset, productIonDataset);
+            return new ChromatogramChartMaker().make(precursorIonDataset, productIonDataset, _legend);
         }
     }
 
@@ -153,6 +158,6 @@ public class ChromatogramChartMakerFactory
 
     public JFreeChart createSampleFileChromChart(SampleFileChromInfo chromInfo, User user, Container container)
     {
-        return new ChromatogramChartMaker().make(new ChromatogramDataset.SampleFileDataset(chromInfo, user, container), "Time", "Value", false);
+        return new ChromatogramChartMaker().make(new ChromatogramDataset.SampleFileDataset(chromInfo, user, container), false, "Time", "Value");
     }
 }

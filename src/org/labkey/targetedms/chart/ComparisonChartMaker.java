@@ -261,7 +261,7 @@ public class ComparisonChartMaker
         else
         {
             // X-axis label for the "replicate comparison" graph
-            xLabel = noAnnotation(groupByAnnotation) ? "Replicate" : groupByAnnotation;
+            xLabel = noAnnotation(groupByAnnotation) ? "Replicates" : groupByAnnotation;
         }
 
         JFreeChart chart;

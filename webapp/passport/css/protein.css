@@ -241,20 +241,13 @@
     height:400px;
     display: table;
     margin: auto;
-    position:relative;
-}
-
-#selectedPeptideChromatogramContainer img {
-    max-width:250px;
-   float:left;
 }
 
 #selectedPeptideChromatogramContainer span
 {
-    color:#808080;
-    font-size:12px;
-    display:block;
-    float:right;
+    text-align: center;
+    width: 250px;
+    display: inline-grid;
 }
 
 .peptideDetails {

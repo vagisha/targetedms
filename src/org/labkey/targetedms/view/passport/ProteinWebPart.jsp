@@ -21,7 +21,7 @@
     @Override
     public void addClientDependencies(ClientDependencies dependencies)
     {
-        dependencies.add("vis/lib/d3-3.5.17.min.js");
+        dependencies.add("vis/vis");
         dependencies.add("passport/js/util.js");
         dependencies.add("passport/js/settings.js");
         dependencies.add("passport/js/protein.js");
@@ -31,6 +31,7 @@
         dependencies.add("internal/jQuery");
         dependencies.add("passport/jQuery/jquery-ui.min.css");
         dependencies.add("passport/jQuery/jquery-ui.min.js");
+        dependencies.add("TargetedMS/js/svgChart.js");
 
     }
 %>
@@ -47,6 +48,8 @@
             break;
         }
     }
+    // Temporary bridge between original and new reporting approach
+    boolean showCV = me.getViewContext().getActionURL().getParameter("showNewPlot") != null;
     %>
     <!--START IMPORTS-->
 
@@ -170,6 +173,9 @@
                     <select id="peptideSort" name="peptideSort">
                         <option value="intensity">Intensity</option>
                         <option value="sequencelocation">Sequence Location</option>
+                        <% if (showCV) { %>
+                        <option value="cv">Coefficient of Variation</option>
+                        <% } %>
                     </select>
                 </p>
                 <% if (hasBeforeAndAfter) { %>
@@ -202,15 +208,19 @@
     <!-- FILTER OPTIONS END -->
     <!-- CHART START -->
         <div id="chart"></div>
+        <div id="visChart"></div>
         <div id="peptide"></div>
         <div id="protein"></div>
     <!-- CHART END -->
 
         <div id="selectedPeptideChromatogramContainer">
-            <img id="selectedPeptideChromatogramBefore" src="" alt="Chromatogram not available for the selected peptide"/>
-            <img id="selectedPeptideChromatogramAfter" src="" alt="Chromatogram not available for the selected peptide"/>
-            <img id="selectedPeptideChromatogram" src="" alt="Chromatogram not available for the selected peptide"/>
+            <div>
+                <span width="350" height="400" id="selectedPeptideChromatogramBefore"></span>
+                <span width="350" height="400" id="selectedPeptideChromatogramAfter"></span>
+                <span width="350" height="400" id="selectedPeptideChromatogram"></span>
+            </div>
         </div>
+        <div id="seriesLegend" style="width: 500px; margin: auto"></div>
         <div id="peptideinfo" class="peptideDetails"></div>
         <div class="peptideDetails"><a id="selectedPeptideLink" href="">View peptide details</a></div>
     </div>

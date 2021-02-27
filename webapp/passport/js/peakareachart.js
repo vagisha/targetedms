@@ -31,7 +31,7 @@ peakareachart = {
             .style("text-anchor", "middle")
             .attr("x", relativeStart + relativeWidth/2)
             .attr("y", yRelative(31 - 12 - 8)) //12px font  8px for highlight_peptide_bounds
-            .text(start +  " - " + (start + sequence.length -1)); // subtract 1 because end index will be base 2
+            .text((start + 1) +  " - " + (start + sequence.length)); // subtract 1 because end index will be base 2
 
     },
     paintPeptide: function paintPeptide(d) {

@@ -78,10 +78,15 @@ class ChromatogramChartMaker
 
     public JFreeChart make(final ChromatogramDataset chromatogramDataset)
     {
-        return make(chromatogramDataset, "Retention Time", "Intensity", true);
+        return make(chromatogramDataset, true, "Retention Time", "Intensity");
     }
 
-    public JFreeChart make(final ChromatogramDataset chromatogramDataset, String xLabel, String yLabel, boolean legend)
+    public JFreeChart make(final ChromatogramDataset chromatogramDataset, boolean legend)
+    {
+        return make(chromatogramDataset, legend, "Retention Time", "Intensity");
+    }
+
+    public JFreeChart make(final ChromatogramDataset chromatogramDataset, boolean legend, String xLabel, String yLabel)
     {
         chromatogramDataset.build();
 
@@ -206,15 +211,15 @@ class ChromatogramChartMaker
         }
     }
 
-    public JFreeChart make(ChromatogramDataset dataset1, ChromatogramDataset dataset2)
+    public JFreeChart make(ChromatogramDataset dataset1, ChromatogramDataset dataset2, boolean legend)
     {
-        JFreeChart precursorChart = make(dataset1);
-        JFreeChart productChart = make(dataset2);
-        if(precursorChart.getXYPlot().getDataset().getSeriesCount() == 0)
+        JFreeChart precursorChart = make(dataset1, legend);
+        JFreeChart productChart = make(dataset2, legend);
+        if(precursorChart.getXYPlot().getDataset() == null || precursorChart.getXYPlot().getDataset().getSeriesCount() == 0)
         {
             return productChart;
         }
-        if(productChart.getXYPlot().getDataset().getSeriesCount() == 0)
+        if(productChart.getXYPlot().getDataset() == null || productChart.getXYPlot().getDataset().getSeriesCount() == 0)
         {
             return precursorChart;
         }

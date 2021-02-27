@@ -199,7 +199,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertEquals("Wrong decoy value", "false", getText(Locator.tagWithClass("td", "lk-form-label").withText("Decoy:").followingSibling("td")));
         assertEquals("Wrong File", SKY_FILE1, getText(Locator.tagWithClass("td", "lk-form-label").withText("File:").followingSibling("td")));
         assertElementPresent(Locator.xpath("//table[contains(@id, 'peptideMap')]"));
-        assertElementPresent(Locator.xpath("//div[@id = 'peakAreasGraphImg']/img"));
+        ensureComparisonPlots("CTCF");
 
         log("Testing chart interactivity");
         WebElement height= getDriver().findElement(By.xpath("//input[contains(@id, 'chartHeight-inputEl')]"));
@@ -209,7 +209,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         width.clear();
         width.sendKeys("500");
         click(Locator.xpath("//a[contains(@class, 'x4-btn x-unselectable x4-box-item x4-toolbar-item x4-btn-default-small x4-noicon x4-btn-noicon x4-btn-default-small-noicon')]"));
-        assertElementPresent(Locator.xpath("//div[@id = 'peakAreasGraphImg']/img"));
+        ensureComparisonPlots("CTCF");
     }
 
     @LogMethod

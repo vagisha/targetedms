@@ -296,6 +296,13 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         clickButton("Finish");
     }
 
+    /** Verify that the comparison plots have been AJAX'd into place */
+    protected void ensureComparisonPlots(String title)
+    {
+        waitForElement(Locator.xpath("//div[@id ='peakAreasGraph']/div[normalize-space()='" + title + "']"));
+        waitForElement(Locator.xpath("//div[@id ='retentionTimesGraph']/div[normalize-space()='" + title + "']"));
+    }
+
     protected void verifyQcSummary(int docCount, int sampleFileCount, int precursorCount)
     {
         QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();

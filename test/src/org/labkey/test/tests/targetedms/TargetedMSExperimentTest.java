@@ -346,8 +346,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals("703.9755", drt.getDataAsText(5, "Mass Average"));
         assertEquals("703.5152", drt.getDataAsText(5, "Mass Monoisotopic"));
         assertEquals(" ", drt.getDataAsText(5, "Avg. Measured RT"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+        ensureComparisonPlots("PC");
+
 
         //Click on a value under Custom Ion Name
         clickAndWait(Locator.linkContainingText("PC aa C26:0").index(0)); //two links with this text, want the first one under Custom Ion Name hence index(0).
@@ -361,8 +361,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         assertElementPresent(Locator.xpath("//img[contains(@src, 'generalMoleculeChromatogramChart.view')]"));
         assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+        ensureComparisonPlots("PC aa C26:0");
 
         //Click on Molecule Precursor Chromatogram link
         clickAndWait(Locator.xpath("//a[contains(@href, 'moleculePrecursorAllChromatogramsChart.view')]"));
@@ -375,8 +374,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertElementPresent(Locator.xpath("//tr[td[text()='m/z']][td[normalize-space()='650.4755']]"));
 
         assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 4);
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+        ensureComparisonPlots("PC aa C26:0");
 
         //Go back to Document Summary page
         clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
@@ -396,8 +394,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertTextPresent("Small Molecule Summary");
         assertElementPresent(Locator.xpath("//img[contains(@src, 'generalMoleculeChromatogramChart.view')]"));
         assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+        ensureComparisonPlots("lysoPC a C14:0");
         assertElementPresent(Locator.xpath("//a[contains(@href, 'moleculePrecursorAllChromatogramsChart.view')]"));
 
         clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
@@ -405,8 +402,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("lysoPC a C14:0").index(1));
         assertTextPresent("Molecule Precursor Chromatograms");
         assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 4);
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+        ensureComparisonPlots("lysoPC a C14:0");
 
         //Go to Small Molecule Transition List
         clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));

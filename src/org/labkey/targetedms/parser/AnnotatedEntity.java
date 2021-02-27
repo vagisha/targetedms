@@ -49,7 +49,9 @@ public abstract class AnnotatedEntity<AnnotationType extends AbstractAnnotation>
         }
         if (!ionFormula.contains("[") || !ionFormula.endsWith("]"))
         {
-            throw new IllegalStateException("Invalid ion formula: " + ionFormula);
+            // Skyline shouldn't be writing out formulas without adducts but a to-be-fixed bug in the compact,
+            // BASE64-encoded format means that some documents
+            return null;
         }
         // Pull out the text between the brackets at the end
         String adduct = ionFormula.substring(ionFormula.lastIndexOf("[") + 1);
@@ -66,7 +68,9 @@ public abstract class AnnotatedEntity<AnnotationType extends AbstractAnnotation>
         }
         if (!ionFormula.contains("[") || !ionFormula.endsWith("]"))
         {
-            throw new IllegalStateException("Invalid ion formula: " + ionFormula);
+            // Skyline shouldn't be writing out formulas without adducts but a to-be-fixed bug in the compact,
+            // BASE64-encoded format means that some documents
+            return ionFormula;
         }
         // Pull out the text before the last bracket
         return ionFormula.substring(0, ionFormula.lastIndexOf("["));

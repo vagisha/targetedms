@@ -31,6 +31,7 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
+        dependencies.add("TargetedMS/js/svgChart.js");
     }
 %>
 <%
@@ -44,6 +45,9 @@
 
     ActionURL peakAreaUrl = new ActionURL(TargetedMSController.ShowPeakAreasAction.class, getContainer());
     ActionURL retentionTimesUrl = new ActionURL(TargetedMSController.ShowRetentionTimesChartAction.class, getContainer());
+
+    ActionURL replicateListAction = new ActionURL(TargetedMSController.ShowReplicatesAction.class, getContainer());
+    replicateListAction.addParameter("id", bean.getRun().getId());
 
     // for proteomics summary charts
     List<Peptide> peptideList = bean.getPeptideList();
@@ -375,19 +379,8 @@
     });
 
     // peak areas graph
-    var peakAreasImg = Ext4.create('Ext.Img', {
-        src: <%=q(peakAreaUrl)%>,
-        renderTo: Ext4.get('peakAreasGraphImg'),
-        width: <%= bean.getInitialWidth() %>,
-        height: <%= bean.getInitialHeight()%>
-    });
-
-    var retentionTimesImg = Ext4.create('Ext.Img', {
-        src: <%=q(retentionTimesUrl)%>,
-        renderTo: Ext4.get('retentionTimesGraphImg'),
-        width: <%= bean.getInitialWidth() %>,
-        height: <%= bean.getInitialHeight()%>
-    });
+    LABKEY.targetedms.SVGChart.requestAndRenderSVG(<%= q(peakAreaUrl) %>, document.getElementById('peakAreasGraph'), null, document.getElementById('peakAreasGraphLabel'));
+    LABKEY.targetedms.SVGChart.requestAndRenderSVG(<%= q(retentionTimesUrl) %>, document.getElementById('retentionTimesGraph'), null, document.getElementById('retentionTimesGraphLabel'));
 
     // buttons
     var updateBtn = Ext4.create('Ext.button.Button', {
@@ -408,7 +401,7 @@
                 chartHeight: chartHeightTb.getValue()
             };
 
-            var pearAreaUrl =  LABKEY.ActionURL.buildURL(
+            var peakAreaUrl =  LABKEY.ActionURL.buildURL(
                     'targetedms',  // controller
                     'showPeakAreas', // action
                     LABKEY.ActionURL.getContainer(),
@@ -427,12 +420,14 @@
             );
 
             // change the src of the image
-            peakAreasImg.setSrc(pearAreaUrl);
-            retentionTimesImg.setSrc(retentionTimesUrl);
-            peakAreasImg.setHeight(parseInt(chartHeightTb.getValue()));
-            peakAreasImg.setWidth(parseInt(chartWidthTb.getValue()));
-            retentionTimesImg.setHeight(parseInt(chartHeightTb.getValue()));
-            retentionTimesImg.setWidth(parseInt(chartWidthTb.getValue()));
+            var areaElement = document.getElementById('peakAreasGraph');
+            LABKEY.targetedms.SVGChart.requestAndRenderSVG(peakAreaUrl, areaElement, null, document.getElementById('peakAreasGraphLabel'));
+            var timeElement = document.getElementById('retentionTimesGraph');
+            LABKEY.targetedms.SVGChart.requestAndRenderSVG(retentionTimesUrl, timeElement, null, document.getElementById('retentionTimesGraphLabel'));
+            areaElement.style.width = parseInt(chartWidthTb.getValue());
+            areaElement.style.height = parseInt(chartHeightTb.getValue());
+            timeElement.style.width = parseInt(chartWidthTb.getValue());
+            timeElement.style.height = parseInt(chartHeightTb.getValue());
         }
     });
 
@@ -522,11 +517,13 @@
     <div id="peakAreasFormDiv" class="summary_form_box" style="display: <%=h(bean.isShowControls() ? "block" : "none")%>;"></div>
     <div class="summary_title_box">
         <h3 class="title">Peak Areas</h3>
-        <div id="peakAreasGraphImg"></div>
+        <div id="peakAreasGraph"></div>
+        <a href="<%= h(replicateListAction)%>"><div style="text-align: center" id="peakAreasGraphLabel"></div></a>
     </div>
     <div class="summary_title_box">
         <h3 class="title">Retention Times</h3>
-        <div id="retentionTimesGraphImg"></div>
+        <div id="retentionTimesGraph"></div>
+        <a href="<%= h(replicateListAction)%>"><div style="text-align: center" id="retentionTimesGraphLabel"></div></a>
     </div>
 </div>
 

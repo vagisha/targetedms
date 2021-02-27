@@ -4,6 +4,7 @@
 var barChartData = []; // d3 peptide chart DO NOT MODIFY ONLY SORT
 var peakAreaDiv, proteinBarDiv; // viz module div containers
 
+var showNewPlot = LABKEY.ActionURL.getParameter('showNewPlot');
 
 protein =
 {
@@ -149,6 +150,21 @@ protein =
         return protein.selectedPeptide;
     },
 
+    requestSVG: function(chromatogramReference, svgParentId) {
+        var chromatogram = protein.selectedPeptide[chromatogramReference];
+        var parentElement = $('#' + svgParentId);
+        if (chromatogram) {
+            parentElement.empty();
+            parentElement.show();
+            LABKEY.targetedms.SVGChart.requestAndRenderSVG(chromatogramUrl + "id=" + chromatogram + "&syncY=true&syncX=false&chartWidth=250&chartHeight=400", parentElement[0], $('#seriesLegend')[0])
+            return true;
+        }
+        else {
+            parentElement.hide();
+            return false;
+        }
+    },
+
     selectPeptide: function(p) {
         if(p == null)
             return;
@@ -163,34 +179,12 @@ protein =
                 break;
         }
 
-        var showLink = false;
+        $('#seriesLegend').empty();
+
         // sets panorama chromatogram to that of the newly selected peptide
-        if(protein.selectedPeptide["ChromatogramBeforeId"]) {
-            $('#selectedPeptideChromatogramBefore').attr("src", chromatogramUrl + "id=" + protein.selectedPeptide["ChromatogramBeforeId"] + "&chartWidth=250&chartHeight=400&syncY=false&syncX=false");
-            $('#selectedPeptideChromatogramBefore').show();
-            showLink = true;
-        }
-        else {
-            $('#selectedPeptideChromatogramBefore').hide();
-        }
-
-        if (protein.selectedPeptide["ChromatogramAfterId"]) {
-            $('#selectedPeptideChromatogramAfter').attr("src", chromatogramUrl + "id=" + protein.selectedPeptide["ChromatogramAfterId"] + "&chartWidth=250&chartHeight=400&syncY=false&syncX=false")
-            $('#selectedPeptideChromatogramAfter').show();
-            showLink = true;
-        }
-        else {
-            $('#selectedPeptideChromatogramAfter').hide();
-        }
-
-        if (protein.selectedPeptide["ChromatogramId"]) {
-            $('#selectedPeptideChromatogram').attr("src", chromatogramUrl + "id=" + protein.selectedPeptide["ChromatogramId"] + "&chartWidth=250&chartHeight=400&syncY=false&syncX=false")
-            $('#selectedPeptideChromatogram').show();
-            showLink = true;
-        }
-        else {
-            $('#selectedPeptideChromatogram').hide();
-        }
+        var showLink = this.requestSVG('ChromatogramBeforeId', 'selectedPeptideChromatogramBefore');
+        showLink |= this.requestSVG('ChromatogramAfterId', 'selectedPeptideChromatogramAfter');
+        showLink |= this.requestSVG('ChromatogramId', 'selectedPeptideChromatogram');
 
         if (showLink) {
             $('#selectedPeptideLink').show();
@@ -206,7 +200,7 @@ protein =
         var value = protein.selectedPeptide["Before Incubation"] ? protein.selectedPeptide["Before Incubation"] : protein.selectedPeptide["Total Area"];
         var totalPeakAreaWithCommas = value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         $('#peptideinfo').append('<span style="font-weight:600">Sequence:</span>&nbsp;<span style="font-family: monospace;">' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.Sequence) + "</span><br />" +
-                '<span style="font-weight:600">Location:</span>&nbsp;<span style="font-family: monospace;">[' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.StartIndex) +","+ LABKEY.Utils.encodeHtml(protein.selectedPeptide.EndIndex) + "]</span> <br />" +
+                '<span style="font-weight:600">Location:</span>&nbsp;<span style="font-family: monospace;">[' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.StartIndex + 1) +","+ LABKEY.Utils.encodeHtml(protein.selectedPeptide.EndIndex) + "]</span> <br />" +
                 '<span style="font-weight:600">Length:</span>&nbsp;<span style="font-family: monospace;">' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.Sequence.length)+ "</span> <br />" +
                 '<span style="font-weight:600">Total Peak Area:</span>&nbsp;<span style="font-family: monospace;">' + LABKEY.Utils.encodeHtml(totalPeakAreaWithCommas) + "</span> ");
 
@@ -224,6 +218,171 @@ protein =
     updateUI: function(){
         var parentWidth = parseInt(d3.select('#chart').style('width'), 10);
         peakareachart.draw("#chart", "#protein", parentWidth);
+
+        if (showNewPlot) {
+
+            var visChartElement = document.getElementById("visChart");
+
+            while (visChartElement.firstChild) {
+                visChartElement.removeChild(visChartElement.firstChild);
+            }
+
+            if (this.peptides && this.peptides.length) {
+                var plotData = [];
+                for (var i = 0; i < this.peptides.length; i++) {
+                    var abbreviatedSequence = this.peptides[i].sequence.substring(0, Math.min(this.peptides[i].sequence.length, 3));
+                    plotData.push({
+                        timepoint: 'Before',
+                        intensity: this.peptides[i].beforeintensity,
+                        sequence: this.peptides[i].sequence,
+                        xLabel: abbreviatedSequence
+                    });
+                    plotData.push({
+                        timepoint: 'After',
+                        intensity: this.peptides[i].normalizedafterintensity ? this.peptides[i].normalizedafterintensity : 0.0,
+                        sequence: this.peptides[i].sequence,
+                        xLabel: abbreviatedSequence
+                    });
+                }
+
+                var groupedBoxData = LABKEY.vis.groupData(plotData, function (row) {
+                    return row.sequence
+                });
+
+                var medians = {};
+                var cvLineData = [];
+                var cvs = {};
+
+                for (var groupName in groupedBoxData) {
+                    var stats = LABKEY.vis.Stat.summary(groupedBoxData[groupName], function (row) {
+                        return row.intensity
+                    });
+                    var sd = LABKEY.vis.Stat.getStdDev(stats.sortedValues);
+                    medians[groupName] = stats.Q2;
+                    var cv = stats.Q2 ? (sd / stats.Q2) : null;
+                    cvLineData.push({x: groupName, cv: cv, color: 'median'});
+                    cvs[groupName] = cv;
+                }
+
+                var sortBy = this.settings.getSortBy();
+                if (sortBy === "Sequence Location") {
+                    plotData.sort(function (a, b) {
+                        return a["StartIndex"] - b["StartIndex"];
+                    });
+                }
+
+                if (sortBy === "Intensity") {
+                    plotData.sort(function (a, b) {
+                        return medians[b.sequence] - medians[a.sequence];
+                    });
+                }
+
+                if (sortBy === "Coefficient of Variation") {
+                    plotData.sort(function (a, b) {
+                        return cvs[b.sequence] - cvs[a.sequence];
+                    });
+                }
+
+                var cvBarLayer = new LABKEY.vis.Layer({
+                    geom: new LABKEY.vis.Geom.BarPlot({
+                        opacity: 0.2,
+                        hoverFn: function (row) {
+                            return 'Peptide: ' + row.x + '\nCV: ' + (row.cv * 100).toFixed(2) + '%';
+                        }
+                    }),
+                    aes: {
+                        x: 'x',
+                        yRight: 'cv'
+                    },
+                    data: cvLineData
+                });
+
+                var pointLayer = new LABKEY.vis.Layer({
+                    geom: new LABKEY.vis.Geom.Point({
+                        position: 'jitter',
+                        color: 'timepoint',
+                        opacity: 0.6,
+                        size: 3
+                    }),
+                    aes: {
+                        hoverText: function (row) {
+                            return row.intensity.toExponential(3) + '\n' + row.timepoint;
+                        }
+                    }
+                });
+
+                var boxLayer = new LABKEY.vis.Layer({
+                    geom: new LABKEY.vis.Geom.Boxplot({
+                        showOutliers: false
+                    }),
+                    aes: {
+                        hoverText: function (x, stats) {
+                            var sd = LABKEY.vis.Stat.getStdDev(stats.sortedValues);
+
+                            return 'Peptide: ' + x +
+                                    '\nMin: ' + stats.min.toExponential(3) +
+                                    '\nMax: ' + stats.max.toExponential(3) +
+                                    '\nMean: ' + stats.Q2.toExponential(3) +
+                                    '\nStd dev: ' + sd.toExponential(3) +
+                                    '\n%CV: ' + (stats.Q2 ? ((sd / stats.Q2) * 100).toFixed(1) : 'N/A');
+                        }
+                    }
+                });
+
+                var plot = new LABKEY.vis.Plot({
+                    renderTo: 'visChart',
+                    rendererType: 'd3',
+                    clipRect: true,
+                    width: 1200,
+                    height: 400,
+                    gridLineColor: '#777777',
+                    labels: {
+                        yLeft: {value: 'Peak Area'},
+                        yRight: {value: '% Coefficient of Variation'}
+                    },
+                    data: plotData,
+                    gridLinesVisible: 'none',
+                    layers: [cvBarLayer, boxLayer, pointLayer],
+                    aes: {
+                        yLeft: 'intensity',
+                        yRight: 'cv',
+                        x: 'sequence',
+                        color: 'timepoint'
+                    },
+                    scales: {
+                        x: {
+                            scaleType: 'discrete',
+                            tickFormat: function (v) {
+                                return v.substring(0, Math.min(v.length, 3));
+                            }
+                        },
+                        yLeft: {
+                            scaleType: 'continuous',
+                            trans: 'linear',
+                            tickFormat: function (d) {
+                                if (d === 0)
+                                    return 0;
+                                return d.toExponential();
+                            }
+                        },
+                        yRight: {
+                            scaleType: 'continuous',
+                            trans: 'linear',
+                            tickFormat: function (d) {
+                                if (d === 0)
+                                    return 0;
+                                return (d * 100).toFixed(0);
+                            }
+                        }
+                    },
+                    margins: {
+                        bottom: 50
+                    }
+                });
+
+                plot.render();
+            }
+        }
     },
 
     initialize: function() {

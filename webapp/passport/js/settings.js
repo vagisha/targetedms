@@ -35,7 +35,7 @@ function Settings(updateCallback) {
             .change(function () {
                 $( "select option:selected" ).each(function() {
                     var newSort = $( this ).text();
-                    if(newSort != sortBy && (newSort == 'Intensity' || newSort == 'Sequence Location')) {
+                    if(newSort !== sortBy) {
                         sortBy = newSort;
                         update();
                     }
