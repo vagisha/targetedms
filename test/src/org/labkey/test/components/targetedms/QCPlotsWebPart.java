@@ -57,121 +57,6 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         super(driver, DEFAULT_TITLE, index);
     }
 
-    public enum Scale
-    {
-        LINEAR("Linear"),
-        LOG("Log"),
-        PERCENT_OF_MEAN("Percent of Mean"),
-        STANDARD_DEVIATIONS("Standard Deviations");
-
-        private String _text;
-
-        Scale(String text)
-        {
-            _text = text;
-        }
-
-        public String toString()
-        {
-            return _text;
-        }
-
-        public static Scale getEnum(String value)
-        {
-            for(Scale v : values())
-                if(v.toString().equalsIgnoreCase(value))
-                    return v;
-            throw new IllegalArgumentException();
-        }
-    }
-
-    public enum DateRangeOffset
-    {
-        ALL(0, "All dates"),
-        CUSTOM(-1, "Custom range");
-
-        private Integer _offset;
-        private String _label;
-
-        DateRangeOffset(Integer offset, String label)
-        {
-            _offset = offset;
-            _label = label;
-        }
-
-        public Integer getOffset()
-        {
-            return _offset;
-        }
-
-        public String toString()
-        {
-            return _label;
-        }
-
-        public static DateRangeOffset getEnum(String value)
-        {
-            for (DateRangeOffset v : values())
-                if (v.toString().equalsIgnoreCase(value))
-                    return v;
-            throw new IllegalArgumentException();
-        }
-    }
-
-    public enum QCPlotType
-    {
-        LeveyJennings("Levey-Jennings", "Levey-Jennings", ""),
-        MovingRange("Moving Range", "Moving Range", "_mR"),
-        CUSUMm("CUSUMm", "Mean CUSUM", "_CUSUMm"),
-        CUSUMv("CUSUMv", "Variability CUSUM", "_CUSUMv");
-
-        private String _label;
-        private String _labellong;
-        private String _suffix;
-
-        QCPlotType(String shortlabel, String longlabel, String idSuffix)
-        {
-            _label = shortlabel;
-            _labellong = longlabel;
-            _suffix = idSuffix;
-        }
-
-        public String getLabel()
-        {
-            return _label;
-        }
-
-        public String getLongLabel()
-        {
-            return _labellong;
-        }
-
-        public String getIdSuffix()
-        {
-            return _suffix;
-        }
-    }
-
-    public enum QCPlotExclusionState
-    {
-        Include("Include in QC"),
-        ExcludeMetric("Exclude sample from QC for this metric"),
-        ExcludeAll("Exclude sample from QC for all metrics");
-
-        private String _label;
-
-        QCPlotExclusionState(String label)
-        {
-            _label = label;
-        }
-
-        public String getLabel()
-        {
-            return _label;
-        }
-    }
-
-
     private void waitForNoRecords()
     {
         WebDriverWrapper.waitFor(() -> elementCache().noRecords().size() > 0, 10000);
@@ -226,46 +111,6 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
     public String getCurrentEndDate()
     {
         return getWrapper().getFormElement(elementCache().endDate);
-    }
-
-    public enum MetricType
-    {
-        RETENTION("Retention Time", true),
-        PEAK("Peak Area", true),
-        FWHM("Full Width at Half Maximum (FWHM)", true),
-        FWB("Full Width at Base (FWB)", true),
-        LHRATIO("Light/Heavy Ratio", false),
-        TPAREARATIO("Transition/Precursor Area Ratio", true),
-        TPAREAS("Transition & Precursor Areas", true),
-        MASSACCURACY("Mass Accuracy", true),
-        TICAREA("TIC Area", true);
-
-        private String _text;
-        private boolean _hasData;
-
-        MetricType(String text, boolean hasData)
-        {
-            _text = text;
-            _hasData = hasData;
-        }
-
-        public String toString()
-        {
-            return _text;
-        }
-
-        public boolean hasData()
-        {
-            return _hasData;
-        }
-
-        public static MetricType getEnum(String value)
-        {
-            for(MetricType v : values())
-                if(v.toString().equalsIgnoreCase(value))
-                    return v;
-            throw new IllegalArgumentException();
-        }
     }
 
     public void setMetricType(MetricType metricType)
@@ -360,6 +205,16 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
     public void setShowExcludedPoints(boolean check)
     {
         elementCache().showExcludedCheckbox.set(check);
+    }
+
+    public void setShowReferenceGuideSet(boolean check)
+    {
+        elementCache().showReferenceGuideSet.set(check);
+    }
+
+    public boolean isShowReferenceGuideSetChecked()
+    {
+        return elementCache().showReferenceGuideSet.isChecked();
     }
 
     public boolean isShowAllPeptidesInSinglePlotChecked()
@@ -494,6 +349,27 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return elementCache().guideSetTrainingRect.findElements(getDriver()).size();
     }
 
+    public List<String> getGuideSetTrainingRectTitle(int count)
+    {
+        List<String> titles = new ArrayList<>();
+        int i = 1;
+        for (WebElement e : elementCache().guideSetTrainingRect.findElements(getDriver()))
+        {
+            titles.add(e.getText());
+            if (i < count)
+                i++;
+            else
+                break; //Get only information of guideSet based on the count.
+        }
+
+        return titles;
+    }
+
+    public String getExperimentRangeRectTitle()
+    {
+        return elementCache().experimentRangeRect.findElement(getDriver()).getText();
+    }
+
     public int getGuideSetErrorBarPathCount(String cls)
     {
         return Locator.css("svg g g.error-bar path." + cls).findElements(getDriver()).size();
@@ -507,7 +383,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         for (WebElement point : elementCache().svgPointPath.findElements(this))
         {
             if ((isPrefix && point.getAttribute(attr).startsWith(value))
-                || (!isPrefix && point.getAttribute(attr).equals(value)))
+                    || (!isPrefix && point.getAttribute(attr).equals(value)))
             {
                 matchingPoints.add(point);
             }
@@ -551,7 +427,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         yEndOffset = 10;
 
         // If StartDate is empty use the far left of the svg as the starting point.
-        if(!guideSet.getStartDate().trim().isEmpty())
+        if (!guideSet.getStartDate().trim().isEmpty())
         {
             startPoint = getPointByAcquiredDate(guideSet.getStartDate());
             xStartOffset = -10;
@@ -563,7 +439,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         }
 
         // If EndDate is empty use the far right of the svg as the ending point.
-        if(!guideSet.getEndDate().trim().isEmpty())
+        if (!guideSet.getEndDate().trim().isEmpty())
         {
             endPoint = getPointByAcquiredDate(guideSet.getEndDate());
             xEndOffset = 10;
@@ -571,7 +447,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         else
         {
             endPoint = elementCache().svgBackgrounds.findElements(this).get(0);
-            xEndOffset = (Integer.parseInt(endPoint.getAttribute("width")) / 2) - 1;;
+            xEndOffset = (Integer.parseInt(endPoint.getAttribute("width")) / 2) - 1;
+            ;
         }
 
         getWrapper().scrollIntoView(startPoint);
@@ -736,6 +613,171 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         getWrapper().doAndWaitForPageToLoad(() -> elementCache().paginationNextBtn.findElement(this).click());
     }
 
+    public Locator.XPathLocator getBubble()
+    {
+        return Locator.byClass("hopscotch-bubble-container");
+    }
+
+    public Locator.XPathLocator getBubbleContent()
+    {
+        Locator.XPathLocator hopscotchBubble = Locator.byClass("hopscotch-bubble-container");
+        return hopscotchBubble.append(Locator.byClass("hopscotch-bubble-content").append(Locator.byClass("hopscotch-content")));
+    }
+
+    public enum Scale
+    {
+        LINEAR("Linear"),
+        LOG("Log"),
+        PERCENT_OF_MEAN("Percent of Mean"),
+        STANDARD_DEVIATIONS("Standard Deviations");
+
+        private String _text;
+
+        Scale(String text)
+        {
+            _text = text;
+        }
+
+        public static Scale getEnum(String value)
+        {
+            for (Scale v : values())
+                if (v.toString().equalsIgnoreCase(value))
+                    return v;
+            throw new IllegalArgumentException();
+        }
+
+        public String toString()
+        {
+            return _text;
+        }
+    }
+
+    public enum DateRangeOffset
+    {
+        ALL(0, "All dates"),
+        CUSTOM(-1, "Custom range");
+
+        private Integer _offset;
+        private String _label;
+
+        DateRangeOffset(Integer offset, String label)
+        {
+            _offset = offset;
+            _label = label;
+        }
+
+        public static DateRangeOffset getEnum(String value)
+        {
+            for (DateRangeOffset v : values())
+                if (v.toString().equalsIgnoreCase(value))
+                    return v;
+            throw new IllegalArgumentException();
+        }
+
+        public Integer getOffset()
+        {
+            return _offset;
+        }
+
+        public String toString()
+        {
+            return _label;
+        }
+    }
+
+    public enum QCPlotType
+    {
+        LeveyJennings("Levey-Jennings", "Levey-Jennings", ""),
+        MovingRange("Moving Range", "Moving Range", "_mR"),
+        CUSUMm("CUSUMm", "Mean CUSUM", "_CUSUMm"),
+        CUSUMv("CUSUMv", "Variability CUSUM", "_CUSUMv");
+
+        private String _label;
+        private String _labellong;
+        private String _suffix;
+
+        QCPlotType(String shortlabel, String longlabel, String idSuffix)
+        {
+            _label = shortlabel;
+            _labellong = longlabel;
+            _suffix = idSuffix;
+        }
+
+        public String getLabel()
+        {
+            return _label;
+        }
+
+        public String getLongLabel()
+        {
+            return _labellong;
+        }
+
+        public String getIdSuffix()
+        {
+            return _suffix;
+        }
+    }
+
+    public enum QCPlotExclusionState
+    {
+        Include("Include in QC"),
+        ExcludeMetric("Exclude sample from QC for this metric"),
+        ExcludeAll("Exclude sample from QC for all metrics");
+
+        private String _label;
+
+        QCPlotExclusionState(String label)
+        {
+            _label = label;
+        }
+
+        public String getLabel()
+        {
+            return _label;
+        }
+    }
+
+    public enum MetricType
+    {
+        RETENTION("Retention Time", true),
+        PEAK("Peak Area", true),
+        FWHM("Full Width at Half Maximum (FWHM)", true),
+        FWB("Full Width at Base (FWB)", true),
+        LHRATIO("Light/Heavy Ratio", false),
+        TPAREARATIO("Transition/Precursor Area Ratio", true),
+        TPAREAS("Transition & Precursor Areas", true),
+        MASSACCURACY("Mass Accuracy", true),
+        TICAREA("TIC Area", true);
+
+        private String _text;
+        private boolean _hasData;
+
+        MetricType(String text, boolean hasData)
+        {
+            _text = text;
+            _hasData = hasData;
+        }
+
+        public static MetricType getEnum(String value)
+        {
+            for (MetricType v : values())
+                if (v.toString().equalsIgnoreCase(value))
+                    return v;
+            throw new IllegalArgumentException();
+        }
+
+        public String toString()
+        {
+            return _text;
+        }
+
+        public boolean hasData()
+        {
+            return _hasData;
+        }
+    }
+
     public class Elements extends BodyWebPart.ElementCache
     {
         WebElement startDate = new LazyWebElement(Locator.css("#start-date-field input"), this);
@@ -746,23 +788,18 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Checkbox groupedXCheckbox = new Checkbox(Locator.css("#grouped-x-field input")
                 .findWhenNeeded(this).withTimeout(WAIT_FOR_JAVASCRIPT));
         Checkbox singlePlotCheckbox = new Checkbox(Locator.css("#peptides-single-plot input")
-                .findWhenNeeded( this).withTimeout(WAIT_FOR_JAVASCRIPT));
+                .findWhenNeeded(this).withTimeout(WAIT_FOR_JAVASCRIPT));
         Checkbox showExcludedCheckbox = new Checkbox(Locator.css("#show-excluded-points input")
                 .findWhenNeeded(this).withTimeout(WAIT_FOR_JAVASCRIPT));
+        Checkbox showReferenceGuideSet = new Checkbox(Locator.css("#show-oorange-gs input")
+                .findWhenNeeded(this).withTimeout(WAIT_FOR_JAVASCRIPT));
+
 
         WebElement plotPanel = new LazyWebElement(Locator.css("div.tiledPlotPanel"), this);
         WebElement paginationPanel = new LazyWebElement(Locator.css("div.plotPaginationHeaderPanel"), this);
-
-        List<WebElement> findPlots() { return Locator.css("table.qc-plot-wp").waitForElements(plotPanel, 20000);}
-
-        List<WebElement> noRecords() { return Locator.tagContainingText("span", "There were no records found.").findElements(plotPanel);}
-        List<WebElement> logScaleInvalid() { return Locator.tagContainingText("span", "Log scale invalid for values").findElements(plotPanel);}
-        List<WebElement> logScaleWarning() { return Locator.tagContainingText("span", "For log scale, standard deviations below the mean").findElements(plotPanel);}
-        List<WebElement> logScaleEpsilonWarning() { return Locator.tagContainingText("span", "Values that are 0 have been replaced").findElements(plotPanel);}
-
         Locator extFormDisplay = Locator.css("div.x4-form-display-field");
-
         Locator.CssLocator guideSetTrainingRect = Locator.css("svg rect.training");
+        Locator.CssLocator experimentRangeRect = Locator.css("svg rect.expRange");
         Locator.CssLocator guideSetSvgButton = Locator.css("svg g.guideset-svg-button text");
         Locator.CssLocator svgPoint = Locator.css("svg g a.point");
         Locator.CssLocator svgPointPath = Locator.css("svg g a.point path");
@@ -773,27 +810,40 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.CssLocator paginationPrevBtn = Locator.css(".qc-paging-prev");
         Locator.CssLocator paginationNextBtn = Locator.css(".qc-paging-next");
         Locator.CssLocator svgBackgrounds = Locator.css("svg g.brush rect.background");
-
         Locator.XPathLocator hopscotchBubble = Locator.byClass("hopscotch-bubble-container");
         Locator.XPathLocator hopscotchBubbleClose = Locator.byClass("hopscotch-bubble-close");
-
         private Map<QCPlotType, Checkbox> plotTypeCheckboxes = new HashMap<>();
+
+        List<WebElement> findPlots()
+        {
+            return Locator.css("table.qc-plot-wp").waitForElements(plotPanel, 20000);
+        }
+
+        List<WebElement> noRecords()
+        {
+            return Locator.tagContainingText("span", "There were no records found.").findElements(plotPanel);
+        }
+
+        List<WebElement> logScaleInvalid()
+        {
+            return Locator.tagContainingText("span", "Log scale invalid for values").findElements(plotPanel);
+        }
+
+        List<WebElement> logScaleWarning()
+        {
+            return Locator.tagContainingText("span", "For log scale, standard deviations below the mean").findElements(plotPanel);
+        }
+
+        List<WebElement> logScaleEpsilonWarning()
+        {
+            return Locator.tagContainingText("span", "Values that are 0 have been replaced").findElements(plotPanel);
+        }
+
         protected Checkbox findQCPlotTypeCheckbox(QCPlotType plotType)
         {
             if (!plotTypeCheckboxes.containsKey(plotType))
                 plotTypeCheckboxes.put(plotType, Ext4Checkbox().withLabel(plotType.getLabel()).waitFor(this));
             return plotTypeCheckboxes.get(plotType);
         }
-    }
-
-    public Locator.XPathLocator getBubble()
-    {
-        return Locator.byClass("hopscotch-bubble-container");
-    }
-
-    public Locator.XPathLocator getBubbleContent()
-    {
-        Locator.XPathLocator hopscotchBubble = Locator.byClass("hopscotch-bubble-container");
-        return hopscotchBubble.append(Locator.byClass("hopscotch-bubble-content").append(Locator.byClass("hopscotch-content")));
     }
 }

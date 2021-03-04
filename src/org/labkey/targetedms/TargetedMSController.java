@@ -1151,6 +1151,7 @@ public class TargetedMSController extends SpringActionController
         private Date _endDate;
         private List<OutlierGenerator.AnnotationGroup> _selectedAnnotations;
         private boolean _showExcluded;
+        private boolean _showReferenceGS;
 
         public int getMetricId()
         {
@@ -1241,6 +1242,16 @@ public class TargetedMSController extends SpringActionController
         {
             _showExcluded = showExcluded;
         }
+
+        public boolean isShowReferenceGS()
+        {
+            return _showReferenceGS;
+        }
+
+        public void setShowReferenceGS(boolean showReferenceGS)
+        {
+            _showReferenceGS = showReferenceGS;
+        }
     }
 
     /**
@@ -1268,15 +1279,27 @@ public class TargetedMSController extends SpringActionController
             OutlierGenerator generator = OutlierGenerator.get();
 
             int passedMetricId = form.getMetricId();
+            boolean filterQCPoints = false;
 
             List<GuideSet> guideSets = TargetedMSManager.getGuideSets(getContainer(), getUser());
+            GuideSet closestOutOfRangeGuideSet;
+            var rangeStartDate = form.getStartDate();
+            if (form.isShowReferenceGS() && !guideSets.isEmpty())
+            {
+                closestOutOfRangeGuideSet = getClosestPastGuideSet(guideSets, form.getStartDate());
+                if (null != closestOutOfRangeGuideSet)
+                {
+                    rangeStartDate = closestOutOfRangeGuideSet.getTrainingStart();
+                    filterQCPoints = true;
+                }
+            }
 
             List<QCMetricConfiguration> qcMetricConfigurations = TargetedMSManager.get()
                     .getEnabledQCMetricConfigurations(getContainer(), getUser())
                     .stream()
                     .filter(qcMetricConfiguration -> qcMetricConfiguration.getId() == passedMetricId)
                     .collect(Collectors.toList());
-            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, form.getStartDate(), form.getEndDate(), form.getSelectedAnnotations(), form.isShowExcluded());
+            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, rangeStartDate, form.getEndDate(), form.getSelectedAnnotations(), form.isShowExcluded());
             Map<GuideSetKey, GuideSetStats> stats = generator.getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
             Map<Integer, QCMetricConfiguration> metricMap = qcMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
             List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, getContainer(), null);
@@ -1288,8 +1311,30 @@ public class TargetedMSController extends SpringActionController
                     .map(qcPlotFragment -> qcPlotFragment.toJSON(form.isIncludeLJ(), form.isIncludeMR(), form.isIncludeMeanCusum(), form.isIncludeVariableCusum()))
                     .collect(Collectors.toList()));
             response.put("metricProps", metricMap.get(passedMetricId).toJSON());
+            response.put("filterQCPoints", filterQCPoints);
 
             return response;
+        }
+
+        private GuideSet getClosestPastGuideSet(List<GuideSet> guideSets, Date startDate)
+        {
+            GuideSet gs = null;
+            for (GuideSet guideSet : guideSets)
+            {
+                if (!guideSet.isDefault() && guideSet.getTrainingEnd().before(startDate))
+                {
+                    if (null == gs)
+                    {
+                        gs = guideSet;
+                    }
+                    else if (guideSet.getTrainingEnd().after(gs.getTrainingEnd()))
+                    {
+                        gs = guideSet;
+                    }
+                }
+            }
+
+            return gs;
         }
     }
     // ------------------------------------------------------------------------

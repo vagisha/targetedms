@@ -62,7 +62,7 @@ public class GuideSetWebPart extends BodyWebPart
     public Integer getRowId(GuideSet guideSet)
     {
         try {
-            Connection cn = _test.createDefaultConnection(false);
+            Connection cn = _test.createDefaultConnection();
             SelectRowsCommand selectCmd = new SelectRowsCommand("targetedms", "GuideSet");
             selectCmd.addFilter(new Filter("Comment", guideSet.getComment()));
             SelectRowsResponse selResp = selectCmd.execute(cn, _projectName);
