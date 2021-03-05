@@ -15,7 +15,6 @@
  */
 package org.labkey.test.tests.targetedms;
 
-import org.apache.tika.utils.SystemUtils;
 import org.junit.BeforeClass;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
@@ -333,7 +332,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     }
 
     @LogMethod
-    protected void createGuideSetFromTable(GuideSet guideSet)
+    public int createGuideSetFromTable(GuideSet guideSet)
     {
         if (!"Guide Sets".equals(getUrlParam("pageId", true)))
             clickTab("Guide Sets");
@@ -341,6 +340,8 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this, getProjectName());
         GuideSetPage guideSetPage = guideSetWebPart.startInsert();
         guideSetPage.insert(guideSet, null);
+
+        return guideSet.getRowId();
     }
 
     @LogMethod

@@ -18,6 +18,9 @@ package org.labkey.targetedms;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keypoint.PngEncoder;
+import org.apache.batik.dom.GenericDOMImplementation;
+import org.apache.batik.svggen.SVGGraphics2D;
+import org.apache.batik.svggen.SVGGraphics2DIOException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -35,7 +38,6 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.svg.SVGGraphics2D;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -235,6 +237,8 @@ import org.labkey.targetedms.view.spectrum.PeptideSpectrumView;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
 
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
@@ -243,6 +247,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1146,6 +1151,7 @@ public class TargetedMSController extends SpringActionController
         private Date _endDate;
         private List<OutlierGenerator.AnnotationGroup> _selectedAnnotations;
         private boolean _showExcluded;
+        private boolean _showReferenceGS;
 
         public int getMetricId()
         {
@@ -1236,6 +1242,16 @@ public class TargetedMSController extends SpringActionController
         {
             _showExcluded = showExcluded;
         }
+
+        public boolean isShowReferenceGS()
+        {
+            return _showReferenceGS;
+        }
+
+        public void setShowReferenceGS(boolean showReferenceGS)
+        {
+            _showReferenceGS = showReferenceGS;
+        }
     }
 
     /**
@@ -1263,15 +1279,27 @@ public class TargetedMSController extends SpringActionController
             OutlierGenerator generator = OutlierGenerator.get();
 
             int passedMetricId = form.getMetricId();
+            boolean filterQCPoints = false;
 
             List<GuideSet> guideSets = TargetedMSManager.getGuideSets(getContainer(), getUser());
+            GuideSet closestOutOfRangeGuideSet;
+            var rangeStartDate = form.getStartDate();
+            if (form.isShowReferenceGS() && !guideSets.isEmpty())
+            {
+                closestOutOfRangeGuideSet = getClosestPastGuideSet(guideSets, form.getStartDate());
+                if (null != closestOutOfRangeGuideSet)
+                {
+                    rangeStartDate = closestOutOfRangeGuideSet.getTrainingStart();
+                    filterQCPoints = true;
+                }
+            }
 
             List<QCMetricConfiguration> qcMetricConfigurations = TargetedMSManager.get()
                     .getEnabledQCMetricConfigurations(getContainer(), getUser())
                     .stream()
                     .filter(qcMetricConfiguration -> qcMetricConfiguration.getId() == passedMetricId)
                     .collect(Collectors.toList());
-            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, form.getStartDate(), form.getEndDate(), form.getSelectedAnnotations(), form.isShowExcluded());
+            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, rangeStartDate, form.getEndDate(), form.getSelectedAnnotations(), form.isShowExcluded());
             Map<GuideSetKey, GuideSetStats> stats = generator.getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
             Map<Integer, QCMetricConfiguration> metricMap = qcMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
             List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, getContainer(), null);
@@ -1283,8 +1311,30 @@ public class TargetedMSController extends SpringActionController
                     .map(qcPlotFragment -> qcPlotFragment.toJSON(form.isIncludeLJ(), form.isIncludeMR(), form.isIncludeMeanCusum(), form.isIncludeVariableCusum()))
                     .collect(Collectors.toList()));
             response.put("metricProps", metricMap.get(passedMetricId).toJSON());
+            response.put("filterQCPoints", filterQCPoints);
 
             return response;
+        }
+
+        private GuideSet getClosestPastGuideSet(List<GuideSet> guideSets, Date startDate)
+        {
+            GuideSet gs = null;
+            for (GuideSet guideSet : guideSets)
+            {
+                if (!guideSet.isDefault() && guideSet.getTrainingEnd().before(startDate))
+                {
+                    if (null == gs)
+                    {
+                        gs = guideSet;
+                    }
+                    else if (guideSet.getTrainingEnd().after(gs.getTrainingEnd()))
+                    {
+                        gs = guideSet;
+                    }
+                }
+            }
+
+            return gs;
         }
     }
     // ------------------------------------------------------------------------
@@ -1467,7 +1517,6 @@ public class TargetedMSController extends SpringActionController
         else if ("svg".equalsIgnoreCase(form.getFormat()))
         {
             response.setContentType("image/svg+xml");
-            response.getWriter().write("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n");
             response.getWriter().write(renderSVG(form, chart));
         }
         else if ("pdf".equalsIgnoreCase(form.getFormat()))
@@ -1508,12 +1557,26 @@ public class TargetedMSController extends SpringActionController
     }
 
     @NotNull
-    private String renderSVG(AbstractChartForm form, JFreeChart chart)
+    private String renderSVG(AbstractChartForm form, JFreeChart chart) throws SVGGraphics2DIOException
     {
-        SVGGraphics2D g2 = new SVGGraphics2D(form.getChartWidth(), form.getChartHeight());
-        Rectangle r = new Rectangle(0, 0, form.getChartWidth(), form.getChartHeight());
-        chart.draw(g2, r);
-        return g2.getSVGElement();
+        DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
+
+        // Create an instance of org.w3c.dom.Document.
+        String svgNS = "http://www.w3.org/2000/svg";
+        Document document = domImpl.createDocument(svgNS, "svg", null);
+
+        // Create an instance of the SVG Generator from Batik
+        SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
+        Dimension dim = new Dimension(form.getChartWidth(), form.getChartHeight());
+        svgGenerator.setSVGCanvasSize(dim);
+        Rectangle r = new Rectangle(dim);
+
+        chart.draw(svgGenerator, r);
+
+        // Render SVG to a string
+        StringWriter out = new StringWriter();
+        svgGenerator.stream(out, true); // Use CSS style attributes
+        return out.toString();
     }
 
     @RequiresPermission(ReadPermission.class)

@@ -108,6 +108,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         plotsConfig.includeMeanCusum = this.showMeanCUSUMPlot();
         plotsConfig.includeVariableCusum = this.showVariableCUSUMPlot();
         plotsConfig.showExcluded = this.showExcluded;
+        // show reference guide set for custom date range
+        plotsConfig.showReferenceGS = this.showReferenceGS && this.dateRangeOffset !== 0;
 
         var config = this.getReportConfig()
 
@@ -140,6 +142,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         var plotDataRows = parsed.plotDataRows;
         var metricProps = parsed.metricProps;
         var sampleFiles = parsed.sampleFiles;
+        this.filterQCPoints = parsed.filterQCPoints;
 
         var allPlotDateValues = [];
 
@@ -158,8 +161,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         for (var i = this.pagingStartIndex; i < this.pagingEndIndex; i++) {
             var plotDataRow = plotDataRows[i];
             var fragment = plotDataRow.SeriesLabel;
-            Ext4.iterate(plotDataRow.data, function (plotData)
-            {
+            Ext4.iterate(plotDataRow.data, function (plotData) {
                 Ext4.iterate(sampleFiles, function (sampleFile) {
                     if (plotData['SampleFileId'] === sampleFile['SampleId']) {
                         plotData['FilePath'] = sampleFile['FilePath'];
@@ -175,6 +177,35 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 allPlotDateValues.push(data.fullDate);
 
             }, this);
+
+            if (this.filterQCPoints && !this.groupedX) {
+                for (var j = 0; j < plotDataRow.data.length; j++) {
+                    var plotData = plotDataRow.data[j];
+
+                    Ext4.Object.each(this.guideSetDataMap, function(guideSetId, guideSetData) {
+                        // for truncating out of range guideset data  find first index of plotDate ending at guideset.trainingEnd
+                        if (plotData.GuideSetId == guideSetId && plotData.InGuideSetTrainingRange && guideSetData.TrainingEnd <= this.startDate) {
+                            this.filterPointsFirstIndex = j + 1;
+                        }
+                    }, this);
+
+                    // for truncating out of range guideset data find last index of plotData starting from this.startDate
+                    if (plotData.AcquiredTime >= this.startDate) {
+                        if (!this.filterPointsLastIndex) {
+                            // skip 5 points
+                            this.filterPointsLastIndex = j;
+                        }
+                    }
+                }
+            }
+        }
+
+        // no need to filter if less than 6 data points are present between reference end of guideset and startdate
+        if (this.filterPointsLastIndex - this.filterPointsFirstIndex < 6) {
+            this.filterQCPoints = false;
+        }
+        else {
+            this.filterPointsLastIndex = this.filterPointsLastIndex - 6;
         }
 
         // Issue 31678: get the full set of dates values from the precursor data and from the annotations
@@ -187,8 +218,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         this.legendHelper.setupLegendPrefixes(this.fragmentPlotData, 3);
 
         // merge in the annotation data to make room on the y axis
-        for (var i = 0; i < this.precursors.length; i++)
-        {
+        for (var i = 0; i < this.precursors.length; i++) {
             var precursorInfo = this.fragmentPlotData[this.precursors[i]];
 
             // We don't necessarily have info for all possible precursors, depending on the filters and plot type
@@ -251,8 +281,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         this.renderPlots();
     },
 
-    renderPlots: function()
-    {
+    renderPlots: function() {
+        if (this.filterQCPoints && !this.groupedX) {
+            this.truncateOutOfRangeQCPoints();
+        }
         this.persistSelectedFormOptions();
 
         if (this.precursors.length === 0) {
@@ -278,6 +310,27 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         Ext4.get(this.plotDivId).unmask();
     },
 
+    truncateOutOfRangeQCPoints: function() {
+        Ext4.Object.each(this.fragmentPlotData, function(label, fragmentData) {
+            // traverse plotData backwards from firstIndex to lastIndex and
+            // remove them from the array
+            if (this.filterQCPoints && this.filterPointsFirstIndex && this.filterPointsLastIndex) {
+                for (var i = this.filterPointsLastIndex; i >= this.filterPointsFirstIndex; i--) {
+                    this.fragmentPlotData[label].data.splice(i, 1);
+                }
+
+                // ReferenceRangeSeries is used to separate series
+                for (var i = 0; i < this.filterPointsFirstIndex; i++) {
+                    fragmentData.data[i]['ReferenceRangeSeries'] = "GuideSet";
+                }
+
+                for (var i = this.filterPointsFirstIndex; i < fragmentData.data.length; i++) {
+                    fragmentData.data[i]['ReferenceRangeSeries'] = "InRange";
+                }
+            }
+        }, this);
+    },
+
     getBasePlotConfig : function(id, data, legenddata) {
         return {
             rendererType : 'd3',
@@ -292,8 +345,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         };
     },
 
-    getPlotWidth: function()
-    {
+    getPlotWidth: function() {
         var width = this.plotWidth - 30;
         return !this.largePlot && this.plotTypes.length > 1 ? width / 2 : width;
     },
@@ -430,8 +482,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         }
     },
 
-    getCombinedPlotLegendData: function(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean)
-    {
+    getCombinedPlotLegendData: function(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean) {
         var newLegendData = Ext4.Array.clone(this.legendData),
                 proteomicsLegend = [{ //Temp holder for proteomics legend labels
                     text: 'Peptides',
@@ -569,8 +620,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return precursor + ' - ' + this.getMetricPropsById(this.metric).name;;
     },
 
-    addEachCombinedPrecusorPlot: function(plotIndex, id, combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, plotType, isCUSUMMean)
-    {
+    addEachCombinedPrecusorPlot: function(plotIndex, id, combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, plotType, isCUSUMMean) {
         var plotLegendData = this.getCombinedPlotLegendData(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean);
 
         if (plotType !== LABKEY.vis.TrendingLinePlotType.CUSUM) {
@@ -584,6 +634,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         else if (this.yAxisScale === 'standardDeviation' && plotType === LABKEY.vis.TrendingLinePlotType.LeveyJennings) {
             disableRange = false;
         }
+        var scope = this;
 
         var trendLineProps = {
             disableRangeDisplay: disableRange,
@@ -648,8 +699,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         this.attachPlotExportIcons(id, mainTitle + '- All Series', plotIndex, this.getPlotWidth(), this.showInPlotLegends() ? 0 : legendMargin);
     },
 
-    addEachIndividualPrecusorPlot: function(plotIndex, id, precursorIndex, precursorInfo, metricProps, plotType, isCUSUMMean, scope)
-    {
+    addEachIndividualPrecusorPlot: function(plotIndex, id, precursorIndex, precursorInfo, metricProps, plotType, isCUSUMMean, scope) {
         if (this.yAxisScale == 'log' && plotType != LABKEY.vis.TrendingLinePlotType.LeveyJennings && plotType != LABKEY.vis.TrendingLinePlotType.CUSUM)
         {
             Ext4.get(id).update("<span style='font-style: italic;'>Values that are 0 have been replaced with 0.0000001 for log scale plot.</span>");
@@ -682,6 +732,11 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             position: this.groupedX ? 'jitter' : undefined,
             disableRangeDisplay: this.isMultiSeries()
         };
+
+        if (this.filterQCPoints) {
+            trendLineProps.lineColor = '#000000';
+            trendLineProps.groupBy = "ReferenceRangeSeries";
+        }
 
         Ext4.apply(trendLineProps, this.getPlotTypeProperties(precursorInfo, plotType, isCUSUMMean));
 
@@ -769,8 +824,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         this.attachPlotExportIcons(id, mainTitle + '-' + this.precursors[precursorIndex] + '-' + this.getMetricPropsById(this.metric).series1Label, plotIndex, this.getPlotWidth(), extraMargin);
     },
 
-    getYAxisLeftMarginOffset: function(precursorInfo)
-    {
+    getYAxisLeftMarginOffset: function(precursorInfo) {
         if (precursorInfo.min === undefined || precursorInfo.max === undefined) {
             return 0;
         }
@@ -788,8 +842,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
     },
 
     // empty legend to reserve plot space for plot alignment
-    getEmptyLegend: function()
-    {
+    getEmptyLegend: function() {
         var empty = [];
         empty.push({
             text: '',

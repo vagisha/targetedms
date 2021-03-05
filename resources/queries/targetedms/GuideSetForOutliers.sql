@@ -2,7 +2,8 @@
 SELECT RowId,
        TrainingStart,
        TrainingEnd,
-       CAST(ReferenceEnd AS TIMESTAMP) AS ReferenceEnd
+       CAST(ReferenceEnd AS TIMESTAMP) AS ReferenceEnd,
+       false as isDefault
 FROM Guideset
 
 UNION
@@ -11,6 +12,7 @@ UNION
 SELECT RowId,
        TrainingStart,
        TrainingEnd,
-       ReferenceEnd
+       ReferenceEnd,
+       true as isDefault
 FROM DefaultGuideSet
 WHERE NOT EXISTS (SELECT 1 FROM GuideSet) OR EXISTS (SELECT 1 FROM SampleFile WHERE AcquiredTime < (SELECT MIN(TrainingStart) FROM GuideSet))

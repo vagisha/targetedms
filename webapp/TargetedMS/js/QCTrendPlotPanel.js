@@ -34,6 +34,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     groupedX: false,
     singlePlot: false,
     showExcluded: false,
+    showReferenceGS: true,
     plotWidth: null,
     enableBrushing: false,
     havePlotOptionsChanged: false,
@@ -57,8 +58,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    queryInitialPlotOptions : function()
-    {
+    queryInitialPlotOptions : function() {
         // If there are URL parameters (i.e. from Pareto Plot click), set those as initial values as well.
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'leveyJenningsPlotOptions.api'),
@@ -119,8 +119,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         });
     },
 
-    queryContainerReplicateAnnotations : function()
-    {
+    queryContainerReplicateAnnotations : function() {
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'GetContainerReplicateAnnotations.api'),
             method: 'GET',
@@ -151,9 +150,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         });
     },
 
-
-    calculateStartDateByOffset : function()
-    {
+    calculateStartDateByOffset : function() {
         if (this.dateRangeOffset > 0)
         {
             var todayMinusOffset = new Date();
@@ -164,16 +161,14 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.minAcquiredTime;
     },
 
-    calculateEndDateByOffset : function()
-    {
+    calculateEndDateByOffset : function() {
         if (this.dateRangeOffset > 0)
             return new Date();
 
         return this.maxAcquiredTime;
     },
 
-    initPlotForm : function(initValues)
-    {
+    initPlotForm : function(initValues) {
         // apply the initial values to the panel object so they are used in form field initialization
         Ext4.apply(this, initValues);
 
@@ -201,8 +196,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    initPlotFormToolbars : function()
-    {
+    initPlotFormToolbars : function() {
         var toolbarArr = [
             { tbar: this.getMainPlotOptionsToolbar() },
             { tbar: this.getCustomDateRangeToolbar() },
@@ -221,8 +215,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return toolbarArr;
     },
 
-    getFirstPlotOptionsToolbar: function()
-    {
+    getFirstPlotOptionsToolbar: function() {
         if (!this.plotTypeOptionsToolbar)
         {
             this.plotTypeOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
@@ -273,8 +266,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
       return this.plotTypeWithoutYOptionsToolbar;
     },
 
-    getPlotSizeOptions: function()
-    {
+    getPlotSizeOptions: function() {
         var plotSizeRadio = [{
             boxLabel  : 'Small',
             name      : 'largePlot',
@@ -310,8 +302,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    getPlotTypeOptions: function(withYOptions)
-    {
+    getPlotTypeOptions: function(withYOptions) {
         var plotTypeCheckBoxes = [];
         var me = this;
         Ext4.each(LABKEY.targetedms.QCPlotHelperBase[withYOptions ? 'qcPlotTypesWithYOptions' : 'qcPlotTypesWithoutYOptions'], function(plotType){
@@ -381,8 +372,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    getMainPlotOptionsToolbar : function()
-    {
+    getMainPlotOptionsToolbar : function() {
         if (!this.mainPlotOptionsToolbar)
         {
             this.mainPlotOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
@@ -401,8 +391,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.mainPlotOptionsToolbar;
     },
 
-    getThirdPlotOptionsToolbar : function()
-    {
+    getThirdPlotOptionsToolbar : function() {
         if (!this.otherPlotOptionsToolbar)
         {
             var  toolbarItems = [];
@@ -419,6 +408,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             var location = toolbarItems.push(this.getSinglePlotCheckbox());
             toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
             toolbarItems.push(this.getShowExcludedCheckbox());
+            toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
+            toolbarItems.push(this.getShowReferenceCheckbox());
             // toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
             // toolbarItems.push(this.getShowPlotLegendButton());
 
@@ -437,8 +428,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.otherPlotOptionsToolbar;
     },
 
-    showAllSeriesCheckbox: function (visible, location)
-    {
+    showAllSeriesCheckbox: function (visible, location) {
         var items = this.otherPlotOptionsToolbar.items.items;
         items[location-1].setVisible(visible);
         items[location].setVisible(visible);
@@ -446,8 +436,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         items[location+2].setVisible(visible);
     },
 
-    getAnnotationFiltersToolbar : function()
-    {
+    getAnnotationFiltersToolbar : function() {
         if (!this.annotationFiltersToolbar)
         {
             this.annotationFiltersToolbar = Ext4.create('Ext.toolbar.Toolbar', {
@@ -493,8 +482,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.annotationFiltersToolbar;
     },
 
-    getSelectedAnnotationsToolbar: function()
-    {
+    getSelectedAnnotationsToolbar: function() {
         if (!this.selectedAnnotationsToolbar)
         {
             this.selectedAnnotationsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
@@ -514,8 +502,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.selectedAnnotationsToolbar;
     },
 
-    getCustomDateRangeToolbar : function()
-    {
+    getCustomDateRangeToolbar : function() {
         if (!this.customDateRangeToolbar)
         {
             this.customDateRangeToolbar = Ext4.create('Ext.toolbar.Toolbar', {
@@ -535,8 +522,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.customDateRangeToolbar;
     },
 
-    getGuideSetMessageToolbar : function()
-    {
+    getGuideSetMessageToolbar : function() {
         if (!this.guideSetMessageToolbar)
         {
             this.guideSetMessageToolbar = Ext4.create('Ext.toolbar.Toolbar', {
@@ -555,8 +541,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.guideSetMessageToolbar;
     },
 
-    getExperimentRunDateRangeToolbar : function()
-    {
+    getExperimentRunDateRangeToolbar : function() {
         if (!this.experimentRunDateRangeToolbar)
         {
             var hidden = !this.showExpRunRange;
@@ -584,8 +569,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.experimentRunDateRangeToolbar;
     },
 
-    isValidQCPlotType: function(plotType)
-    {
+    isValidQCPlotType: function(plotType) {
         var valid = false;
         Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesWithYOptions.concat(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesWithoutYOptions), function(type){
             if (plotType == type)
@@ -597,8 +581,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return valid;
     },
 
-    getInitialValuesFromUrlParams : function()
-    {
+    getInitialValuesFromUrlParams : function() {
         var urlParams = LABKEY.ActionURL.getParameters(),
             paramValues = {},
             alertMessage = '', sep = '',
@@ -692,8 +675,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return null;
     },
 
-    validateMetricId : function(id)
-    {
+    validateMetricId : function(id) {
         for (var i = 0; i < this.metricPropArr.length; i++)
         {
             if (this.metricPropArr[i].id == id)
@@ -711,8 +693,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    getScaleCombo : function()
-    {
+    getScaleCombo : function() {
         if (!this.scaleCombo)
         {
             this.scaleCombo = Ext4.create('Ext.form.field.ComboBox', {
@@ -746,8 +727,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.scaleCombo;
     },
 
-    getDateRangeCombo : function()
-    {
+    getDateRangeCombo : function() {
         if (!this.dateRangeCombo)
         {
             this.dateRangeCombo = Ext4.create('Ext.form.field.ComboBox', {
@@ -803,8 +783,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.dateRangeCombo;
     },
 
-    getStartDateField : function()
-    {
+    getStartDateField : function() {
         if (!this.startDateField)
         {
             this.startDateField = Ext4.create('Ext.form.field.Date', {
@@ -828,8 +807,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.startDateField;
     },
 
-    getEndDateField : function()
-    {
+    getEndDateField : function() {
         if (!this.endDateField)
         {
             this.endDateField = Ext4.create('Ext.form.field.Date', {
@@ -853,8 +831,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.endDateField;
     },
 
-    getApplyDateRangeButton : function()
-    {
+    getApplyDateRangeButton : function() {
         if (!this.applyFilterButton)
         {
             this.applyFilterButton = Ext4.create('Ext.button.Button', {
@@ -867,8 +844,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.applyFilterButton;
     },
 
-    assignDefaultMetricIfNull: function ()
-    {
+    assignDefaultMetricIfNull: function () {
         if (this.metric == null || isNaN(Number(this.metric)) || !this.getMetricPropsById(this.metric)) {
             var targetIndex = 0;
             for (var i = 0; i < this.metricPropArr.length; i++) {
@@ -882,8 +858,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    getMetricCombo : function()
-    {
+    getMetricCombo : function() {
         if (!this.metricField)
         {
             this.assignDefaultMetricIfNull();
@@ -933,8 +908,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.metricField;
     },
 
-    getAnnotationListTree : function()
-    {
+    getAnnotationListTree : function() {
         if (!this.annotationFiltersField)
         {
             var store = Ext4.create('Ext.data.TreeStore', {
@@ -959,8 +933,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.annotationFiltersField;
     },
 
-    getApplyAnnotationFiltersButton : function()
-    {
+    getApplyAnnotationFiltersButton : function() {
         if (!this.applyAnnotationFiltersButton)
         {
             this.applyAnnotationFiltersButton = Ext4.create('Ext.button.Button', {
@@ -973,8 +946,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.applyAnnotationFiltersButton;
     },
 
-    getClearAnnotationFiltersButton : function()
-    {
+    getClearAnnotationFiltersButton : function() {
         if (!this.clearAnnotationFiltersButton)
         {
             this.clearAnnotationFiltersButton = Ext4.create('Ext.button.Button', {
@@ -988,8 +960,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.clearAnnotationFiltersButton;
     },
 
-    getGroupedXCheckbox : function()
-    {
+    getGroupedXCheckbox : function() {
         if (!this.groupedXCheckbox)
         {
             this.groupedXCheckbox = Ext4.create('Ext.form.field.Checkbox', {
@@ -998,8 +969,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 checked: this.groupedX,
                 listeners: {
                     scope: this,
-                    change: function(cb, newValue, oldValue)
-                    {
+                    change: function(cb, newValue, oldValue) {
                         this.groupedX = newValue;
                         this.havePlotOptionsChanged = true;
 
@@ -1014,8 +984,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.groupedXCheckbox;
     },
 
-    getSinglePlotCheckbox : function()
-    {
+    getSinglePlotCheckbox : function() {
         if (!this.peptidesInSinglePlotCheckbox)
         {
             this.peptidesInSinglePlotCheckbox = Ext4.create('Ext.form.field.Checkbox', {
@@ -1040,8 +1009,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.peptidesInSinglePlotCheckbox;
     },
 
-    getShowExcludedCheckbox : function()
-    {
+    getShowExcludedCheckbox : function() {
         if (!this.showExcludedPointsCheckbox)
         {
             this.showExcludedPointsCheckbox = Ext4.create('Ext.form.field.Checkbox', {
@@ -1065,14 +1033,35 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.showExcludedPointsCheckbox;
     },
 
-    getGuideSetCreateButton : function()
-    {
+    getShowReferenceCheckbox : function() {
+        if (!this.showReferenceGSCheckBox) {
+            this.showReferenceGSCheckBox = Ext4.create('Ext.form.field.Checkbox', {
+                id: 'show-oorange-gs',
+                boxLabel: 'Show Reference Guide Set',
+                checked: this.showReferenceGS,
+                listeners: {
+                    scope: this,
+                    change: function(cb, newValue, oldValue) {
+                        this.showReferenceGS = newValue;
+                        this.havePlotOptionsChanged = true;
+
+                        this.setLoadingMsg();
+                        this.getAnnotationData();
+                    }
+                }
+            });
+        }
+
+        return this.showReferenceGSCheckBox;
+    },
+
+    getGuideSetCreateButton : function() {
         if (!this.createGuideSetToggleButton)
         {
             this.createGuideSetToggleButton = Ext4.create('Ext.button.Button', {
                 text: 'Create Guide Set',
                 tooltip: 'Enable/disable guide set creation mode',
-                disabled: this.groupedX || this.singlePlot || this.isMultiSeries(),
+                disabled: this.groupedX || this.singlePlot || this.isMultiSeries() || this.showExpRunRange,
                 enableToggle: true,
                 handler: function(btn) {
                     this.setBrushingEnabled(btn.pressed);
@@ -1084,8 +1073,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.createGuideSetToggleButton;
     },
 
-    getShowPlotLegendButton : function()
-    {
+    getShowPlotLegendButton : function() {
         if (!this.showPlotLegendButton)
         {
             var cmpId = Ext4.id();
@@ -1157,8 +1145,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     },
 
     setBrushingEnabled : function(enabled) {
-        // we don't currently allow creation of guide sets in single plot mode, grouped x-axis mode, or multi series mode
-        this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot || this.isMultiSeries());
+        // we don't currently allow creation of guide sets in single plot mode, grouped x-axis mode, multi series mode or when showingExpRunRange
+        this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot || this.isMultiSeries() || this.showExpRunRange);
 
         this.enableBrushing = enabled;
         this.clearPlotBrush();
@@ -1339,8 +1327,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    getExportSVGStr: function(btn, extraMargin)
-    {
+    getExportSVGStr: function(btn, extraMargin) {
         var svgStr = this.callParent([btn, extraMargin]);
 
         // issue 25066: pdf export has artifact of the brush resize handlers
@@ -1350,8 +1337,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return svgStr;
     },
 
-    showInvalidLogMsg : function(id, toShow)
-    {
+    showInvalidLogMsg : function(id, toShow) {
         if (toShow)
         {
             Ext4.get(id).update("<span style='font-style: italic;'>Log scale invalid for values &le; 0. "
@@ -1538,7 +1524,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         Ext4.Object.each(this.guideSetDataMap, function(guideSetId, guideSetData)
         {
             // only compare guide set info for matching precursor fragment
-            if (!this.singlePlot && guideSetData.Series[precursorInfo.fragment] == undefined) {
+            if (!this.singlePlot && guideSetData.Series[precursorInfo.fragment] === undefined) {
                 return true; // continue
             }
 
@@ -1579,6 +1565,10 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
         var widthAcc = function (d) {
             return plot.scales.x.scale(d.EndIndex) - plot.scales.x.scale(d.StartIndex) + binWidth;
+        };
+
+        var xSep = function (d) {
+            return (plot.scales.x.scale(d.StartIndex) - (binWidth/2)) + 5;
         };
 
         if (this.showExpRunRange) {
@@ -1627,8 +1617,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
 
         // add a "shaded" rect to indicate which points in the plot are part of the guide set training range
-        if (guideSetTrainingData.length > 0)
-        {
+        if (guideSetTrainingData.length > 0) {
             var guideSetTrainingRange = this.getSvgElForPlot(plot).selectAll("rect.training").data(guideSetTrainingData)
                 .enter().append("rect").attr("class", "training")
                 .attr('x', xAcc).attr('y', yRange[1])
@@ -1659,6 +1648,15 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     + (showGuideSetStats ? ",\n%CV: " + Ext4.String.htmlEncode(percentCV) : "")
                     + (guideSetInfo.Comment ? (",\nComment: " + Ext4.String.htmlEncode(guideSetInfo.Comment)) : "");
             });
+
+            if (this.filterQCPoints) {
+                var guideSetEndIndex = guideSetTrainingData[0]['EndIndex'];
+                this.getSvgElForPlot(plot).selectAll("line.separator").data([{'StartIndex': guideSetEndIndex + 1, 'EndIndex': guideSetEndIndex + 1}])
+                        .enter().append("line").attr("class", "separator")
+                        .attr('x1', xSep).attr('y1', yRange[0]).attr('x2', xSep).attr('y2', (yRange[0] - yRange[1]) - 110)
+                        .attr('stroke', '#000000').attr('stroke-opacity', 1)
+                        .attr('fill', '#000000').attr('fill-opacity', 1);
+            }
         }
 
         // Issue 32277: need to move the data points in front of the guide set range display
@@ -1820,11 +1818,18 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     this.expRunDetails.endIndex = undefined;
                 }
             }
+
+            // reset reference guideset indices
+            if (this.filterPointsFirstIndex) {
+                this.filterPointsFirstIndex = undefined;
+            }
+            if (this.filterPointsLastIndex) {
+                this.filterPointsLastIndex = undefined;
+            }
         }
     },
 
-    applyAnnotationFiltersBtnClick: function()
-    {
+    applyAnnotationFiltersBtnClick: function() {
         // make sure that at least one filter is selected
         if (this.getAnnotationListTree().getChecked().length == 0)
         {
@@ -1882,8 +1887,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         this.annotationFiltersField.collapse();
     },
 
-    updateSelectedAnnotationsToolbar: function()
-    {
+    updateSelectedAnnotationsToolbar: function() {
         var selectedAnnotationsTb = this.selectedAnnotationsToolbar;
         if(!selectedAnnotationsTb)
             return;
@@ -1992,8 +1996,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         })
     },
 
-    persistSelectedFormOptions : function()
-    {
+    persistSelectedFormOptions : function() {
         if (this.havePlotOptionsChanged)
         {
             this.havePlotOptionsChanged = false;
@@ -2005,8 +2008,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    getSelectedPlotFormOptions : function()
-    {
+    getSelectedPlotFormOptions : function() {
         var annotationsProp = [];
 
         Ext4.Object.each(this.selectedAnnotations, function(name, values)
@@ -2043,8 +2045,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return 0;
     },
 
-    getColorRange: function()
-    {
+    getColorRange: function() {
         return LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete());
     }
 

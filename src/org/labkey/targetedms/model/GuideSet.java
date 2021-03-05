@@ -37,6 +37,7 @@ public class GuideSet extends Entity
     private Date _trainingStart;
     private Date _trainingEnd;
     private Date _referenceEnd;
+    private boolean _isDefault;
 
     public int getRowId()
     {
@@ -86,6 +87,16 @@ public class GuideSet extends Entity
     public void setReferenceEnd(Date referenceEnd)
     {
         _referenceEnd = referenceEnd;
+    }
+
+    public boolean isDefault()
+    {
+        return _isDefault;
+    }
+
+    public void setIsDefault(boolean isDefault)
+    {
+        _isDefault = isDefault;
     }
 
     public JSONObject toJSON(List<RawMetricDataSet> dataRows, Map<Integer, QCMetricConfiguration> metrics, Map<GuideSetKey, GuideSetStats> stats)
