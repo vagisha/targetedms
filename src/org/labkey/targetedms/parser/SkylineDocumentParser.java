@@ -1944,9 +1944,11 @@ public class SkylineDocumentParser implements AutoCloseable
                     if (!StringUtils.isEmpty(transitionProto.getAnnotations().getNote())) {
                         transition.setNote(transitionProto.getAnnotations().getNote());
                     }
+                    List<TransitionAnnotation> annotations = new ArrayList<>();
                     for (SkylineDocument.SkylineDocumentProto.AnnotationValue transitionValue : transitionProto.getAnnotations().getValuesList()) {
-                        transition.getAnnotations().add(readAnnotationValue(transitionValue, new TransitionAnnotation()));
+                        annotations.add(readAnnotationValue(transitionValue, new TransitionAnnotation()));
                     }
+                    transition.setAnnotations(annotations);
                 }
                 list.add(transition);
             }
