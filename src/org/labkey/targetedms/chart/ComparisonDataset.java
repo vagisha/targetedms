@@ -256,7 +256,11 @@ public class ComparisonDataset
                 _seriesDatasetsMap.put(seriesLabel, seriesDataset);
                 if(seriesDataset.getSeriesItemData() != null)
                 {
-                    _maxCategoryValue = Math.max(_maxCategoryValue, seriesDataset.getSeriesItemData().getValue());
+                    double value = seriesDataset.getSeriesItemData().getValue();
+                    if (!Double.isNaN(value))
+                    {
+                        _maxCategoryValue = Math.max(_maxCategoryValue, value);
+                    }
                 }
             }
         }
@@ -428,10 +432,14 @@ public class ComparisonDataset
                     {
                         // NOTE: This will always be a BarChartSeriesItemData
                         BarChartSeriesItemData seriesItem = (BarChartSeriesItemData) seriesDataset.getSeriesItemData();
-                        dataset.add(getDataItemValue(seriesItem.getValue(), peakAreaAxisMagnitude, _logScale),
-                                getDataItemValue(seriesItem.getSdev(), peakAreaAxisMagnitude, _logScale),
-                                seriesLabel.toString(),
-                                categoryLabel);
+                        double value = seriesItem.getValue();
+                        if (!Double.isNaN(value))
+                        {
+                            dataset.add(getDataItemValue(value, peakAreaAxisMagnitude, _logScale),
+                                    getDataItemValue(seriesItem.getSdev(), peakAreaAxisMagnitude, _logScale),
+                                    seriesLabel.toString(),
+                                    categoryLabel);
+                        }
                     }
                 }
             }
@@ -449,7 +457,7 @@ public class ComparisonDataset
                     for (ComparisonDataset.SeriesLabel seriesLabel : this.getSortedSeriesLabels())
                     {
                         ComparisonDataset.ComparisonSeriesItem seriesDataset = categoryDataset.getSeriesDataset(seriesLabel);
-                        if (seriesDataset == null)
+                        if (seriesDataset == null || Double.isNaN(seriesDataset.getSeriesItemData().getValue()))
                         {
                             // Add an empty series otherwise color order of series can be incorrect.
                             dataset.addValue(0, seriesLabel.toString(), categoryLabel);

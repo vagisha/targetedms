@@ -8,15 +8,19 @@ import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.HttpView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSSchema;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -59,7 +63,21 @@ public class SamplePivotCustomizer implements TableCustomizer
                     {
                         // Get the sample names associated with that run
                         long runId = Integer.parseInt(clause.getParamVals()[0].toString());
-                        Set<String> sampleNames = new CaseInsensitiveHashSet(new TableSelector(TargetedMSManager.getTableInfoSampleFile(), Collections.singleton("SampleName"), new SimpleFilter(FieldKey.fromParts("ReplicateId", "RunId"), runId), null).getArrayList(String.class));
+                        Set<String> sampleNames = new CaseInsensitiveHashSet();
+                        TargetedMSSchema schema = new TargetedMSSchema(context.getUser(), context.getContainer());
+                        TableInfo sampleFileTable = schema.getTable(TargetedMSSchema.TABLE_SAMPLE_FILE);
+                        for (Map<String, Object> sampleInfo : new TableSelector(sampleFileTable,
+                                QueryService.get().getColumns(tableInfo, Set.of(FieldKey.fromParts("SampleName"), FieldKey.fromParts("ReplicateId", "Name"))).values(),
+                                new SimpleFilter(FieldKey.fromParts("ReplicateId", "RunId"), runId), null).getMapCollection())
+                        {
+                            for (Object sampleName : sampleInfo.values())
+                            {
+                                if (sampleName != null)
+                                {
+                                    sampleNames.add(sampleName.toString());
+                                }
+                            }
+                        }
 
                         // Match the samples from the desired run against all of the pivoted columns
                         List<FieldKey> defaultColumns = new ArrayList<>(tableInfo.getDefaultVisibleColumns());

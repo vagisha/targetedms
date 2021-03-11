@@ -1,16 +1,21 @@
 package org.labkey.targetedms.model.passport;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 public class IPeptide
 {
     private String sequence;
-    private String peptideModifiedSequence;
     private int startIndex;
     private int endIndex;
     private long proteinId;
     private long panoramaPeptideId;
 
-    private double totalArea;
-    private long precursorId;
+    private List<ReplicateInfo> replicateInfo = new ArrayList<>();
 
     private double beforeIntensity;
     private double beforeTotalArea;
@@ -72,16 +77,6 @@ public class IPeptide
     public void setAfterTotalArea(double afterTotalArea)
     {
         this.afterTotalArea = afterTotalArea;
-    }
-
-    public String getPeptideModifiedSequence()
-    {
-        return peptideModifiedSequence;
-    }
-
-    public void setPeptideModifiedSequence(String peptideModifiedSequence)
-    {
-        this.peptideModifiedSequence = peptideModifiedSequence;
     }
 
     public long getPrecursorbeforeid()
@@ -164,29 +159,92 @@ public class IPeptide
         this.afterIntensity = afterIntensity;
     }
 
-    public double getIntensity()
+    public void addReplicateInfo(String replicate, String timepoint, String index, long intensity, long precursorId, Date acquiredTime)
     {
-        return getTotalArea();
+        replicateInfo.add(new ReplicateInfo(replicate, timepoint, index, intensity, precursorId, acquiredTime));
     }
 
-    public double getTotalArea()
+    public List<ReplicateInfo> getReplicateInfo()
     {
-        return totalArea;
+        return replicateInfo;
     }
 
-    public void setTotalArea(double totalArea)
+    public JSONObject toJSON()
     {
-        this.totalArea = totalArea;
+        JSONObject result = new JSONObject();
+        result.put("beforeintensity", getBeforeIntensity());
+        result.put("normalizedafterintensity", getAfterIntensity());
+        result.put("startindex", getStartIndex());
+        result.put("endindex", getEndIndex());
+        result.put("sequence", getSequence());
+        result.put("panoramapeptideid", getPanoramaPeptideId());
+        result.put("panoramaprecursorbeforeid", getPrecursorbeforeid());
+        result.put("panoramaprecursorafterid", getPrecursorafterid());
+
+        JSONArray replicateInfo = new JSONArray();
+        for (IPeptide.ReplicateInfo info : getReplicateInfo())
+        {
+            JSONObject i = new JSONObject();
+            i.put("grouping", info.getGrouping());
+            i.put("timepoint", info.getTimepoint());
+            i.put("replicate", info.getReplicate());
+            i.put("acquiredTime", info.getAcquiredTime());
+            i.put("intensity", info.getIntensity());
+            i.put("precursorChromInfoId", info.getPrecursorChromInfoId());
+            replicateInfo.put(i);
+        }
+        result.put("replicateInfo", replicateInfo);
+        return result;
     }
 
-    public long getPrecursorId()
+    public static class ReplicateInfo
     {
-        return precursorId;
-    }
+        private final String _replicate;
+        private final String _timepoint;
+        private final String _grouping;
+        private final double _intensity;
+        private final long _precursorChromInfoId;
+        private final Date _acquiredTime;
 
-    public void setPrecursorId(long precursorId)
-    {
-        this.precursorId = precursorId;
+        public ReplicateInfo(String replicate, String timepoint, String grouping, double intensity, long precursorChromInfoId, Date acquiredTime)
+        {
+            _replicate = replicate;
+            _timepoint = timepoint;
+            _grouping = grouping;
+            _intensity = intensity;
+            _precursorChromInfoId = precursorChromInfoId;
+            _acquiredTime = acquiredTime;
+        }
+
+        public String getReplicate()
+        {
+            return _replicate;
+        }
+
+        public String getTimepoint()
+        {
+            return _timepoint;
+        }
+
+        public String getGrouping()
+        {
+            return _grouping;
+        }
+
+        public double getIntensity()
+        {
+            return _intensity;
+        }
+
+        public long getPrecursorChromInfoId()
+        {
+            return _precursorChromInfoId;
+        }
+
+        public Date getAcquiredTime()
+        {
+            return _acquiredTime;
+        }
     }
 
     @Override

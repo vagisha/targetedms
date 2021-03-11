@@ -24,7 +24,7 @@ public class IProtein
     }
 
     private long pepGroupId;
-    private long sequenceId;
+    private Long sequenceId;
     private Date modified;
     private String accession;
     private String preferredname;
@@ -34,10 +34,8 @@ public class IProtein
     private String description;
     private String sequence;
     List<IPeptide> pep;
-    List<IKeyword> keywords;
-    List<IFeature> features;
-    List<IProject> projects;
-    int length;
+    List<IKeyword> keywords = Collections.emptyList();
+    List<IFeature> features = Collections.emptyList();
     IFile file;
 
     public List<IFeature> getFeatures()
@@ -49,16 +47,6 @@ public class IProtein
     {
         features.sort(Comparator.comparingInt(IFeature::getStartIndex));
         this.features = features;
-    }
-
-    public List<IProject> getProjects()
-    {
-        return projects;
-    }
-
-    public void setProjects(List<IProject> projects)
-    {
-        this.projects = projects;
     }
 
     public List<IKeyword> getKeywords()
@@ -82,16 +70,6 @@ public class IProtein
         this.pep = pep;
     }
 
-    public int getLength()
-    {
-        return length;
-    }
-
-    public void setLength(int length)
-    {
-        this.length = length;
-    }
-
     public String getSequence()
     {
         return sequence;
@@ -113,12 +91,12 @@ public class IProtein
         this.label = label;
     }
 
-    public long getSequenceId()
+    public Long getSequenceId()
     {
         return sequenceId;
     }
 
-    public void setSequenceId(long sequenceId)
+    public void setSequenceId(Long sequenceId)
     {
         this.sequenceId = sequenceId;
     }
@@ -149,7 +127,7 @@ public class IProtein
                 nameSplit = getDescription().split("OS");
             name = nameSplit[0];
         }
-        return name;
+        return name == null ? getLabel() : name;
     }
 
     public void setAccession(String accession)
@@ -222,18 +200,7 @@ public class IProtein
         List<IPeptide> peps = getPep();
         for (IPeptide pep : peps)
         {
-            JSONObject p = new JSONObject();
-            p.put("intensity", pep.getIntensity());
-            p.put("beforeintensity", pep.getBeforeIntensity());
-            p.put("normalizedafterintensity", pep.getAfterIntensity());
-            p.put("startindex", pep.getStartIndex());
-            p.put("endindex", pep.getEndIndex());
-            p.put("sequence", pep.getSequence());
-            p.put("panoramapeptideid", pep.getPanoramaPeptideId());
-            p.put("panoramaprecursorbeforeid", pep.getPrecursorbeforeid());
-            p.put("panoramaprecursorafterid", pep.getPrecursorafterid());
-            p.put("panoramaprecursorid", pep.getPrecursorId());
-            pepJSON.put(p);
+            pepJSON.put(pep.toJSON());
         }
         JSONArray featJSON = new JSONArray();
         if (features != null)
@@ -250,40 +217,7 @@ public class IProtein
                 featJSON.put(f);
             }
         }
-        JSONArray projectsJSON = new JSONArray();
-        if (projects != null)
-        {
-            for (IProject p : projects)
-            {
-                JSONObject pObj = new JSONObject();
-                pObj.put("runId", p.getRunId());
-                pObj.put("pepGroupId", p.getPeptideGroupId());
-                pObj.put("fileName", p.getFileName());
-                pObj.put("container", p.getContainer().getId());
-                List<IPeptide> peptides = p.getPeptides();
-                Collections.sort(peptides, new Comparator<IPeptide>()
-                {
-                    @Override
-                    public int compare(IPeptide o1, IPeptide o2)
-                    {
-                        return o1.getStartIndex() - o2.getStartIndex();
-                    }
-                });
-                JSONArray peptidesJSON = new JSONArray();
-                for (IPeptide pep : peptides)
-                {
-                    JSONObject pepObj = new JSONObject();
-                    pepObj.put("startindex", pep.getStartIndex());
-                    pepObj.put("endindex", pep.getEndIndex());
-                    pepObj.put("sequence", pep.getSequence());
-                    peptidesJSON.put(pepObj);
-                }
-                pObj.put("peptides", peptidesJSON);
-                projectsJSON.put(pObj);
-            }
-        }
 
-        protJSON.put("projects", projectsJSON);
         protJSON.put("peptides", pepJSON);
         protJSON.put("features", featJSON);
         return protJSON;
@@ -291,6 +225,10 @@ public class IProtein
 
     public List<HtmlString> getProtSeqHTML()
     {
+        if (getSequence() == null)
+        {
+            return Collections.emptyList();
+        }
         String[] str = getSequence().split("");
         HtmlString[] htmlStrings = new HtmlString[str.length];
         for (int i = 0; i < str.length; i++)
@@ -298,7 +236,7 @@ public class IProtein
             htmlStrings[i] = HtmlString.of(str[i]);
         }
         List<HtmlString> groups = new ArrayList<>();
-        if (features != null && features.get(features.size() - 1).getEndIndex() < str.length)
+        if (features != null && !features.isEmpty() && features.get(features.size() - 1).getEndIndex() < str.length)
         {
             for (int i = 0; i < features.size(); i++)
             {
