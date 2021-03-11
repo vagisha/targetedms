@@ -32,10 +32,14 @@ import java.util.List;
  */
 public class LibPrecursorRetentionTimeDao extends BaseDaoImpl<LibPrecursorRetentionTime>
 {
+    private final Table _table;
+    private final Constants.ColumnDef[] _columns;
     private final Constants.Column _precursorCol;
 
-    public LibPrecursorRetentionTimeDao(Constants.Column precursorCol)
+    public LibPrecursorRetentionTimeDao(Table table, Constants.Column precursorCol, Constants.ColumnDef[] columns)
     {
+        _table = table;
+        _columns = columns;
         _precursorCol = precursorCol;
     }
 
@@ -53,13 +57,13 @@ public class LibPrecursorRetentionTimeDao extends BaseDaoImpl<LibPrecursorRetent
     @Override
     public String getTableName()
     {
-        return Table.PrecursorRetentionTime.name();
+        return _table.name();
     }
 
     @Override
     protected Constants.ColumnDef[] getColumns()
     {
-        return PrecursorRetentionTimeColumn.values();
+        return _columns;
     }
 
     @Override

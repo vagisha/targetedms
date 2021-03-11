@@ -96,13 +96,13 @@ public class ChromatogramLibraryWriter
         _isotopeModificationDao = new LibIsotopeModificationDao();
 
         Dao<LibPrecursor> precursorDao = new LibPrecursorDao(new LibPrecursorIsotopeModificationDao(),
-                new LibPrecursorRetentionTimeDao(Constants.Column.PrecursorId),
+                new LibPrecursorRetentionTimeDao(Constants.Table.PrecursorRetentionTime, Constants.Column.PrecursorId, Constants.PrecursorRetentionTimeColumn.values()),
                 new LibTransitionDao(new LibTransitionOptimizationDao()));
         _peptideDao = new LibPeptideDao(new LibPeptideStructuralModDao(), precursorDao);
         _proteinDao = new LibProteinDao(_peptideDao);
 
         Dao<LibMoleculePrecursor> moleculePrecursorDao = new LibMoleculePrecursorDao(
-                new LibPrecursorRetentionTimeDao(Constants.Column.MoleculePrecursorId),
+                new LibPrecursorRetentionTimeDao(Constants.Table.MoleculePrecursorRetentionTime, Constants.Column.MoleculePrecursorId, Constants.MoleculePrecursorRetentionTimeColumn.values()),
                 new LibMoleculeTransitionDao(new LibMoleculeTransitionOptimizationDao()));
         _moleculeDao = new LibMoleculeDao(moleculePrecursorDao);
         _moleculeListDao = new LibMoleculeListDao(_moleculeDao);
