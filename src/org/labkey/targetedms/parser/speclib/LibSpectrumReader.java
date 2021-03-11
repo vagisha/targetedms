@@ -27,6 +27,7 @@ import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 import org.sqlite.SQLiteConfig;
 
@@ -36,7 +37,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.zip.DataFormatException;
@@ -68,16 +72,7 @@ public abstract class LibSpectrumReader
                                       String modifiedPeptide, int charge,
                                       int redundantRefSpectrumId, String sourceFile) throws SQLException, DataFormatException
     {
-        SpectrumKey key = new SpectrumKey(modifiedPeptide, charge, sourceFile, redundantRefSpectrumId);
-
-        if(key.forRedundantSpectrum())
-        {
-            return getRedundantLibSpectrum(container, libPath, key);
-        }
-        else
-        {
-            return getLibSpectrum(container, libPath, key);
-        }
+        return getLibSpectrum(container, libPath, new SpectrumKey(modifiedPeptide, charge, sourceFile, redundantRefSpectrumId));
     }
 
     @Nullable
@@ -90,7 +85,10 @@ public abstract class LibSpectrumReader
     @Nullable
     private LibSpectrum getLibSpectrum(Container container, Path libPath, SpectrumKey key) throws SQLException, DataFormatException
     {
-        String localLibPath = getLocalLibPath(container, libPath);
+        String localLibPath = key.forRedundantSpectrum()
+                ? getLocalLibPath(container, getRedundantLibPath(container, libPath)) // Bibliospec stores redundant spectra in a separate SQLite file
+                : getLocalLibPath(container, libPath);
+
         if (null == localLibPath)
             return null;
 
@@ -99,23 +97,8 @@ public abstract class LibSpectrumReader
 
         try (Connection conn = getLibConnection(localLibPath))
         {
-            return readSpectrum(conn, key, libPath);
-        }
-    }
-
-    @Nullable
-    private LibSpectrum getRedundantLibSpectrum(Container container, Path libPath, SpectrumKey key) throws SQLException, DataFormatException
-    {
-        String localLibPath = getRedundantLibPath(container, libPath);
-        if (null == localLibPath)
-            return null;
-
-        if(!(new File(localLibPath).exists()))
-            return null;
-
-        try (Connection conn = getLibConnection(localLibPath))
-        {
-            return readRedundantSpectrum(conn, key);
+            SpectrumKey matchingKey = getMatchingModSeqSpecKey(conn, key);
+            return key.forRedundantSpectrum() ? readRedundantSpectrum(conn, matchingKey) : readSpectrum(conn, matchingKey, libPath);
         }
     }
 
@@ -135,7 +118,8 @@ public abstract class LibSpectrumReader
 
         try (Connection conn = getLibConnection(libFilePath))
         {
-            return readRetentionTimes(conn, modifiedPeptide, libFilePath);
+            String matchingModSeq = findMatchingModifiedSequence(conn, modifiedPeptide, getMatchingModSeqLookupSql());
+            return readRetentionTimes(conn, matchingModSeq, libFilePath);
         }
         catch(SQLException e)
         {
@@ -147,10 +131,24 @@ public abstract class LibSpectrumReader
     protected abstract LibSpectrum readSpectrum(Connection conn, SpectrumKey spectrumKey, Path libPath) throws DataFormatException, SQLException;
 
     @Nullable
-    protected abstract String getRedundantLibPath(Container container, Path libPath);
+    protected abstract Path getRedundantLibPath(Container container, Path libPath);
 
     @Nullable
     protected abstract LibSpectrum readRedundantSpectrum(Connection conn, SpectrumKey spectrumKey) throws DataFormatException, SQLException;
+
+    // The SQL should take a single parameter, the unmodified peptide sequence
+    abstract String getMatchingModSeqLookupSql();
+
+    /**
+     * Issue 33190: Spectrum viewer unable to show data for peptides with modifications
+     * Modifications in the Precursor's modified sequence may not have the same number of precision digits as the modified sequence in the library.
+     * Return a spectrum key with a modified sequence that matches what is in the library.
+     */
+    protected SpectrumKey getMatchingModSeqSpecKey(Connection conn, SpectrumKey key) throws SQLException
+    {
+        String matchingPeptide = findMatchingModifiedSequence(conn, key.getModifiedPeptide(), getMatchingModSeqLookupSql());
+        return new SpectrumKey(matchingPeptide, key.getCharge(), key.getSourceFile(), key.getRedundantRefSpectrumId());
+    }
 
     @NotNull
     protected abstract List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> readRetentionTimes(Connection conn, String modifiedPeptide, String libPath) throws SQLException;
@@ -244,5 +242,31 @@ public abstract class LibSpectrumReader
         SQLiteConfig config = new SQLiteConfig();
         config.setReadOnly(true);
         return DriverManager.getConnection("jdbc:sqlite:/" + libFilePath, config.toProperties());
+    }
+
+    static String findMatchingModifiedSequence(Connection conn, String modifiedSequence, String sql) throws SQLException
+    {
+        // Issue 33190: Spectrum viewer unable to show data for peptides with modifications
+        // Modifications in the Precursor's modified sequence may not have the same number of precision digits as the modified sequence in the library file.
+        // Find the modified sequence representation from the library that matches
+        List<Pair<Integer, String>> mods = new ArrayList<>();
+        String unmodifiedSequence = Peptide.stripModifications(modifiedSequence, mods);
+        if (mods.size() == 0) {
+            return modifiedSequence;
+        }
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, unmodifiedSequence);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next())
+                {
+                    String modSeqCompare = rs.getString(1);
+                    if (Peptide.modifiedSequencesMatch(modifiedSequence, modSeqCompare)) {
+                        return modSeqCompare;
+                    }
+                }
+            }
+        }
+        return modifiedSequence;
     }
 }
