@@ -64,7 +64,7 @@ public class TargetedMSMAMTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("PTM Report"));
 
         assertElementPresent("Wrong modification count", Locator.xpath("//td[contains(text(), 'Carbamidomethyl Cysteine')]"), 9);
-        assertTextPresentInThisOrder("K.HDLDLICR.A", "K.YLECSALTQR.G", "R.YVDIAIPCNNK.G");
+        assertTextPresentInThisOrder("(K)HDLDLICR(A)", "(K)YLECSALTQR(G)", "(R)YVDIAIPCNNK(G)");
         assertTextPresentInThisOrder("C245", "C157", "C163");
         assertTextPresent("A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35", "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35");
 
@@ -73,7 +73,7 @@ public class TargetedMSMAMTest extends TargetedMSTest
         assertTextPresentInThisOrder("1501.75", "1078.50", "1547.71");
         assertTextPresentInThisOrder("NU205", "NU205", "1433Z");
         assertTextPresentInThisOrder("70-84", "325-333", "28-41");
-        assertTextPresentInThisOrder("K.ASTEGVAIQGQQGTR.L", "K.AQYEDIANR.S", "K.SVTEQGAELSNEER.N");
+        assertTextPresentInThisOrder("(K)ASTEGVAIQGQQGTR(L)", "(K)AQYEDIANR(S)", "(K)SVTEQGAELSNEER(N)");
         assertTextPresentInThisOrder("Carbamidomethyl Cysteine @ C156", "Carbamidomethyl Cysteine @ C244", "Carbamidomethyl Cysteine @ C93");
     }
 }

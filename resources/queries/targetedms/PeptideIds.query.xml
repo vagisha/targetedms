@@ -11,6 +11,7 @@
                             <className>org.labkey.targetedms.query.ModifiedSequenceDisplayColumn$PeptideDisplayColumnFactory</className>
                             <properties>
                                 <property name="showNextAndPrevious">true</property>
+                                <property name="useParens">true</property>
                             </properties>
                         </displayColumnFactory>
                     </column>
@@ -22,6 +23,10 @@
                     </column>
                     <column columnName="ExpectedPeptideMass">
                         <formatString>0.00</formatString>
+                    </column>
+                    <column columnName="TotalArea">
+                        <columnTitle>Intensity</columnTitle>
+                        <formatString>0,000</formatString>
                     </column>
                 </columns>
             </table>
