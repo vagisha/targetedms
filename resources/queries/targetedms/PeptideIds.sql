@@ -18,7 +18,9 @@ SELECT
                          SUBSTRING(p.Sequence, IndexAA + 1, 1) ||
                          CAST(IndexAA + p.StartIndex AS VARCHAR)),
        (', ' || CHR(10)))
-   FROM targetedms.PeptideStructuralModification psm INNER JOIN targetedms.Peptide p ON psm.PeptideId = p.Id WHERE psm.PeptideId = pci.PrecursorId.PeptideId) AS Modification
+   FROM targetedms.PeptideStructuralModification psm INNER JOIN targetedms.Peptide p ON psm.PeptideId = p.Id WHERE psm.PeptideId = pci.PrecursorId.PeptideId) AS Modification,
+   SUM(TotalArea) AS TotalArea
+
 FROM
      targetedms.precursorchrominfo pci
 GROUP BY

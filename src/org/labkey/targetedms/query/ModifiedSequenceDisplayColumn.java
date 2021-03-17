@@ -83,6 +83,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
     public static class PeptideDisplayColumnFactory implements DisplayColumnFactory
     {
         private boolean _showNextAndPrevious = false;
+        private boolean _useParens = false;
 
         public PeptideDisplayColumnFactory()
         {
@@ -90,39 +91,71 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 
         public PeptideDisplayColumnFactory(MultiValuedMap<String, String> map)
         {
-            Collection<String> values = map == null ? Collections.emptyList() : map.get("showNextAndPrevious");
+            _showNextAndPrevious = getBooleanProperty(map, "showNextAndPrevious", _showNextAndPrevious);
+            _useParens = getBooleanProperty(map, "useParens", _useParens);
+        }
+
+        private boolean getBooleanProperty(MultiValuedMap<String, String> map, String propertyName, boolean defaultValue)
+        {
+            Collection<String> values = map == null ? Collections.emptyList() : map.get(propertyName);
             if (!values.isEmpty())
             {
-                _showNextAndPrevious = Boolean.valueOf(values.iterator().next());
+                return Boolean.valueOf(values.iterator().next());
             }
+            return defaultValue;
         }
 
         @Override
         public DisplayColumn createRenderer(ColumnInfo colInfo)
         {
-            return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo, _showNextAndPrevious);
+            return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo, _showNextAndPrevious, _useParens);
         }
     }
 
     public static class PeptideCol extends ModifiedSequenceDisplayColumn
     {
         private final boolean _showNextAndPrevious;
+        private final boolean _useParens;
+        private final FieldKey _previousAAFieldKey;
+        private final FieldKey _nextAAFieldKey;
 
         public PeptideCol(ColumnInfo colInfo)
         {
-            this(colInfo, false);
+            this(colInfo, false, false);
         }
 
-        public PeptideCol(ColumnInfo colInfo, boolean showNextAndPrevious)
+        public PeptideCol(ColumnInfo colInfo, boolean showNextAndPrevious, boolean useParens)
         {
             super(colInfo);
             _showNextAndPrevious = showNextAndPrevious;
+            _useParens = useParens;
+
+            _previousAAFieldKey = FieldKey.fromString(getParentFieldKey(), "PreviousAa");
+            _nextAAFieldKey = FieldKey.fromString(getParentFieldKey(), "NextAa");
         }
 
         @Override
         String getLinkTitle()
         {
             return "Peptide Details";
+        }
+
+        @Override
+        public Object getDisplayValue(RenderContext ctx)
+        {
+            // Render for TSV and Excel
+            Object result = super.getDisplayValue(ctx);
+            if (_showNextAndPrevious)
+            {
+                String previous = (String)ctx.get(_previousAAFieldKey);
+                String next = (String)ctx.get(_nextAAFieldKey);
+                if (_useParens)
+                {
+                    return "(" + previous + ")" + result + "(" + next + ")";
+                }
+                return previous + "." + result + "." + next;
+            }
+            return result;
         }
 
         @Override
@@ -136,8 +169,8 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "PeptideGroupId/RunId"));
             if (_showNextAndPrevious)
             {
-                keys.add(FieldKey.fromString(super.getParentFieldKey(), "PreviousAa"));
-                keys.add(FieldKey.fromString(super.getParentFieldKey(), "NextAa"));
+                keys.add(_previousAAFieldKey);
+                keys.add(_nextAAFieldKey);
             }
         }
 
@@ -166,7 +199,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
             }
             else
             {
-                _cellData = getHtmlMaker().getPeptideHtml(peptideId, sequence, peptideModifiedSequence, runId, previousAA, nextAA);
+                _cellData = getHtmlMaker().getPeptideHtml(peptideId, sequence, peptideModifiedSequence, runId, previousAA, nextAA, _useParens);
                 _iconPath = IconFactory.getPeptideIconPath(peptideId, runId, decoy, standardType);
             }
         }

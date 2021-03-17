@@ -70,15 +70,15 @@ public class ModifiedPeptideHtmlMaker
 
     public HtmlString getPrecursorHtml(long peptideId, long isotopeLabelId, String peptideSequence, String precursorModifiedSequence, Long runId)
     {
-        return getHtml(peptideId, isotopeLabelId, peptideSequence, precursorModifiedSequence, runId, null, null);
+        return getHtml(peptideId, isotopeLabelId, peptideSequence, precursorModifiedSequence, runId, null, null, false);
     }
 
     public HtmlString getPeptideHtml(Peptide peptide, Long runId)
     {
-        return getPeptideHtml(peptide.getId(), peptide.getSequence(), peptide.getPeptideModifiedSequence(), runId, null, null);
+        return getPeptideHtml(peptide.getId(), peptide.getSequence(), peptide.getPeptideModifiedSequence(), runId, null, null, false);
     }
 
-    public HtmlString getPeptideHtml(long peptideId, String sequence, String peptideModifiedSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA)
+    public HtmlString getPeptideHtml(long peptideId, String sequence, String peptideModifiedSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA, boolean useParens)
     {
         String altSequence = peptideModifiedSequence;
         if(StringUtils.isBlank(altSequence))
@@ -86,10 +86,10 @@ public class ModifiedPeptideHtmlMaker
             altSequence = sequence;
         }
 
-        return getHtml(peptideId, null, sequence, altSequence, runId, previousAA, nextAA);
+        return getHtml(peptideId, null, sequence, altSequence, runId, previousAA, nextAA, useParens);
     }
 
-    private HtmlString getHtml(long peptideId,  @Nullable Long isotopeLabelId, String sequence, String altSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA)
+    private HtmlString getHtml(long peptideId,  @Nullable Long isotopeLabelId, String sequence, String altSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA, boolean useParens)
     {
         Long firstIsotopeLabelIdInDoc = null;
         if(runId != null)
@@ -132,8 +132,12 @@ public class ModifiedPeptideHtmlMaker
 
         if (previousAA != null)
         {
+            if (useParens)
+            {
+                result.append("(");
+            }
             result.append(PageFlowUtil.filter(previousAA));
-            result.append(".");
+            result.append(useParens ? ")" : ".");
         }
 
         for(int i = 0; i < sequence.length(); i++)
@@ -163,8 +167,12 @@ public class ModifiedPeptideHtmlMaker
 
         if (nextAA != null)
         {
-            result.append(".");
+            result.append(useParens ? "(" : ".");
             result.append(PageFlowUtil.filter(nextAA));
+            if (useParens)
+            {
+                result.append(")");
+            }
         }
 
         result.append("</span>");

@@ -276,12 +276,13 @@ public abstract class BaseDaoImpl<T extends AbstractLibEntity> implements Dao<T>
 
     protected abstract ColumnDef[] getColumns();
 
-    protected int setIonMobilityColumns(PreparedStatement stmt, int colIndex, AbstractLibPrecursor precursor) throws SQLException
+    protected int setIonMobilityColumns(PreparedStatement stmt, int colIndex, AbstractLibPrecursor<?> precursor) throws SQLException
     {
         stmt.setObject(colIndex++, precursor.getExplicitIonMobility(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getCcs(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getIonMobilityMS1(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getIonMobilityFragment(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getIonMobilityWindow(), Types.DOUBLE);
         stmt.setString(colIndex++, precursor.getIonMobilityType());
         stmt.setString(colIndex++, precursor.getExplicitIonMobilityUnits());
         stmt.setObject(colIndex++, precursor.getExplicitCcsSqa(), Types.DOUBLE);

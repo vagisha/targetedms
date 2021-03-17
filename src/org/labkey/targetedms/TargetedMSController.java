@@ -1468,6 +1468,9 @@ public class TargetedMSController extends SpringActionController
     private void writeChart(AbstractChartForm form, HttpServletResponse response, JFreeChart chart)
             throws Exception
     {
+        TextTitle title = chart.getTitle();
+        String filename = title == null ? "PanoramaPlot" : FileUtil.makeLegalName(title.getText().replace('"', '_'));
+
         if ("json".equals(form.getFormat()))
         {
             Map<String, Object> jsonPayload = new HashMap<>();
@@ -1507,7 +1510,6 @@ public class TargetedMSController extends SpringActionController
             {
                 jsonPayload.put("xLabel", xLabel);
             }
-            TextTitle title = chart.getTitle();
             jsonPayload.put("title", title == null ? null : title.getText());
             // Null out the title so that it's not part of the SVG and let the client render it as text via the DOM
             chart.setTitle((String)null);
@@ -1521,7 +1523,7 @@ public class TargetedMSController extends SpringActionController
         }
         else if ("pdf".equalsIgnoreCase(form.getFormat()))
         {
-            VisualizationService.get().renderSvgAsPdf(renderSVG(form, chart), "PanoramaPlot.pdf", getViewContext().getResponse());
+            VisualizationService.get().renderSvgAsPdf(renderSVG(form, chart), filename + ".pdf", getViewContext().getResponse());
         }
         else
         {
@@ -1529,8 +1531,7 @@ public class TargetedMSController extends SpringActionController
 
             if ("pngDownload".equalsIgnoreCase(form.getFormat()))
             {
-                String filename = "PanoramaPlot.png";
-                response.addHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+                response.addHeader("Content-Disposition", "attachment; filename=\"" + filename + ".png" + "\"");
             }
 
             if (!form.hasDpi())
@@ -4435,16 +4436,13 @@ public class TargetedMSController extends SpringActionController
             boolean proteomics = peptideCount != null && peptideCount.intValue() > 0;
 
             // Peptide group details
-            DataRegion groupDetails = new DataRegion();
+            JspView<PeptideGroup> detailsView = new JspView<>("/org/labkey/targetedms/view/moleculeListView.jsp", group);
+            detailsView.setFrame(WebPartView.FrameType.PORTAL);
+            detailsView.setTitle(proteomics ? "Protein" : "Molecule List");
+
+            VBox result = new VBox(detailsView);
+
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
-            TableInfo tableInfo = schema.getTable(proteomics ? TargetedMSSchema.TABLE_PEPTIDE_GROUP : TargetedMSSchema.TABLE_MOLECULE_GROUP);
-            groupDetails.setColumns(tableInfo.getColumns("Label", "Description", "Decoy", "Note", "RunId"));
-            groupDetails.setButtonBar(new ButtonBar());
-            DetailsView groupDetailsView = new DetailsView(groupDetails, form.getId());
-            groupDetailsView.setTitle(proteomics ? "Protein" : "Molecule List");
-
-            VBox result = new VBox(groupDetailsView);
-
 
             // Protein sequence coverage
             if (group.getSequenceId() != null)
@@ -4540,9 +4538,8 @@ public class TargetedMSController extends SpringActionController
         public void addNavTrail(NavTree root)
         {
             new ShowPrecursorListAction(getViewContext()).addNavTrail(root, _run);
-            if (_run != null)
+            if (_proteinLabel != null)
             {
-                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
                 root.addChild(_proteinLabel);
             }
         }

@@ -51,15 +51,21 @@ public class ElibSpectrumReader extends LibSpectrumReader
     }
 
     @Override
-    protected @Nullable String getRedundantLibPath(Container container, Path libPath)
+    protected @Nullable Path getRedundantLibPath(Container container, Path libPath)
     {
-        return getLocalLibPath(container, libPath);
+        return libPath; // EncyclopeDIA does not have a separate redundant spectra file
     }
 
     @Override
     public @Nullable ElibSpectrum readRedundantSpectrum(Connection conn, SpectrumKey spectrumKey) throws SQLException, DataFormatException
     {
         return readElibSpectrum(conn, spectrumKey, false);
+    }
+
+    @Override
+    protected String getMatchingModSeqLookupSql()
+    {
+        return "SELECT PeptideModSeq FROM entries WHERE PeptideSeq = ?";
     }
 
     private ElibSpectrum readElibSpectrum(Connection conn, SpectrumKey spectrumKey, boolean getRedundant) throws SQLException, DataFormatException

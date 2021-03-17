@@ -368,7 +368,7 @@ public class ComparisonChartMaker
             pciPlusList = getPrecursorChromInfo(peptide, precursor, user, container);
         }
 
-        if (pciPlusList == null || pciPlusList.size() == 0)
+        if (pciPlusList.size() == 0)
         {
             return null;
         }

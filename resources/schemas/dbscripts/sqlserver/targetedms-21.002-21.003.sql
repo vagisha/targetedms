@@ -1,0 +1,1 @@
+ALTER TABLE targetedms.peptidegroup ALTER COLUMN label NVARCHAR(255);

@@ -341,7 +341,7 @@ public class SkylineAuditLogParser implements AutoCloseable
                 if(prevEntry != null)
                     ent.setParentEntryHash(prevEntry.getEntryHash());
                 entries.add(ent.expandEntry(expander));
-                _logger.info(ent.toString());
+                _logger.debug(ent.toString());
                 //all messages in this file should have expanded text
                 //ent.persist();
 
@@ -392,7 +392,7 @@ public class SkylineAuditLogParser implements AutoCloseable
             {
                 AuditLogEntry ent = _parser.parseLogEntry();
                 entries.add(ent.expandEntry(expander));
-                _logger.info(ent.toString());
+                _logger.debug(ent.toString());
             }
 
             Assert.assertTrue(expander.areResourcesReady());

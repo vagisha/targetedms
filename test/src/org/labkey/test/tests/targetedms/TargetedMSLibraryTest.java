@@ -196,8 +196,8 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("CTCF"));
         assertElementPresent(Locator.pageHeader("CTCF"));
         assertTextPresent("HsCD00078657 (2-D02)");
-        assertEquals("Wrong decoy value", "false", getText(Locator.tagWithClass("td", "lk-form-label").withText("Decoy:").followingSibling("td")));
-        assertEquals("Wrong File", SKY_FILE1, getText(Locator.tagWithClass("td", "lk-form-label").withText("File:").followingSibling("td")));
+        assertEquals("Wrong decoy value", "false", getText(Locator.tagWithClass("td", "labkey-form-label").withText("Decoy").followingSibling("td")));
+        assertEquals("Wrong File", SKY_FILE1, getText(Locator.tagWithClass("td", "labkey-form-label").withText("File").followingSibling("td")));
         assertElementPresent(Locator.xpath("//table[contains(@id, 'peptideMap')]"));
         ensureComparisonPlots("CTCF");
 

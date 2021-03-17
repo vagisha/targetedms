@@ -246,6 +246,7 @@
 #selectedPeptideChromatogramContainer span
 {
     text-align: center;
+    margin: 20px;
     width: 250px;
     display: inline-grid;
 }

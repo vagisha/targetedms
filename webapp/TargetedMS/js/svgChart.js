@@ -5,8 +5,8 @@ if (!LABKEY.targetedms) {
 if (!LABKEY.targetedms.SVGChart) {
     LABKEY.targetedms.SVGChart = {
         createExportIcon: function (divId, iconCls, tooltip, url) {
-            return '<span id="' + divId + iconCls + '" ><a href="' + LABKEY.Utils.encodeHtml(url) + '"' +
-                            '<i class="fa ' + iconCls + '" title="' + tooltip + '"></i></a></span>';
+            return '<a href="' + LABKEY.Utils.encodeHtml(url) + '"' +
+                            '<i class="fa ' + iconCls + '" title="' + tooltip + '"></i></a>';
         },
         requestAndRenderSVG: function (originalUrl, targetElement, legendElement, labelElement) {
             var url = originalUrl  + '&format=json' + (legendElement ? '&legend=false' : '');
@@ -19,7 +19,7 @@ if (!LABKEY.targetedms.SVGChart) {
                 success: function (xhr) {
                     var parsedResponse = JSON.parse(xhr.responseText);
 
-                    var plotAndTitleHtml = '<div style="text-align: center">' +
+                    var plotAndTitleHtml = '<div style="text-align: center; word-break: break-word">' +
                             LABKEY.Utils.encodeHtml(parsedResponse.title).split('\n').join('<br>') + ' ' +
                             this.createExportIcon(targetElement.id, 'fa-file-pdf-o', 'Export to PDF', originalUrl + '&format=pdf') + ' ' +
                             this.createExportIcon(targetElement.id, 'fa-file-image-o', 'Export to PNG', originalUrl + '&format=pngDownload') +

@@ -23,8 +23,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.targetedms.BlibSourceFile;
 import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.Pair;
-import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.speclib.LibSpectrum.RedundantSpectrum;
 import org.labkey.targetedms.query.LibraryManager;
@@ -100,14 +98,9 @@ public class BlibSpectrumReader extends LibSpectrumReader
     }
 
     @Override
-    protected @Nullable String getRedundantLibPath(Container container, Path libPath)
+    protected @Nullable Path getRedundantLibPath(Container container, Path libPath)
     {
-        Path redundantBlibPath = redundantBlibPath(libPath);
-        if(null == redundantBlibPath)
-        {
-            return null;
-        }
-        return getLocalLibPath(container, redundantBlibPath);
+        return redundantBlibPath(libPath);
     }
 
     @Override
@@ -121,6 +114,23 @@ public class BlibSpectrumReader extends LibSpectrumReader
         readSpectrumPeaks(conn, spectrum);
 
         return spectrum;
+    }
+
+    @Override
+    protected LibSpectrum.SpectrumKey getMatchingModSeqSpecKey(Connection conn, LibSpectrum.SpectrumKey key) throws SQLException
+    {
+        if(key.forRedundantSpectrum())
+        {
+            // When querying a redundant spectrum for Bibliospec we do not use the peptide modified sequence
+            // since we will have the database id of the spectrum, so no need to do any additional work here.
+            return key;
+        }
+        else
+        {
+            String blibPeptide = makePeptideBlibFormat(key.getModifiedPeptide());
+            String matchingPeptide = findMatchingModifiedSequence(conn, blibPeptide, getMatchingModSeqLookupSql());
+            return new LibSpectrum.SpectrumKey(matchingPeptide, key.getCharge(), key.getSourceFile(), key.getRedundantRefSpectrumId());
+        }
     }
 
     private static boolean malformedBlibFileError(String blibFilePath, SQLException e)
@@ -158,16 +168,12 @@ public class BlibSpectrumReader extends LibSpectrumReader
     @Override
     protected List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> readRetentionTimes(Connection conn, String modifiedPeptide, String blibFilePath) throws SQLException
     {
-        String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
-
         try
         {
             if(!hasValidRtTable(conn))
             {
                 return Collections.emptyList();
             }
-
-            blibPeptide = findMatchingModifiedSequence(conn, blibPeptide);
 
             StringBuilder sql = new StringBuilder("SELECT rt.retentionTime, rt.bestSpectrum, rs.peptideModSeq, rs.precursorCharge, ssf.fileName from RetentionTimes AS rt ");
             sql.append(" INNER JOIN RefSpectra AS rs ON (rt.RefSpectraID = rs.id)");
@@ -176,7 +182,7 @@ public class BlibSpectrumReader extends LibSpectrumReader
 
             try(PreparedStatement stmt = conn.prepareStatement(sql.toString()))
             {
-                stmt.setString(1, blibPeptide);
+                stmt.setString(1, modifiedPeptide);
                 List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> retentionTimes = new ArrayList<>();
                 try (ResultSet rs = stmt.executeQuery())
                 {
@@ -206,8 +212,6 @@ public class BlibSpectrumReader extends LibSpectrumReader
     @Nullable
     private BlibSpectrum readBlibSpectrum(Connection conn, String modifiedPeptide, int charge) throws SQLException
     {
-        String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
-        blibPeptide = findMatchingModifiedSequence(conn, blibPeptide);
         boolean validRtTable = hasValidRtTable(conn);
         StringBuilder sql;
         if(validRtTable)
@@ -227,7 +231,7 @@ public class BlibSpectrumReader extends LibSpectrumReader
 
         try (PreparedStatement stmt = conn.prepareStatement(sql.toString()))
         {
-            stmt.setString(1, blibPeptide);
+            stmt.setString(1, modifiedPeptide);
             stmt.setInt(2, charge);
             try (ResultSet rs = stmt.executeQuery())
             {
@@ -259,28 +263,10 @@ public class BlibSpectrumReader extends LibSpectrumReader
         }
     }
 
-    private static String findMatchingModifiedSequence(Connection conn, String modifiedSequence) throws SQLException
+    @Override
+    String getMatchingModSeqLookupSql()
     {
-        List<Pair<Integer, String>> mods = new ArrayList<>();
-        String unmodifiedSequence = Peptide.stripModifications(modifiedSequence, mods);
-        if (mods.size() == 0) {
-            return modifiedSequence;
-        }
-        String sql = "SELECT peptideModSeq FROM RefSpectra WHERE peptideSeq = ?";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, unmodifiedSequence);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next())
-                {
-                    String modSeqCompare = rs.getString(1);
-                    if (Peptide.modifiedSequencesMatch(modifiedSequence, modSeqCompare)) {
-                        return modSeqCompare;
-                    }
-                }
-            }
-        }
-        return modifiedSequence;
+        return "SELECT peptideModSeq FROM RefSpectra WHERE peptideSeq = ?";
     }
 
     private static boolean hasTable(Connection conn, String tableName) throws SQLException
