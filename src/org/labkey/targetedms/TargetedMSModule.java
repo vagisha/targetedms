@@ -62,7 +62,6 @@ import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.query.SkylineListSchema;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.search.ProteinSearchWebPart;
-import org.labkey.targetedms.view.InstrumentSummaryWebPart;
 import org.labkey.targetedms.view.LibraryQueryViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.QCSummaryWebPart;
@@ -89,7 +88,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String IMPORT_SKYZIP_PROTOCOL_OBJECT_PREFIX = "TargetedMS.ImportSkyZip";
 
     public static final ExperimentRunType EXP_RUN_TYPE = new TargetedMSExperimentRunType();
-    public static final String TARGETED_MS_INSTRUMENT_SUMMARY = "Instrument Summary";
     public static final String TARGETED_MS_SETUP = "Targeted MS Setup";
     public static final String TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD = "Chromatogram Library Download";
     public static final String TARGETED_MS_PRECURSOR_VIEW = "Targeted MS Precursor View";
@@ -412,15 +410,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                     v.setTitle("Passport");
                     v.setFrame(WebPartView.FrameType.PORTAL);
                     return v;
-                }
-            },
-
-            new BaseWebPartFactory(TARGETED_MS_INSTRUMENT_SUMMARY)
-            {
-                @Override
-                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-                {
-                    return new InstrumentSummaryWebPart(portalCtx);
                 }
             }
         );
