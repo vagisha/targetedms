@@ -15,7 +15,12 @@
 
 package org.labkey.targetedms.parser;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: vsharma
@@ -414,6 +419,8 @@ public class TransitionSettings
         private Predictor _cePredictor;
         private Predictor _dpPredictor;
 
+        private Map<String, String> _optimizedLibraries = new HashMap<>();
+
         public long getRunId()
         {
             return _runId;
@@ -492,6 +499,17 @@ public class TransitionSettings
         public void setDpPredictor(Predictor dpPredictor)
         {
             _dpPredictor = dpPredictor;
+        }
+
+        public void addOptimizedLibrary(String name, String path)
+        {
+            _optimizedLibraries.put(name, path);
+        }
+
+        @NotNull
+        public Map<String, String> getOptimizedLibraries()
+        {
+            return Collections.unmodifiableMap(_optimizedLibraries);
         }
     }
 

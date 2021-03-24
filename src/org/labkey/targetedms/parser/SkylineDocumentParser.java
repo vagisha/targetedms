@@ -59,6 +59,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -81,6 +82,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String TRANSITION_SETTINGS = "transition_settings";
     private static final String TRANSITION_PREDICTION = "transition_prediction";
     private static final String PREDICT_COLLISION_ENERGY = "predict_collision_energy";
+    private static final String OPTIMIZED_LIBRARY = "optimized_library";
     private static final String REGRESSION_CE = "regression_ce";
     private static final String PREDICT_DECLUSTERING_POTENTIAL = "predict_declustering_potential";
     private static final String TRANSITION_INSTRUMENT = "transition_instrument";
@@ -202,6 +204,8 @@ public class SkylineDocumentParser implements AutoCloseable
     private Map<String, String> _replicateSampleFileIdMap;
     private final List<IrtPeptide> _iRTScaleSettings;
 
+    private final List<OptimizationDBRow> _optimizationDBRows = new LinkedList<>();
+
     private double _matchTolerance = DEFAULT_TOLERANCE;
 
     private final XMLStreamReader _reader;
@@ -276,7 +280,76 @@ public class SkylineDocumentParser implements AutoCloseable
         updateProgress();
 
         parseiRTFile();
+        parseOptDbFiles();
         return parseChromatograms(container, user);
+    }
+
+    @SuppressWarnings("SqlResolve")
+    private void parseOptDbFiles()
+    {
+        for (String optDbPath : _transitionSettings.getPredictionSettings().getOptimizedLibraries().values())
+        {
+            // FileNameUtils.getName() will handle a file path in either Unix or Windows format.
+            String optDbFileName = FilenameUtils.getName(optDbPath);
+            File optDbFile = new File(_file.getParent(), optDbFileName);
+            if (! optDbFile.exists() ) {
+                _log.warn("Input OPTDB database does not exist " + optDbFileName);
+            }
+            else
+            {
+                try
+                {
+                    try (ConnectionSource cs = new ConnectionSource(optDbFile.getAbsolutePath());
+                         Connection conn = cs.getConnection())
+                    {
+                        int schemaVersion;
+                        try (ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM VersionInfo"))
+                        {
+                            if (rs.next())
+                            {
+                                schemaVersion = rs.getInt("SchemaVersion");
+                                if (schemaVersion > 3)
+                                {
+                                    _log.warn("Unsupported OPTDB version: " + schemaVersion + " in OPTDB file " + optDbFile + ", attempting to continue");
+                                }
+                            }
+                            else
+                            {
+                                throw new IllegalStateException("Could not find version info from " + optDbFile);
+                            }
+                        }
+                        try (ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM OptimizationLibrary"))
+                        {
+                            while (rs.next())
+                            {
+                                OptimizationDBRow info = new OptimizationDBRow();
+                                info.setPeptideModSeq(rs.getString("PeptideModSeq"));
+                                info.setCharge(rs.getString("Charge"));
+                                info.setFragmentIon(rs.getString("FragmentIon"));
+                                info.setProductCharge(rs.getString("ProductCharge"));
+                                info.setValue(rs.getDouble("Value"));
+                                info.setType(switch (rs.getInt("Type"))
+                                {
+                                    case 1 -> "ce";
+                                    case 2 -> "dp";
+                                    case 3 -> "rcv";
+                                    case 4 -> "mcv";
+                                    case 5 -> "hcv";
+                                    default -> throw new IllegalArgumentException("Unrecognized optimization type " + rs.getInt("Type") + " in " + optDbFileName);
+                                });
+
+                                _optimizationDBRows.add(info);
+                            }
+                        }
+                    }
+                }
+                catch (SQLException e)
+                {
+                    throw new RuntimeSQLException(e);
+                }
+            }
+
+        }
     }
 
     private void parseiRTFile()
@@ -852,6 +925,10 @@ public class SkylineDocumentParser implements AutoCloseable
             {
                 settings.setDpPredictor(readPredictor(reader, PREDICT_DECLUSTERING_POTENTIAL));
             }
+            else if (XmlUtil.isStartElement(reader, evtType, OPTIMIZED_LIBRARY))
+            {
+                settings.addOptimizedLibrary(reader.getAttributeValue(null, "name"), reader.getAttributeValue(null, "database_path"));
+            }
         }
         return settings;
     }
@@ -1253,6 +1330,11 @@ public class SkylineDocumentParser implements AutoCloseable
         {
             _log.warn("Missed importing " + entry.getValue().intValue() + " chromatograms from sample file " + entry.getKey());
         }
+    }
+
+    public List<OptimizationDBRow> getOptimizationInfos()
+    {
+        return _optimizationDBRows;
     }
 
     public enum MoleculeType

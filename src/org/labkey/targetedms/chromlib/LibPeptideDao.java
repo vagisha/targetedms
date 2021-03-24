@@ -80,8 +80,14 @@ public class LibPeptideDao extends BaseDaoImpl<LibPeptide>
         stmt.setObject(colIndex++, peptide.getEndIndex(), Types.INTEGER);
         stmt.setObject(colIndex++, peptide.getPreviousAa(), Types.CHAR);
         stmt.setObject(colIndex++, peptide.getNextAa(), Types.CHAR);
-        stmt.setDouble(colIndex++, peptide.getCalcNeutralMass());
-        stmt.setInt(colIndex, peptide.getNumMissedCleavages());
+        stmt.setObject(colIndex++, peptide.getCalcNeutralMass(), Types.DOUBLE);
+        stmt.setObject(colIndex++, peptide.getNumMissedCleavages(), Types.INTEGER);
+
+        stmt.setObject(colIndex++, peptide.getChemicalFormula(), Types.VARCHAR);
+        stmt.setObject(colIndex++, peptide.getMoleculeName(), Types.VARCHAR);
+        stmt.setObject(colIndex++, peptide.getMassMonoisotopic(), Types.DOUBLE);
+        stmt.setObject(colIndex++, peptide.getMassAverage(), Types.DOUBLE);
+        stmt.setString(colIndex, peptide.getMoleculeAccession());
     }
 
     @Override
@@ -156,6 +162,12 @@ public class LibPeptideDao extends BaseDaoImpl<LibPeptide>
             peptide.setNextAa(readCharacter(rs, PeptideColumn.NextAa.baseColumn().name()));
             peptide.setCalcNeutralMass(rs.getDouble(PeptideColumn.CalcNeutralMass.baseColumn().name()));
             peptide.setNumMissedCleavages(rs.getInt(PeptideColumn.NumMissedCleavages.baseColumn().name()));
+
+            peptide.setChemicalFormula(rs.getString(Constants.PeptideColumn.ChemicalFormula.baseColumn().name()));
+            peptide.setMoleculeName(rs.getString(Constants.PeptideColumn.MoleculeName.baseColumn().name()));
+            peptide.setMassMonoisotopic(readDouble(rs, Constants.PeptideColumn.MassMonoisotopic.baseColumn().name()));
+            peptide.setMassAverage(readDouble(rs, Constants.PeptideColumn.MassAverage.baseColumn().name()));
+            peptide.setMoleculeAccession(rs.getString(Constants.PeptideColumn.MoleculeAccession.baseColumn().name()));
 
             peptides.add(peptide);
         }

@@ -18,18 +18,28 @@ package org.labkey.targetedms.chromlib;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.targetedms.parser.PeptideGroup;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * User: vsharma
  * Date: 12/31/12
  * Time: 9:22 AM
  */
-public class LibProtein extends AbstractLibList<LibPeptide>
+public class LibProtein extends AbstractLibEntity
 {
+    private String _name;
+    private String _description;
+    private final List<LibPeptide> _children = new ArrayList<>();
+
     public LibProtein() {}
 
     public LibProtein(PeptideGroup pepGroup)
     {
-        super(pepGroup);
+        setName(pepGroup.getLabel());
+        _description = pepGroup.getDescription();
+
         if(pepGroup.getSequenceId() != null)
         {
             setSequence(ProteinService.get().getProteinSequence(pepGroup.getSequenceId()));
@@ -50,5 +60,41 @@ public class LibProtein extends AbstractLibList<LibPeptide>
     public void setSequence(String sequence)
     {
         _sequence = sequence;
+    }
+
+    public String getName()
+    {
+        return _name;
+    }
+
+    public void setName(String name)
+    {
+        _name = name;
+    }
+
+    public String getDescription()
+    {
+        return _description;
+    }
+
+    public void setDescription(String description)
+    {
+        _description = description;
+    }
+
+    public void addChild(LibPeptide child)
+    {
+        _children.add(child);
+    }
+
+    List<LibPeptide> getChildren()
+    {
+        return Collections.unmodifiableList(_children);
+    }
+
+    @Override
+    public int getCacheSize()
+    {
+        return super.getCacheSize() + getChildren().stream().mapToInt(AbstractLibEntity::getCacheSize).sum();
     }
 }
