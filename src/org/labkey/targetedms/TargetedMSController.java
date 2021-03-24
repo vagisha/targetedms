@@ -538,7 +538,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void addNavTrail(NavTree root)
         {
-            urlProvider(AdminUrls.class).addAdminNavTrail(root, "Chromatogram Crawler", new ActionURL(getClass(), getContainer()));
+            urlProvider(AdminUrls.class).addAdminNavTrail(root, "Chromatogram Crawler", getClass(), getContainer());
         }
     }
 
