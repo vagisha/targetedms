@@ -76,8 +76,6 @@ public class LibPrecursor extends AbstractLibEntity
     private List<LibPrecursorIsotopeModification> _isotopeModifications;
 
     // Small molecule fields
-    private Double _massMonoisotopic;
-    private Double _massAverage;
     private String _adduct;
 
 
@@ -146,8 +144,6 @@ public class LibPrecursor extends AbstractLibEntity
     {
         this((GeneralPrecursor<?>) p, isotopeLabelMap, chromInfo, run, sampleFileIdMap);
         setAdduct(p.getAdduct());
-        setMassMonoisotopic(p.getMassMonoisotopic());
-        setMassAverage(p.getMassAverage());
     }
 
 
@@ -180,8 +176,6 @@ public class LibPrecursor extends AbstractLibEntity
         setPrecursorConcentration(readDouble(rs, Constants.PrecursorColumn.PrecursorConcentration.baseColumn().name()));
 
         // Small molecule
-        setMassMonoisotopic(readDouble(rs, Constants.PrecursorColumn.MassMonoisotopic.baseColumn().name()));
-        setMassAverage(readDouble(rs, Constants.PrecursorColumn.MassAverage.baseColumn().name()));
         setAdduct(rs.getString(Constants.PrecursorColumn.Adduct.baseColumn().name()));
     }
 
@@ -507,26 +501,6 @@ public class LibPrecursor extends AbstractLibEntity
     public Double getPrecursorConcentration()
     {
         return _precursorConcentration;
-    }
-
-    public Double getMassMonoisotopic()
-    {
-        return _massMonoisotopic;
-    }
-
-    public void setMassMonoisotopic(Double massMonoisotopic)
-    {
-        _massMonoisotopic = massMonoisotopic;
-    }
-
-    public Double getMassAverage()
-    {
-        return _massAverage;
-    }
-
-    public void setMassAverage(Double massAverage)
-    {
-        _massAverage = massAverage;
     }
 
     public String getAdduct()

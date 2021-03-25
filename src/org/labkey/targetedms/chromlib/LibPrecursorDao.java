@@ -17,7 +17,6 @@ package org.labkey.targetedms.chromlib;
 
 import org.labkey.targetedms.chromlib.Constants.PrecursorColumn;
 import org.labkey.targetedms.chromlib.Constants.Table;
-import org.labkey.targetedms.query.TransitionManager;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -114,8 +113,6 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         stmt.setObject(colIndex++, precursor.getExplicitCompensationVoltage(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getPrecursorConcentration(), Types.DOUBLE);
 
-        stmt.setObject(colIndex++, precursor.getMassMonoisotopic(), Types.DOUBLE);
-        stmt.setObject(colIndex++, precursor.getMassAverage(), Types.DOUBLE);
         stmt.setString(colIndex++, precursor.getAdduct());
     }
 

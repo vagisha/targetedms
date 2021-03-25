@@ -534,8 +534,6 @@ class Constants
         ExplicitCompensationVoltage(Column.ExplicitCompensationVoltage),
         PrecursorConcentration(Column.PrecursorConcentration),
 
-        MassMonoisotopic(Column.MassMonoisotopic),
-        MassAverage(Column.MassAverage),
         Adduct(Column.Adduct);
 
         private final Column _column;
