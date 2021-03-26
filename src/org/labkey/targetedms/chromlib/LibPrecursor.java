@@ -64,7 +64,6 @@ public class LibPrecursor extends AbstractLibEntity
     private String _explicitIonMobilityUnits;
     private Double _explicitCcsSqa;
     private Double _explicitCompensationVoltage;
-    private Double _precursorConcentration;
 
     protected List<LibPrecursorRetentionTime> _retentionTimes;
     protected List<LibTransition> _transitions;
@@ -98,7 +97,6 @@ public class LibPrecursor extends AbstractLibEntity
         setExplicitIonMobilityUnits(p.getExplicitIonMobilityUnits());
         setExplicitCcsSqa(p.getExplicitCcsSqa());
         setExplicitCompensationVoltage(p.getExplicitCompensationVoltage());
-        setPrecursorConcentration(p.getPrecursorConcentration());
 
         if (bestChromInfo != null)
         {
@@ -173,7 +171,6 @@ public class LibPrecursor extends AbstractLibEntity
         setExplicitIonMobilityUnits(rs.getString(Constants.PrecursorColumn.ExplicitIonMobilityUnits.baseColumn().name()));
         setExplicitCcsSqa(readDouble(rs, Constants.PrecursorColumn.ExplicitCcsSqa.baseColumn().name()));
         setExplicitCompensationVoltage(readDouble(rs, Constants.PrecursorColumn.ExplicitCompensationVoltage.baseColumn().name()));
-        setPrecursorConcentration(readDouble(rs, Constants.PrecursorColumn.PrecursorConcentration.baseColumn().name()));
 
         // Small molecule
         setAdduct(rs.getString(Constants.PrecursorColumn.Adduct.baseColumn().name()));
@@ -491,16 +488,6 @@ public class LibPrecursor extends AbstractLibEntity
     public Double getExplicitCompensationVoltage()
     {
         return _explicitCompensationVoltage;
-    }
-
-    public void setPrecursorConcentration(Double precursorConcentration)
-    {
-        _precursorConcentration = precursorConcentration;
-    }
-
-    public Double getPrecursorConcentration()
-    {
-        return _precursorConcentration;
     }
 
     public String getAdduct()
