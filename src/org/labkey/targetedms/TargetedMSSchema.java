@@ -180,6 +180,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_QC_METRIC_CONFIGURATION = "QCMetricConfiguration";
     public static final String TABLE_QC_METRIC_EXCLUSION = "QCMetricExclusion";
     public static final String TABLE_QC_ENABLED_METRICS = "QCEnabledMetrics";
+    public static final String TABLE_QC_TRACE_METRIC_VALUES = "QCTraceMetricValues";
 
     public static final String TABLE_GUIDE_SET = "GuideSet";
 
@@ -910,9 +911,13 @@ public class TargetedMSSchema extends UserSchema
         {
             return new QCMetricConfigurationTable(this, cf);
         }
-        if(TABLE_QC_ENABLED_METRICS.equalsIgnoreCase(name))
+        if (TABLE_QC_ENABLED_METRICS.equalsIgnoreCase(name))
         {
             return new QCEnabledMetricsTable(this, cf);
+        }
+        if (TABLE_QC_TRACE_METRIC_VALUES.equalsIgnoreCase(name))
+        {
+            return new QCTraceMetricValuesTable(this, cf);
         }
         if (TABLE_GUIDE_SET.equalsIgnoreCase(name))
         {
@@ -1508,6 +1513,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_QC_METRIC_CONFIGURATION);
         hs.add(TABLE_QC_METRIC_EXCLUSION);
         hs.add(TABLE_QC_ENABLED_METRICS);
+        hs.add(TABLE_QC_TRACE_METRIC_VALUES);
         hs.add(TABLE_SKYLINE_AUDITLOG_ENTRY);
         hs.add(TABLE_SKYLINE_AUDITLOG_MESSAGE);
         hs.add(TABLE_LIST_DEFINITION);

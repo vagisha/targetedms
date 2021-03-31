@@ -278,15 +278,15 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
     },
 
     getRunId: function () {
-        LABKEY.Query.selectRows({
+
+        LABKEY.Query.executeSql({
             schemaName: this.metricProps.series1SchemaName,
-            queryName: this.metricProps.series1QueryName,
-            columns: 'SampleFileId/ReplicateId/RunId/Id',
+            sql: 'SELECT SampleFileId.ReplicateId.RunId.Id as runId from PrecursorChromInfo',
             scope: this,
             success: function (results) {
                 var runId;
                 if(results && results.rows)
-                    runId = results.rows[0]["SampleFileId/ReplicateId/RunId/Id"];
+                    runId = results.rows[0]["runId"];
 
                 this.viewDocumentURL = LABKEY.ActionURL.buildURL('targetedms', 'showPrecursorList', null, {id: runId});
                 this.getExistingReplicateExclusions();

@@ -58,6 +58,7 @@ import org.labkey.targetedms.SkylinePort.Irt.IrtRegressionCalculator;
 import org.labkey.targetedms.SkylinePort.Irt.RetentionTimeProviderImpl;
 import org.labkey.targetedms.calculations.RunQuantifier;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
+import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.parser.list.ListData;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
@@ -96,6 +97,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import static org.labkey.targetedms.TargetedMSManager.getTableInfoPrecursorChromInfo;
 import static org.labkey.targetedms.TargetedMSManager.getTableInfoTransitionChromInfo;
@@ -332,6 +334,9 @@ public class SkylineDocImporter
 
             // Data settings -- these are the annotation settings
             List<GroupComparisonSettings> groupComparisons = insertDataSettings(parser);
+
+            // calculate and insert values for trace metrics
+            insertTraceCalculations(run);
 
             // Store the data
             // 1. peptide group
@@ -2871,5 +2876,16 @@ public class SkylineDocImporter
         void complete(String message);
 
         int getProgressPercent();
+    }
+
+    public void insertTraceCalculations(TargetedMSRun run)
+    {
+        List<QCMetricConfiguration> qcMetricConfigurations = TargetedMSManager.getTraceMetricConfigurations(_container, _user);
+
+        if (!qcMetricConfigurations.isEmpty())
+        {
+            var qcTraceMetricValues = TargetedMSManager.calculateTraceMetricValues(qcMetricConfigurations, run);
+            qcTraceMetricValues.forEach(qcTraceMetricValue -> Table.insert(_user, TargetedMSManager.getTableQCTraceMetricValues(), qcTraceMetricValue));
+        }
     }
 }

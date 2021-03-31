@@ -31,6 +31,11 @@ public class QCMetricConfiguration
     private String _enabledQueryName;
     private String _enabledSchemaName;
     private Boolean _enabled;
+    private String _traceName;
+    private Double _timeValue;
+    private Double _traceValue;
+    private String _yAxisLabel1;
+    private String _yAxisLabel2;
 
     public int getId()
     {
@@ -151,6 +156,56 @@ public class QCMetricConfiguration
         _enabledSchemaName = enabledSchemaName;
     }
 
+    public String getTraceName()
+    {
+        return _traceName;
+    }
+
+    public void setTraceName(String traceName)
+    {
+        _traceName = traceName;
+    }
+
+    public Double getTimeValue()
+    {
+        return _timeValue;
+    }
+
+    public void setTimeValue(Double timeValue)
+    {
+        _timeValue = timeValue;
+    }
+
+    public Double getTraceValue()
+    {
+        return _traceValue;
+    }
+
+    public void setTraceValue(Double traceValue)
+    {
+        _traceValue = traceValue;
+    }
+
+    public String getyAxisLabel1()
+    {
+        return _yAxisLabel1;
+    }
+
+    public void setyAxisLabel1(String yAxisLabel1)
+    {
+        _yAxisLabel1 = yAxisLabel1;
+    }
+
+    public String getyAxisLabel2()
+    {
+        return _yAxisLabel2;
+    }
+
+    public void setyAxisLabel2(String yAxisLabel2)
+    {
+        _yAxisLabel2 = yAxisLabel2;
+    }
+
     public JSONObject toJSON(){
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", _id);
@@ -159,21 +214,37 @@ public class QCMetricConfiguration
         jsonObject.put("series1SchemaName", _series1SchemaName);
         jsonObject.put("series1QueryName",  _series1QueryName);
         jsonObject.put("precursorScoped",  _precursorScoped);
-        if(_series2Label != null){
+        if (_series2Label != null) {
             jsonObject.put("series2Label",      _series2Label);
         }
-        if(_series2SchemaName != null){
+        if (_series2SchemaName != null) {
             jsonObject.put("series2SchemaName", _series2SchemaName);
         }
-        if(_series2QueryName != null){
+        if (_series2QueryName != null) {
             jsonObject.put("series2QueryName",  _series2QueryName);
         }
-        if(_enabledQueryName != null){
+        if (_enabledQueryName != null) {
             jsonObject.put("enabledQueryName", _enabledQueryName);
         }
-        if(_enabledQueryName != null){
+        if (_enabledQueryName != null) {
             jsonObject.put("enabledSchemaName", _enabledSchemaName);
         }
+        if (_traceName != null) {
+            jsonObject.put("traceName", _traceName);
+        }
+        if (_traceValue != null) {
+            jsonObject.put("traceValue", _traceValue);
+        }
+        if (_timeValue != null) {
+            jsonObject.put("timeValue", _timeValue);
+        }
+        if (_yAxisLabel1 != null) {
+            jsonObject.put("yAxisLabel1", _yAxisLabel1);
+        }
+        if (_yAxisLabel2 != null) {
+            jsonObject.put("yAxisLabel2", _yAxisLabel2);
+        }
+
         return jsonObject;
     }
 }

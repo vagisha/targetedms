@@ -1313,6 +1313,11 @@
             <column columnName="PrecursorScoped"/>
             <column columnName="EnabledQueryName"/>
             <column columnName="EnabledSchemaName"/>
+            <column columnName="TraceValue"/>
+            <column columnName="TimeValue"/>
+            <column columnName="TraceName"/>
+            <column columnName="YAxisLabel1"/>
+            <column columnName="YAxisLabel2"/>
         </columns>
     </table>
     <table tableName="QCMetricExclusion" tableDbType="TABLE">
@@ -1674,6 +1679,14 @@
             <column columnName="id"/>
             <column columnName="categoryid"/>
             <column columnName="label"/>
+        </columns>
+    </table>
+    <table tableName="QCTraceMetricValues" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="metric"/>
+            <column columnName="value"/>
+            <column columnName="sampleFileId"/>
         </columns>
     </table>
 </tables>

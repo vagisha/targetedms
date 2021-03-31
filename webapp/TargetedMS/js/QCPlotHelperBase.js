@@ -581,37 +581,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             }
         }
 
-        // TODO: Add these to targetedms.QCMetricConfiguration
         if (!yScaleLabel) {
-            var metricName = this.getMetricPropsById(this.metric).name;
-
-            if (metricName === "Full Width at Base (FWB)") {
-                yScaleLabel = "Minutes";
-            }
-            else if (metricName === "Full Width at Half Maximum (FWHM)") {
-                yScaleLabel = "Minutes";
-            }
-            else if (metricName === "Light/Heavy Ratio") {
-                yScaleLabel = "Ratio";
-            }
-            else if (metricName === "Mass Accuracy") {
-                yScaleLabel = "PPM";
-            }
-            else if (metricName === "Peak Area") {
-                yScaleLabel = "Area";
-            }
-            else if (metricName === "Retention Time") {
-                yScaleLabel = "Minutes";
-            }
-            else if (metricName === "Transition/Precursor Area Ratio") {
-                yScaleLabel = "Ratio";
-            }
-            else if (metricName === "Transition Area") {
-                yScaleLabel = "Area";
-            }
-            else {
-                yScaleLabel = label;
-            }
+            yScaleLabel = label;
         }
         return yScaleLabel;
     },
@@ -677,10 +648,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     color: '#555555'
                 },
                 yLeft: {
-                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion, metricProps.series1Label)
+                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion, metricProps.yAxisLabel1)
                 },
                 yRight: {
-                    value: this.isMultiSeries() ? metricProps.series2Label : undefined,
+                    value: this.isMultiSeries() ? metricProps.yAxisLabel2 : undefined,
                     visibility: this.isMultiSeries() ? undefined : 'hidden'
                 }
             },
@@ -779,12 +750,12 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     color: '#555555'
                 },
                 yLeft: {
-                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion, metricProps.series1Label),
+                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion, metricProps.yAxisLabel1),
                     color: this.isMultiSeries() ? this.getColorRange()[0] : undefined,
                     position: leftMarginOffset > 0 ? leftMarginOffset - 15 : undefined
                 },
                 yRight: {
-                    value: this.isMultiSeries() ? metricProps.series2Label : undefined,
+                    value: this.isMultiSeries() ? metricProps.yAxisLabel2 : undefined,
                     visibility: this.isMultiSeries() ? undefined : 'hidden',
                     color: this.isMultiSeries() ? this.getColorRange()[1] : undefined
                 }

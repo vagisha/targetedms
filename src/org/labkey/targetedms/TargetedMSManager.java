@@ -81,8 +81,10 @@ import org.labkey.targetedms.model.GuideSet;
 import org.labkey.targetedms.model.GuideSetKey;
 import org.labkey.targetedms.model.GuideSetStats;
 import org.labkey.targetedms.model.QCMetricConfiguration;
+import org.labkey.targetedms.model.QCTraceMetricValues;
 import org.labkey.targetedms.model.RawMetricDataSet;
 import org.labkey.targetedms.outliers.OutlierGenerator;
+import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -504,6 +506,11 @@ public class TargetedMSManager
     public static TableInfo getTableInfoQCEnabledMetrics()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_QC_ENABLED_METRICS);
+    }
+
+    public static TableInfo getTableQCTraceMetricValues()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_QC_TRACE_METRIC_VALUES);
     }
 
     public static TableInfo getTableInfoSkylineAuditLogEntry()
@@ -1451,6 +1458,9 @@ public class TargetedMSManager
         // Delete from PeptideChromInfo
         execute("DELETE FROM " + getTableInfoGeneralMoleculeChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
 
+        // Delete from QCTraceMetricValues
+        execute("DELETE FROM " + getTableQCTraceMetricValues() + " WHERE SampleFileId = ?", sampleFileId);
+
         // Delete from SampleFileChromInfo
         execute("DELETE FROM " + getTableInfoSampleFileChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
     }
@@ -1539,6 +1549,9 @@ public class TargetedMSManager
         deletePeptideGroupDependent(getTableInfoProtein());
         // Delete from PeptideGroupAnnotation
         deletePeptideGroupDependent(getTableInfoPeptideGroupAnnotation());
+
+        // Delete from QCTraceMetricValues
+        deleteSampleFileDependent(getTableQCTraceMetricValues());
 
         // Delete from SampleFileChromInfo
         deleteSampleFileDependent(getTableInfoSampleFileChromInfo());
@@ -2100,7 +2113,7 @@ public class TargetedMSManager
         return Math.log(value.doubleValue()) / Math.log(2);
     }
 
-    public List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user)
+    public static List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user)
     {
         QuerySchema targetedMSSchema = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
         if (targetedMSSchema == null)
@@ -2479,5 +2492,83 @@ public class TargetedMSManager
                 " OR Id IN (SELECT tps.DpPredictorId FROM " + getTableInfoTransitionPredictionSettings() + " tps, " + getTableInfoRuns() + " r WHERE r.Id = tps.RunId AND r.Deleted = ?)").add(true).add(true);
 
         return new SqlSelector(getSchema(), sql).getArrayList(Long.class);
+    }
+
+    private static List<SampleFileChromInfo> getSampleFileChromInfosByName(String traceName, long runId)
+    {
+        var sql = new SQLFragment(" SELECT sfi.Id, sfi.SampleFileId, sfi.StartTime, sfi.EndTime, sfi.NumPoints," +
+                " sfi.UncompressedSize, sfi.ChromatogramFormat, sfi.ChromatogramOffset, sfi.ChromatogramLength, sfi.TextId" +
+                " FROM " + getTableInfoSampleFileChromInfo() + " sfi" +
+                " INNER JOIN " + getTableInfoSampleFile() + " sf ON sf.Id = sfi.SampleFileId" +
+                " INNER JOIN " + getTableInfoReplicate() + " r ON r.Id = sf.ReplicateId" +
+                " INNER JOIN " + getTableInfoRuns() + " rn ON rn.Id = r.RunId" +
+                " WHERE TextId = ?" +
+                " AND rn.ID = ? ").add(traceName).add(runId);
+        return new SqlSelector(getSchema(), sql).getArrayList(SampleFileChromInfo.class);
+    }
+
+    public static List<QCTraceMetricValues> calculateTraceMetricValues(List<QCMetricConfiguration> qcMetricConfigurations, TargetedMSRun run)
+    {
+        List<QCTraceMetricValues> qcTraceMetricValuesList = new ArrayList<>();
+        if (!qcMetricConfigurations.isEmpty())
+        {
+            for (QCMetricConfiguration qcMetricConfiguration : qcMetricConfigurations)
+            {
+                List<SampleFileChromInfo> sampleFileChromInfos = getSampleFileChromInfosByName(qcMetricConfiguration.getTraceName(), run.getRunId());
+                Map<SampleFileChromInfo, Float> valuesToStore = new HashMap<>();
+
+                for (SampleFileChromInfo sampleFileChromInfo : sampleFileChromInfos)
+                {
+                    Chromatogram chromatogram = sampleFileChromInfo.createChromatogram(run);
+                    if (null != chromatogram)
+                    {
+                        float[] times = chromatogram.getTimes();
+                        float[] values = chromatogram.getIntensities(0);
+
+                        if (times.length != values.length)
+                        {
+                            throw new IllegalStateException("Incorrect values in skyd file for time and intensities for trace - " + sampleFileChromInfo.getTextId());
+                        }
+
+                        for (int i = 0; i < times.length; i++)
+                        {
+                            Double timeValue = qcMetricConfiguration.getTimeValue();
+                            Double traceValue = qcMetricConfiguration.getTraceValue();
+
+                            if (timeValue != null && times[i] >= timeValue)
+                            {
+                                valuesToStore.put(sampleFileChromInfo, values[i]);
+                                break;
+                            }
+                            else if (traceValue != null && values[i] >= traceValue)
+                            {
+                                valuesToStore.put(sampleFileChromInfo, times[i]);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!valuesToStore.isEmpty())
+                {
+                    valuesToStore.forEach((key,val) -> {
+                        QCTraceMetricValues qcTraceMetricValues = new QCTraceMetricValues();
+                        qcTraceMetricValues.setMetric(qcMetricConfiguration.getId());
+                        qcTraceMetricValues.setSampleFileId(key.getSampleFileId());
+                        qcTraceMetricValues.setValue(val);
+                        qcTraceMetricValuesList.add(qcTraceMetricValues);
+                    });
+                }
+            }
+        }
+        return qcTraceMetricValuesList;
+    }
+
+    public static List<QCMetricConfiguration> getTraceMetricConfigurations(Container container, User user)
+    {
+        return getEnabledQCMetricConfigurations(container, user)
+                .stream()
+                .filter(qcMetricConfiguration -> qcMetricConfiguration.getTraceName() != null)
+                .collect(Collectors.toList());
     }
 }
