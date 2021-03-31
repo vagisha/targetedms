@@ -15,30 +15,226 @@
  */
 package org.labkey.targetedms.chromlib;
 
+import org.labkey.targetedms.parser.GeneralPrecursor;
+import org.labkey.targetedms.parser.GeneralTransition;
+import org.labkey.targetedms.parser.MoleculePrecursor;
+import org.labkey.targetedms.parser.MoleculeTransition;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
+import org.labkey.targetedms.parser.TransitionOptimization;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import java.util.Objects;
 
 /**
  * User: vsharma
  * Date: 12/31/12
  * Time: 9:25 AM
  */
-public class LibTransition extends AbstractLibTransition
+public class LibTransition extends AbstractLibEntity
 {
+    // Shared fields
     private long _precursorId;
-    private Integer _fragmentOrdinal;
+    protected Double _mz;
+    protected Integer _charge;
+    protected String _fragmentType;
+    protected Integer _fragmentOrdinal;
+    protected Integer _massIndex;
+    protected Double _area;
+    protected Double _height;
+    protected Double _fwhm;
+    protected Integer _chromatogramIndex;
+    protected Double _massErrorPPM;
+    private Double _collisionEnergy;
+    private Double _declusteringPotential;
+
+
+    // Proteomics fields
     private Double _neutralMass;
     private Double _neutralLossMass;
 
+    // Small molecule fields
+    private String _fragmentName;
+    private String _chemicalFormula;
+    private String _adduct;
+
+
+    private List<LibTransitionOptimization> _optimizations = new ArrayList<>();
+
     public LibTransition() {}
 
-    public LibTransition(Transition transition, TransitionChromInfo transitionChromInfo, Precursor precursor)
+    public LibTransition(Transition transition, TransitionChromInfo tci, Precursor precursor, List<TransitionOptimization> optimizations)
     {
-        super(transition, transitionChromInfo, precursor);
+        this((GeneralTransition) transition, tci, precursor, optimizations);
         setNeutralMass(transition.getNeutralMass());
         setNeutralLossMass(transition.getNeutralLossMass());
         setFragmentOrdinal(transition.getFragmentOrdinal());
+    }
+
+    public LibTransition(MoleculeTransition transition, TransitionChromInfo tci, MoleculePrecursor precursor, List<TransitionOptimization> optimizations)
+    {
+        this((GeneralTransition) transition, tci, precursor, optimizations);
+        setFragmentName(transition.getCustomIonName());
+        setChemicalFormula(transition.getChemicalFormula());
+        setAdduct(transition.getAdduct());
+    }
+
+    private LibTransition(GeneralTransition transition, TransitionChromInfo tci, GeneralPrecursor<?> precursor, List<TransitionOptimization> optimizations)
+    {
+        setMz(transition.getMz());
+        if (transition.getCharge() == null)
+        {
+            setCharge(precursor.getCharge());
+        }
+        else
+        {
+            setCharge(transition.getCharge());
+        }
+        setFragmentType(transition.getFragmentType());
+        setMassIndex(transition.getMassIndex());
+
+        if(tci != null)
+        {
+            setArea(tci.getArea() == null ? 0.0 : tci.getArea());
+            setHeight(tci.getHeight() == null ? 0.0 : tci.getHeight());
+            setFwhm(tci.getFwhm() == null ? 0.0 : tci.getFwhm());
+            setChromatogramIndex(tci.getChromatogramIndex());
+            setMassErrorPPM(tci.getMassErrorPPM());
+        }
+        else
+        {
+            setArea(0.0);
+            setHeight(0.0);
+            setFwhm(0.0);
+        }
+
+        if (transition.getCollisionEnergy() != null)
+        {
+            setCollisionEnergy(transition.getCollisionEnergy());
+        }
+        if (transition.getDeclusteringPotential() != null)
+        {
+            setDeclusteringPotential(transition.getDeclusteringPotential());
+        }
+
+        for (TransitionOptimization optimization : optimizations)
+        {
+            _optimizations.add(new LibTransitionOptimization(optimization));
+        }
+    }
+
+    public Double getMz()
+    {
+        return _mz;
+    }
+
+    public void setMz(Double mz)
+    {
+        _mz = mz;
+    }
+
+    public Integer getCharge()
+    {
+        return _charge;
+    }
+
+    public void setCharge(Integer charge)
+    {
+        _charge = charge;
+    }
+
+    public String getFragmentType()
+    {
+        return _fragmentType;
+    }
+
+    public void setFragmentType(String fragmentType)
+    {
+        _fragmentType = fragmentType;
+    }
+
+    public Integer getMassIndex()
+    {
+        return _massIndex;
+    }
+
+    public void setMassIndex(Integer massIndex)
+    {
+        _massIndex = massIndex;
+    }
+
+    public Double getArea()
+    {
+        return _area;
+    }
+
+    public void setArea(Double area)
+    {
+        _area = area;
+    }
+
+    public Double getHeight()
+    {
+        return _height;
+    }
+
+    public void setHeight(Double height)
+    {
+        _height = height;
+    }
+
+    public Double getFwhm()
+    {
+        return _fwhm;
+    }
+
+    public void setFwhm(Double fwhm)
+    {
+        _fwhm = fwhm;
+    }
+
+    public Integer getChromatogramIndex()
+    {
+        return _chromatogramIndex;
+    }
+
+    public void setChromatogramIndex(Integer chromatogramIndex)
+    {
+        _chromatogramIndex = chromatogramIndex;
+    }
+
+    public void setMassErrorPPM(Double massErrorPPM)
+    {
+        _massErrorPPM = massErrorPPM;
+    }
+
+    public Double getMassErrorPPM()
+    {
+        return _massErrorPPM;
+    }
+
+    public Double getCollisionEnergy()
+    {
+        return _collisionEnergy;
+    }
+
+    public void setCollisionEnergy(Double collisionEnergy)
+    {
+        _collisionEnergy = collisionEnergy;
+    }
+
+    public Double getDeclusteringPotential()
+    {
+        return _declusteringPotential;
+    }
+
+    public void setDeclusteringPotential(Double declusteringPotential)
+    {
+        _declusteringPotential = declusteringPotential;
     }
 
     public long getPrecursorId()
@@ -81,51 +277,54 @@ public class LibTransition extends AbstractLibTransition
         _fragmentOrdinal = fragmentOrdinal;
     }
 
+    public String getFragmentName()
+    {
+        return _fragmentName;
+    }
+
+    public void setFragmentName(String fragmentName)
+    {
+        _fragmentName = fragmentName;
+    }
+
+    public String getChemicalFormula()
+    {
+        return _chemicalFormula;
+    }
+
+    public void setChemicalFormula(String chemicalFormula)
+    {
+        _chemicalFormula = chemicalFormula;
+    }
+
+    public String getAdduct()
+    {
+        return _adduct;
+    }
+
+    public void setAdduct(String adduct)
+    {
+        _adduct = adduct;
+    }
+
+
     @Override
     public boolean equals(Object o)
     {
         if (this == o) return true;
-        if (!(o instanceof LibTransition)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         LibTransition that = (LibTransition) o;
-
-        if (_precursorId != that._precursorId) return false;
-        if (!_area.equals(that._area)) return false;
-        if (_charge != null ? !_charge.equals(that._charge) : that._charge != null) return false;
-        if (_chromatogramIndex != null ? !_chromatogramIndex.equals(that._chromatogramIndex) : that._chromatogramIndex != null)
-            return false;
-        if (_fragmentOrdinal != null ? !_fragmentOrdinal.equals(that._fragmentOrdinal) : that._fragmentOrdinal != null)
-            return false;
-        if (!_fragmentType.equals(that._fragmentType)) return false;
-        if (!_fwhm.equals(that._fwhm)) return false;
-        if (!_height.equals(that._height)) return false;
-        if (_massIndex != null ? !_massIndex.equals(that._massIndex) : that._massIndex != null) return false;
-        if (_mz != null ? !_mz.equals(that._mz) : that._mz != null) return false;
-        if (_neutralLossMass != null ? !_neutralLossMass.equals(that._neutralLossMass) : that._neutralLossMass != null)
-            return false;
-        if (_neutralMass != null ? !_neutralMass.equals(that._neutralMass) : that._neutralMass != null) return false;
-        if (_massErrorPPM != null ? !_massErrorPPM.equals(that._massErrorPPM) : that._massErrorPPM != null) return false;
-
-        return true;
+        return _precursorId == that._precursorId && Objects.equals(_mz, that._mz) && Objects.equals(_charge, that._charge) && Objects.equals(_fragmentType, that._fragmentType) && Objects.equals(_fragmentOrdinal, that._fragmentOrdinal) && Objects.equals(_massIndex, that._massIndex) && Objects.equals(_area, that._area) && Objects.equals(_height, that._height) && Objects.equals(_fwhm, that._fwhm) && Objects.equals(_chromatogramIndex, that._chromatogramIndex) && Objects.equals(_massErrorPPM, that._massErrorPPM) && Objects.equals(_collisionEnergy, that._collisionEnergy) && Objects.equals(_declusteringPotential, that._declusteringPotential) && Objects.equals(_neutralMass, that._neutralMass) && Objects.equals(_neutralLossMass, that._neutralLossMass) && Objects.equals(_fragmentName, that._fragmentName) && Objects.equals(_chemicalFormula, that._chemicalFormula) && Objects.equals(_adduct, that._adduct);
     }
 
     @Override
     public int hashCode()
     {
-        int result = (int) _precursorId;
-        result = 31 * result + (_mz != null ? _mz.hashCode() : 0);
-        result = 31 * result + (_charge != null ? _charge.hashCode() : 0);
-        result = 31 * result + (_neutralMass != null ? _neutralMass.hashCode() : 0);
-        result = 31 * result + (_neutralLossMass != null ? _neutralLossMass.hashCode() : 0);
-        result = 31 * result + _fragmentType.hashCode();
-        result = 31 * result + (_fragmentOrdinal != null ? _fragmentOrdinal.hashCode() : 0);
-        result = 31 * result + (_massIndex != null ? _massIndex.hashCode() : 0);
-        result = 31 * result + _area.hashCode();
-        result = 31 * result + _height.hashCode();
-        result = 31 * result + _fwhm.hashCode();
-        result = 31 * result + (_chromatogramIndex != null ? _chromatogramIndex.hashCode() : 0);
-        result = 31 * result + (_massErrorPPM != null ? _massErrorPPM.hashCode() : 0);
-        return result;
+        return Objects.hash(_precursorId, _mz, _charge, _fragmentType, _fragmentOrdinal, _massIndex, _area, _height, _fwhm, _chromatogramIndex, _massErrorPPM, _collisionEnergy, _declusteringPotential, _neutralMass, _neutralLossMass, _fragmentName, _chemicalFormula, _adduct);
     }
 
+    public List<LibTransitionOptimization> getOptimizations()
+    {
+        return _optimizations;
+    }
 }

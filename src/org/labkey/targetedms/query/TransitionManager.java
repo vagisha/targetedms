@@ -33,6 +33,7 @@ import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
+import org.labkey.targetedms.parser.TransitionOptimization;
 import org.labkey.targetedms.parser.TransitionSettings;
 
 import java.util.ArrayList;
@@ -195,6 +196,11 @@ public class TransitionManager
         }
 
         return result;
+    }
+
+    public static List<TransitionOptimization> getOptimizations(long transitionId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoTransitionOptimization(), new SimpleFilter(FieldKey.fromParts("TransitionId"), transitionId), new Sort("Id")).getArrayList(TransitionOptimization.class);
     }
 
     public static class TransitionChromInfoAndQuantitative

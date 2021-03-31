@@ -1275,6 +1275,8 @@ public class TargetedMSSchema extends UserSchema
                     return new DocTransitionsTableInfo(targetedMSSchema, cf);
                 }
             });
+            result.addWrapColumn("MoleculeTransition", result.getRealTable().getColumn("TransitionId")).
+                    setFk(new QueryForeignKey(new QueryForeignKey.Builder(this, cf).table(TABLE_MOLECULE_TRANSITION)));
 
             return result;
         }

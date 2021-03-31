@@ -47,7 +47,7 @@ public class LibInfoDao implements Dao<LibInfo>
             sql.append(" (");
             sql.append(getInsertColumnSql());
             sql.append(")");
-            sql.append(" VALUES (?,?,?,?,?,?,?,?,?,?,?);");
+            sql.append(" VALUES (?,?,?,?,?,?,?,?,?);");
 
             try (PreparedStatement stmt = connection.prepareStatement(sql.toString()))
             {
@@ -61,8 +61,6 @@ public class LibInfoDao implements Dao<LibInfo>
                 stmt.setInt(colIndex++, libInfo.getPeptides());
                 stmt.setInt(colIndex++, libInfo.getPrecursors());
                 stmt.setInt(colIndex++, libInfo.getTransitions());
-                stmt.setInt(colIndex++, libInfo.getMoleculeLists());
-                stmt.setInt(colIndex++, libInfo.getMolecules());
                 stmt.executeUpdate();
             }
         }
@@ -71,11 +69,7 @@ public class LibInfoDao implements Dao<LibInfo>
     @Override
     public List<LibInfo> queryAll(Connection connection) throws SQLException
     {
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT * FROM ");
-        sql.append(Table.LibInfo);
-
-        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql.toString());)
+        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery("SELECT * FROM " + Table.LibInfo))
         {
             List<LibInfo> libInfos = new ArrayList<>();
             while (rs.next())
@@ -98,8 +92,6 @@ public class LibInfoDao implements Dao<LibInfo>
                 libInfo.setPeptides(rs.getInt(LibInfoColumn.Peptides.baseColumn().name()));
                 libInfo.setPrecursors(rs.getInt(LibInfoColumn.Precursors.baseColumn().name()));
                 libInfo.setTransitions(rs.getInt(LibInfoColumn.Transitions.baseColumn().name()));
-                libInfo.setMoleculeLists(rs.getInt(LibInfoColumn.MoleculeLists.baseColumn().name()));
-                libInfo.setMolecules(rs.getInt(LibInfoColumn.Molecules.baseColumn().name()));
                 libInfos.add(libInfo);
             }
             return libInfos;

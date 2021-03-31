@@ -1059,9 +1059,13 @@
             <column columnName="Id">
                 <isHidden>true</isHidden>
             </column>
-            <column columnName="transitionid"/>
-            <column columnName="optimizationtype"/>
-            <column columnName="optvalue"/>
+            <column columnName="TransitionId"/>
+            <column columnName="OptimizationType">
+                <columnTitle>Type</columnTitle>
+            </column>
+            <column columnName="OptValue">
+                <columnTitle>Value</columnTitle>
+            </column>
         </columns>
     </table>
     <table tableName="transitionpredictionsettings" tableDbType="TABLE">

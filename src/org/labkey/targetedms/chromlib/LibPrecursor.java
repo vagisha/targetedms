@@ -16,45 +16,164 @@
 package org.labkey.targetedms.chromlib;
 
 import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.parser.GeneralPrecursor;
+import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static org.labkey.targetedms.chromlib.BaseDaoImpl.readDouble;
 
 /**
  * User: vsharma
  * Date: 12/31/12
  * Time: 9:25 AM
  */
-public class LibPrecursor extends AbstractLibPrecursor<LibTransition>
+public class LibPrecursor extends AbstractLibEntity
 {
+    // Shared fields
     private long _peptideId;
+    protected String _isotopeLabel;
+    protected double _mz;
+    protected int _charge;
+    protected Double _collisionEnergy;
+    protected Double _declusteringPotential;
+    protected Double _totalArea;
+    protected byte[] _chromatogram;
+    protected int _uncompressedSize;
+    protected int _chromatogramFormat;
+    protected long _sampleFileId;
+
+    protected Double _explicitIonMobility;
+    protected Double _ccs;
+    protected Double _ionMobilityMS1;
+    protected Double _ionMobilityFragment;
+
+    protected Double _ionMobilityWindow;
+    protected String _ionMobilityType;
+
+    protected Integer _numTransitions;
+    protected Integer _numPoints;
+    protected Double _averageMassErrorPPM;
+    private String _explicitIonMobilityUnits;
+    private Double _explicitCcsSqa;
+    private Double _explicitCompensationVoltage;
+
+    protected List<LibPrecursorRetentionTime> _retentionTimes;
+    protected List<LibTransition> _transitions;
+
+
+    // Proteomics fields
     private Double _neutralMass;
     private String _modifiedSequence;
-
     private List<LibPrecursorIsotopeModification> _isotopeModifications;
+
+    // Small molecule fields
+    private String _adduct;
+
 
     public LibPrecursor() {}
 
+    private LibPrecursor(GeneralPrecursor<?> p, Map<Long, String> isotopeLabelMap,
+                                PrecursorChromInfo bestChromInfo, TargetedMSRun run, Map<Long, Integer> sampleFileIdMap)
+    {
+        String isotopeLabel = isotopeLabelMap.get(p.getIsotopeLabelId());
+        if(isotopeLabel == null)
+        {
+            throw new IllegalStateException("Isotope label name not found for Id "+p.getIsotopeLabelId());
+        }
+        setIsotopeLabel(isotopeLabel);
+        setMz(p.getMz());
+        setCharge(p.getCharge());
+        setCollisionEnergy(p.getCollisionEnergy());
+        setDeclusteringPotential(p.getDeclusteringPotential());
+        setExplicitIonMobility(p.getExplicitIonMobility());
+        setExplicitIonMobilityUnits(p.getExplicitIonMobilityUnits());
+        setExplicitCcsSqa(p.getExplicitCcsSqa());
+        setExplicitCompensationVoltage(p.getExplicitCompensationVoltage());
+
+        if (bestChromInfo != null)
+        {
+            setTotalArea(bestChromInfo.getTotalArea() == null ? 0.0 : bestChromInfo.getTotalArea());
+            setChromatogram(bestChromInfo.getChromatogramBytes(run));
+            setUncompressedSize(bestChromInfo.getUncompressedSize());
+            setChromatogramFormat(bestChromInfo.getChromatogramFormat());
+            setNumTransitions(bestChromInfo.getNumTransitions());
+            setNumPoints(bestChromInfo.getNumPoints());
+            setAverageMassErrorPPM(bestChromInfo.getAverageMassErrorPPM());
+            setCcs(bestChromInfo.getCcs());
+            setIonMobilityFragment(bestChromInfo.getIonMobilityFragment());
+            setIonMobilityMS1(bestChromInfo.getIonMobilityMs1());
+            setIonMobilityType(bestChromInfo.getIonMobilityType());
+            setIonMobilityWindow(bestChromInfo.getIonMobilityWindow());
+
+            long sampleFileId = bestChromInfo.getSampleFileId();
+            Integer libSampleFileId = sampleFileIdMap.get(sampleFileId);
+            if(libSampleFileId == null)
+            {
+                throw new IllegalStateException("Could not find an Id in the library for sample file Id "+sampleFileId);
+            }
+            setSampleFileId(libSampleFileId.intValue());
+        }
+        else
+        {
+            setTotalArea(0.0);
+            setNumTransitions(0);
+            setNumPoints(0);
+        }
+    }
+
+
     public LibPrecursor(Precursor precursor, Map<Long, String> isotopeLabelMap, PrecursorChromInfo bestChromInfo, TargetedMSRun run, Map<Long, Integer> sampleFileIdMap)
     {
-        super(precursor, isotopeLabelMap, bestChromInfo, run, sampleFileIdMap);
+        this((GeneralPrecursor<?>) precursor, isotopeLabelMap, bestChromInfo, run, sampleFileIdMap);
         setNeutralMass(precursor.getNeutralMass());
         setModifiedSequence(precursor.getModifiedSequence());
     }
 
+    public LibPrecursor(MoleculePrecursor p, Map<Long, String> isotopeLabelMap, PrecursorChromInfo chromInfo,
+                                TargetedMSRun run, Map<Long, Integer> sampleFileIdMap)
+    {
+        this((GeneralPrecursor<?>) p, isotopeLabelMap, chromInfo, run, sampleFileIdMap);
+        setAdduct(p.getAdduct());
+    }
+
+
     public LibPrecursor(ResultSet rs) throws SQLException
     {
-        super(rs);
+        setId(rs.getInt(Constants.PrecursorColumn.Id.baseColumn().name()));
         setPeptideId(rs.getInt(Constants.PrecursorColumn.PeptideId.baseColumn().name()));
+        setIsotopeLabel(rs.getString(Constants.PrecursorColumn.IsotopeLabel.baseColumn().name()));
+        setMz(rs.getDouble(Constants.PrecursorColumn.Mz.baseColumn().name()));
+        setCharge(rs.getInt(Constants.PrecursorColumn.Charge.baseColumn().name()));
         setNeutralMass(rs.getDouble(Constants.PrecursorColumn.NeutralMass.baseColumn().name()));
         setModifiedSequence(rs.getString(Constants.PrecursorColumn.ModifiedSequence.baseColumn().name()));
+        setCollisionEnergy(readDouble(rs, Constants.PrecursorColumn.CollisionEnergy.baseColumn().name()));
+        setDeclusteringPotential(readDouble(rs, Constants.PrecursorColumn.DeclusteringPotential.baseColumn().name()));
+        setTotalArea(rs.getDouble(Constants.PrecursorColumn.TotalArea.baseColumn().name()));
+        setNumTransitions(rs.getInt(Constants.PrecursorColumn.NumTransitions.baseColumn().name()));
+        setNumPoints(rs.getInt(Constants.PrecursorColumn.NumPoints.baseColumn().name()));
+        setAverageMassErrorPPM(rs.getDouble(Constants.PrecursorColumn.AverageMassErrorPPM.baseColumn().name()));
+        setSampleFileId(rs.getInt(Constants.PrecursorColumn.SampleFileId.baseColumn().name()));
+        setChromatogram(rs.getBytes(Constants.PrecursorColumn.Chromatogram.baseColumn().name()));
+        setExplicitIonMobility(readDouble(rs, Constants.PrecursorColumn.ExplicitIonMobility.baseColumn().name()));
+        setCcs(readDouble(rs, Constants.PrecursorColumn.CCS.baseColumn().name()));
+        setIonMobilityMS1(readDouble(rs, Constants.PrecursorColumn.IonMobilityMS1.baseColumn().name()));
+        setIonMobilityFragment(readDouble(rs, Constants.PrecursorColumn.IonMobilityFragment.baseColumn().name()));
+        setIonMobilityWindow(readDouble(rs, Constants.PrecursorColumn.IonMobilityWindow.baseColumn().name()));
+        setIonMobilityType(rs.getString(Constants.PrecursorColumn.IonMobilityType.baseColumn().name()));
+        setExplicitIonMobilityUnits(rs.getString(Constants.PrecursorColumn.ExplicitIonMobilityUnits.baseColumn().name()));
+        setExplicitCcsSqa(readDouble(rs, Constants.PrecursorColumn.ExplicitCcsSqa.baseColumn().name()));
+        setExplicitCompensationVoltage(readDouble(rs, Constants.PrecursorColumn.ExplicitCompensationVoltage.baseColumn().name()));
+
+        // Small molecule
+        setAdduct(rs.getString(Constants.PrecursorColumn.Adduct.baseColumn().name()));
     }
 
     public long getPeptideId()
@@ -106,69 +225,279 @@ public class LibPrecursor extends AbstractLibPrecursor<LibTransition>
             return Collections.unmodifiableList(_isotopeModifications);
     }
 
-    @Override
-    public boolean equals(Object o)
+    public String getIsotopeLabel()
     {
-        if (this == o) return true;
-        if (!(o instanceof LibPrecursor)) return false;
-
-        LibPrecursor precursor = (LibPrecursor) o;
-
-        if (_peptideId != precursor._peptideId) return false;
-        if (_charge != precursor._charge) return false;
-        if (!Arrays.equals(_chromatogram, precursor._chromatogram)) return false;
-        if (_collisionEnergy != null ? !_collisionEnergy.equals(precursor._collisionEnergy) : precursor._collisionEnergy != null)
-            return false;
-        if (_declusteringPotential != null ? !_declusteringPotential.equals(precursor._declusteringPotential) : precursor._declusteringPotential != null)
-            return false;
-        if (!_isotopeLabel.equals(precursor._isotopeLabel)) return false;
-        if (_isotopeModifications != null ? !_isotopeModifications.equals(precursor._isotopeModifications) : precursor._isotopeModifications != null)
-            return false;
-        if (!_modifiedSequence.equals(precursor._modifiedSequence)) return false;
-        if (_mz != precursor._mz) return false;
-        if (_sampleFileId != precursor._sampleFileId) return false;
-        if (!_neutralMass.equals(precursor._neutralMass)) return false;
-        if (_retentionTimes != null ? !_retentionTimes.equals(precursor._retentionTimes) : precursor._retentionTimes != null)
-            return false;
-        if (!_totalArea.equals(precursor._totalArea)) return false;
-        if (_transitions != null ? !_transitions.equals(precursor._transitions) : precursor._transitions != null)
-            return false;
-        if (_numTransitions != null ? !_numTransitions.equals(precursor._numTransitions) : precursor._numTransitions != null)
-            return false;
-        if (_numPoints != null ? !_numPoints.equals(precursor._numPoints) : precursor._numPoints != null)
-            return false;
-        if (_averageMassErrorPPM != null ? !_averageMassErrorPPM.equals(precursor._averageMassErrorPPM) : precursor._averageMassErrorPPM != null)
-            return false;
-
-        return true;
+        return _isotopeLabel;
     }
 
-    @Override
-    public int hashCode()
+    public void setIsotopeLabel(String isotopeLabel)
     {
-        int result = (int) _peptideId;
-        result = 31 * result + getIsotopeLabel().hashCode();
-        result = 31 * result + Double.hashCode(_mz);
-        result = 31 * result + _charge;
-        result = 31 * result + _neutralMass.hashCode();
-        result = 31 * result + _modifiedSequence.hashCode();
-        result = 31 * result + (_collisionEnergy != null ? _collisionEnergy.hashCode() : 0);
-        result = 31 * result + (_declusteringPotential != null ? _declusteringPotential.hashCode() : 0);
-        result = 31 * result + _totalArea.hashCode();
-        result = 31 * result + (_averageMassErrorPPM != null ? _averageMassErrorPPM.hashCode() : 0);
-        result = 31 * result + (_numPoints != null ? _numPoints.hashCode() : 0);
-        result = 31 * result + (_numTransitions != null ? _numTransitions.hashCode() : 0);
-        result = (int) (31 * result + _sampleFileId);
-        result = 31 * result + (_chromatogram != null ? Arrays.hashCode(_chromatogram) : 0);
-        result = 31 * result + (_transitions != null ? _transitions.hashCode() : 0);
-        result = 31 * result + (_retentionTimes != null ? _retentionTimes.hashCode() : 0);
-        result = 31 * result + (_isotopeModifications != null ? _isotopeModifications.hashCode() : 0);
-        return result;
+        _isotopeLabel = isotopeLabel;
+    }
+
+    public double getMz()
+    {
+        return _mz;
+    }
+
+    public void setMz(double mz)
+    {
+        _mz = mz;
+    }
+
+    public int getCharge()
+    {
+        return _charge;
+    }
+
+    public void setCharge(int charge)
+    {
+        _charge = charge;
+    }
+
+    public Double getCollisionEnergy()
+    {
+        return _collisionEnergy;
+    }
+
+    public void setCollisionEnergy(Double collisionEnergy)
+    {
+        _collisionEnergy = collisionEnergy;
+    }
+
+    public Double getDeclusteringPotential()
+    {
+        return _declusteringPotential;
+    }
+
+    public void setDeclusteringPotential(Double declusteringPotential)
+    {
+        _declusteringPotential = declusteringPotential;
+    }
+
+    public Double getTotalArea()
+    {
+        return _totalArea;
+    }
+
+    public void setTotalArea(Double totalArea)
+    {
+        _totalArea = totalArea;
+    }
+
+    public byte[] getChromatogram()
+    {
+        return _chromatogram;
+    }
+
+    public void setChromatogram(byte[] chromatogram)
+    {
+        _chromatogram = chromatogram;
+    }
+
+    public int getUncompressedSize()
+    {
+        return _uncompressedSize;
+    }
+
+    public void setUncompressedSize(int uncompressedSize)
+    {
+        _uncompressedSize = uncompressedSize;
+    }
+
+    public int getChromatogramFormat()
+    {
+        return _chromatogramFormat;
+    }
+
+    public void setChromatogramFormat(int chromatogramFormat)
+    {
+        _chromatogramFormat = chromatogramFormat;
+    }
+
+    public long getSampleFileId()
+    {
+        return _sampleFileId;
+    }
+
+    public void setSampleFileId(long sampleFileId)
+    {
+        _sampleFileId = sampleFileId;
+    }
+
+    public Double getExplicitIonMobility()
+    {
+        return _explicitIonMobility;
+    }
+
+    public void setExplicitIonMobility(Double explicitIonMobility)
+    {
+        _explicitIonMobility = explicitIonMobility;
+    }
+
+    public Double getCcs()
+    {
+        return _ccs;
+    }
+
+    public void setCcs(Double ccs)
+    {
+        _ccs = ccs;
+    }
+
+    public Double getIonMobilityMS1()
+    {
+        return _ionMobilityMS1;
+    }
+
+    public void setIonMobilityMS1(Double ionMobilityMS1)
+    {
+        _ionMobilityMS1 = ionMobilityMS1;
+    }
+
+    public Double getIonMobilityFragment()
+    {
+        return _ionMobilityFragment;
+    }
+
+    public void setIonMobilityFragment(Double ionMobilityFragment)
+    {
+        _ionMobilityFragment = ionMobilityFragment;
+    }
+
+    public Double getIonMobilityWindow()
+    {
+        return _ionMobilityWindow;
+    }
+
+    public void setIonMobilityWindow(Double ionMobilityWindow)
+    {
+        _ionMobilityWindow = ionMobilityWindow;
+    }
+
+    public void setIonMobilityType(String ionMobilityType)
+    {
+        _ionMobilityType = ionMobilityType;
+    }
+
+    public String getIonMobilityType()
+    {
+        return _ionMobilityType;
+    }
+
+    public void setAverageMassErrorPPM(Double averageMassErrorPPM)
+    {
+        _averageMassErrorPPM = averageMassErrorPPM;
+    }
+
+    public Double getAverageMassErrorPPM()
+    {
+        return _averageMassErrorPPM;
+    }
+
+    public void setNumTransitions(Integer numTransitions)
+    {
+        _numTransitions = numTransitions;
+    }
+
+    public Integer getNumTransitions()
+    {
+        return _numTransitions;
+    }
+
+    public void setNumPoints(Integer numPoints)
+    {
+        _numPoints = numPoints;
+    }
+
+    public Integer getNumPoints()
+    {
+        return _numPoints;
+    }
+
+
+
+    public void addRetentionTime(LibPrecursorRetentionTime retentionTime)
+    {
+        if(_retentionTimes == null)
+        {
+            _retentionTimes = new ArrayList<>();
+        }
+        _retentionTimes.add(retentionTime);
+    }
+
+    public List<LibPrecursorRetentionTime> getRetentionTimes()
+    {
+        if(_retentionTimes == null)
+            return Collections.emptyList();
+        else
+            return Collections.unmodifiableList(_retentionTimes);
+    }
+
+    public void addTransition(LibTransition transition)
+    {
+        if(_transitions == null)
+        {
+            _transitions = new ArrayList<>();
+        }
+        _transitions.add(transition);
+    }
+
+    public List<LibTransition> getTransitions()
+    {
+        if(_transitions == null)
+            return Collections.emptyList();
+        else
+            return Collections.unmodifiableList(_transitions);
     }
 
     @Override
     public int getCacheSize()
     {
-        return super.getCacheSize() + getIsotopeModifications().stream().mapToInt(AbstractLibEntity::getCacheSize).sum();
+        return super.getCacheSize() +
+                getTransitions().stream().mapToInt(AbstractLibEntity::getCacheSize).sum() +
+                getRetentionTimes().stream().mapToInt(AbstractLibEntity::getCacheSize).sum() +
+                getIsotopeModifications().stream().mapToInt(AbstractLibEntity::getCacheSize).sum();
     }
+
+    public void setExplicitIonMobilityUnits(String explicitIonMobilityUnits)
+    {
+        _explicitIonMobilityUnits = explicitIonMobilityUnits;
+    }
+
+    public String getExplicitIonMobilityUnits()
+    {
+        return _explicitIonMobilityUnits;
+    }
+
+    public void setExplicitCcsSqa(Double explicitCcsSqa)
+    {
+        _explicitCcsSqa = explicitCcsSqa;
+    }
+
+    public Double getExplicitCcsSqa()
+    {
+        return _explicitCcsSqa;
+    }
+
+    public void setExplicitCompensationVoltage(Double explicitCompensationVoltage)
+    {
+        _explicitCompensationVoltage = explicitCompensationVoltage;
+    }
+
+    public Double getExplicitCompensationVoltage()
+    {
+        return _explicitCompensationVoltage;
+    }
+
+    public String getAdduct()
+    {
+        return _adduct;
+    }
+
+    public void setAdduct(String adduct)
+    {
+        _adduct = adduct;
+    }
+
 }

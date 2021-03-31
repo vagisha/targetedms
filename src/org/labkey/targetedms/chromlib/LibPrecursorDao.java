@@ -89,7 +89,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         stmt.setString(colIndex++, precursor.getIsotopeLabel());
         stmt.setDouble(colIndex++, precursor.getMz());
         stmt.setInt(colIndex++, precursor.getCharge());
-        stmt.setDouble(colIndex++, precursor.getNeutralMass());
+        stmt.setObject(colIndex++, precursor.getNeutralMass(), Types.DOUBLE);
         stmt.setString(colIndex++, precursor.getModifiedSequence());
         stmt.setObject(colIndex++, precursor.getCollisionEnergy(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getDeclusteringPotential(), Types.DOUBLE);
@@ -102,7 +102,17 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         stmt.setInt(colIndex++, precursor.getUncompressedSize());
         stmt.setInt(colIndex++, precursor.getChromatogramFormat());
 
-        colIndex = setIonMobilityColumns(stmt, colIndex, precursor);
+        stmt.setObject(colIndex++, precursor.getExplicitIonMobility(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getCcs(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getIonMobilityMS1(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getIonMobilityFragment(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getIonMobilityWindow(), Types.DOUBLE);
+        stmt.setString(colIndex++, precursor.getIonMobilityType());
+        stmt.setString(colIndex++, precursor.getExplicitIonMobilityUnits());
+        stmt.setObject(colIndex++, precursor.getExplicitCcsSqa(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getExplicitCompensationVoltage(), Types.DOUBLE);
+
+        stmt.setString(colIndex++, precursor.getAdduct());
     }
 
     @Override

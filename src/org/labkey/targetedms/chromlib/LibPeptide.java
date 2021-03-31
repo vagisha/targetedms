@@ -24,8 +24,11 @@ import java.util.List;
  * Date: 12/31/12
  * Time: 9:25 AM
  */
-public class LibPeptide extends AbstractLibMolecule<LibPrecursor>
+public class LibPeptide extends AbstractLibEntity
 {
+    protected List<LibPrecursor> _precursors;
+
+    // Proteomics-only fields
     private Integer _proteinId;
     private String _sequence;
     private Integer _startIndex;
@@ -34,6 +37,63 @@ public class LibPeptide extends AbstractLibMolecule<LibPrecursor>
     private Character _nextAa;
     private Double _calcNeutralMass;
     private Integer _numMissedCleavages;
+
+    // Small molecule-only fields
+    private String _chemicalFormula;
+    private String _moleculeName;
+    private Double _massMonoisotopic;
+    private Double _massAverage;
+    private String _moleculeAccession;
+
+    public String getChemicalFormula()
+    {
+        return _chemicalFormula;
+    }
+
+    public void setChemicalFormula(String chemicalFormula)
+    {
+        _chemicalFormula = chemicalFormula;
+    }
+
+    public String getMoleculeName()
+    {
+        return _moleculeName;
+    }
+
+    public void setMoleculeName(String moleculeName)
+    {
+        _moleculeName = moleculeName;
+    }
+
+    public Double getMassMonoisotopic()
+    {
+        return _massMonoisotopic;
+    }
+
+    public void setMassMonoisotopic(Double massMonoisotopic)
+    {
+        _massMonoisotopic = massMonoisotopic;
+    }
+
+    public Double getMassAverage()
+    {
+        return _massAverage;
+    }
+
+    public void setMassAverage(Double massAverage)
+    {
+        _massAverage = massAverage;
+    }
+
+    public String getMoleculeAccession()
+    {
+        return _moleculeAccession;
+    }
+
+    public void setMoleculeAccession(String moleculeAccession)
+    {
+        _moleculeAccession = moleculeAccession;
+    }
 
     private List<LibPeptideStructuralModification> _structuralModifications;
 
@@ -134,10 +194,29 @@ public class LibPeptide extends AbstractLibMolecule<LibPrecursor>
             return Collections.unmodifiableList(_structuralModifications);
     }
 
+    public void addPrecursor(LibPrecursor precursor)
+    {
+        if(_precursors == null)
+        {
+            _precursors = new ArrayList<>();
+        }
+        _precursors.add(precursor);
+    }
+
+    List<LibPrecursor> getPrecursors()
+    {
+        if(_precursors == null)
+            return Collections.emptyList();
+        else
+            return Collections.unmodifiableList(_precursors);
+    }
+
     @Override
     public int getCacheSize()
     {
-        return super.getCacheSize() + getStructuralModifications().stream().mapToInt(AbstractLibEntity::getCacheSize).sum();
+        return super.getCacheSize() +
+                getStructuralModifications().stream().mapToInt(AbstractLibEntity::getCacheSize).sum() +
+                getPrecursors().stream().mapToInt(AbstractLibEntity::getCacheSize).sum();
     }
 
     @Override

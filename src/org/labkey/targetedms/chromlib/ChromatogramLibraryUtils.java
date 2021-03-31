@@ -221,17 +221,17 @@ public class ChromatogramLibraryUtils
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + archiveFile.toAbsolutePath().toString(), config.toProperties()))
         {
             TargetedMSController.ChromLibAnalyteCounts analyteCountsInLib = new TargetedMSController.ChromLibAnalyteCounts();
-            analyteCountsInLib.setPeptideGroupCount(getCountsIn(Constants.Table.Protein, conn));
-            analyteCountsInLib.setPeptideCount(getCountsIn(Constants.Table.Peptide, conn));
-            analyteCountsInLib.setMoleculeCount(getCountsIn(Constants.Table.Molecule, conn));
-            analyteCountsInLib.setTransitionCount(getCountsIn(Constants.Table.Transition, conn) + getCountsIn(Constants.Table.MoleculeTransition, conn));
+            analyteCountsInLib.setPeptideGroupCount(getCountsIn(Constants.Table.Protein, conn, null));
+            analyteCountsInLib.setPeptideCount(getCountsIn(Constants.Table.Peptide, conn, "Sequence IS NOT NULL"));
+            analyteCountsInLib.setMoleculeCount(getCountsIn(Constants.Table.Peptide, conn, "Sequence IS NULL"));
+            analyteCountsInLib.setTransitionCount(getCountsIn(Constants.Table.Transition, conn, null));
             return analyteCountsInLib;
         }
     }
 
-    private static int getCountsIn(Constants.Table table, Connection conn)
+    private static int getCountsIn(Constants.Table table, Connection conn, String whereClause)
     {
-        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT COUNT(*) from " + table.name()))
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT COUNT(*) from " + table.name() + (whereClause == null ? "" : (" WHERE " + whereClause))))
         {
             if (rs.next())
             {
