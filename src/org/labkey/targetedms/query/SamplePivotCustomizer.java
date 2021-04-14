@@ -67,7 +67,7 @@ public class SamplePivotCustomizer implements TableCustomizer
                         TargetedMSSchema schema = new TargetedMSSchema(context.getUser(), context.getContainer());
                         TableInfo sampleFileTable = schema.getTable(TargetedMSSchema.TABLE_SAMPLE_FILE);
                         for (Map<String, Object> sampleInfo : new TableSelector(sampleFileTable,
-                                QueryService.get().getColumns(tableInfo, Set.of(FieldKey.fromParts("SampleName"), FieldKey.fromParts("ReplicateId", "Name"))).values(),
+                                QueryService.get().getColumns(sampleFileTable, Set.of(FieldKey.fromParts("SampleName"), FieldKey.fromParts("ReplicateId", "Name"))).values(),
                                 new SimpleFilter(FieldKey.fromParts("ReplicateId", "RunId"), runId), null).getMapCollection())
                         {
                             for (Object sampleName : sampleInfo.values())
