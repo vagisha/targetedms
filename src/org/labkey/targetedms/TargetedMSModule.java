@@ -484,6 +484,9 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 		ActionURL chromatogramURL = new ActionURL(TargetedMSController.ChromatogramCrawlerAction.class, ContainerManager.getRoot());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "Targeted MS Chromatogram Crawler", chromatogramURL, ApplicationAdminPermission.class);
 
+        ActionURL fixAreaRatioUrl = new ActionURL(TargetedMSController.FixAreaRatiosAction.class, ContainerManager.getRoot());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "TargetedMS Fix Area Ratios", fixAreaRatioUrl, ApplicationAdminPermission.class);
+
         FileContentService fcs = FileContentService.get();
         if(null != fcs)
         {

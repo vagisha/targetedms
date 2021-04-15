@@ -63,7 +63,6 @@ import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.admin.AdminUrls;
 import org.labkey.api.analytics.AnalyticsService;
-import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
@@ -140,7 +139,6 @@ import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.DetailsView;
 import org.labkey.api.view.GridView;
 import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.HttpView;
@@ -195,6 +193,7 @@ import org.labkey.targetedms.parser.list.ListDefinition;
 import org.labkey.targetedms.parser.skyaudit.AuditLogEntry;
 import org.labkey.targetedms.parser.speclib.SpeclibReaderException;
 import org.labkey.targetedms.pipeline.ChromatogramCrawlerJob;
+import org.labkey.targetedms.pipeline.FixAreaRatiosJob;
 import org.labkey.targetedms.query.ChromatogramDisplayColumnFactory;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
@@ -539,6 +538,48 @@ public class TargetedMSController extends SpringActionController
         public void addNavTrail(NavTree root)
         {
             urlProvider(AdminUrls.class).addAdminNavTrail(root, "Chromatogram Crawler", getClass(), getContainer());
+        }
+    }
+
+    private static class FixAreaRatiosForm
+    {
+
+    }
+
+    @RequiresPermission(ApplicationAdminPermission.class)
+    public class FixAreaRatiosAction extends FormViewAction<FixAreaRatiosForm>
+    {
+        @Override
+        public void validateCommand(FixAreaRatiosForm target, Errors errors)
+        {
+        }
+
+        @Override
+        public ModelAndView getView(FixAreaRatiosForm form, boolean reshow, BindException errors) throws Exception
+        {
+            return new HtmlView("Area Ratio Fixer", DIV("Fixes the stored area ratios for runs in all containers under the parent " + getContainer().getPath(),
+                    FORM(at(method, "POST"),
+                            new Button.ButtonBuilder("Start").submit(true).build())));
+        }
+
+        @Override
+        public boolean handlePost(FixAreaRatiosForm form, BindException errors) throws Exception
+        {
+            PipelineJob job = new FixAreaRatiosJob(getViewBackgroundInfo(), PipelineService.get().getPipelineRootSetting(ContainerManager.getRoot()));
+            PipelineService.get().queueJob(job);
+            return true;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(FixAreaRatiosForm form)
+        {
+            return urlProvider(PipelineUrls.class).urlBegin(getContainer());
+        }
+
+        @Override
+        public void addNavTrail(NavTree root)
+        {
+            urlProvider(AdminUrls.class).addAdminNavTrail(root, "Area Ratio Fixer", getClass(), getContainer());
         }
     }
 
