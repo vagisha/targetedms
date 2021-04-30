@@ -7225,6 +7225,8 @@ public class TargetedMSController extends SpringActionController
             UserSchema schema = new TargetedMSSchema(getUser(), getContainer());
             String queryName = _asProteomics ? "CalibrationCurvePrecursors" : "CalibrationCurveMoleculePrecursors";
             QuerySettings settings = new QuerySettings(getViewContext(), "curveDetail", queryName);
+            // Issue 43057 - avoid query perf problems with alternate folder filters since the data is always scoped to the current container
+            settings.setContainerFilterName(null);
             settings.getBaseFilter().addCondition(FieldKey.fromParts("CalibrationCurve"), form.getCalibrationCurveId());
             settings.setBaseSort(new Sort("SampleFileId/SampleName"));
             QueryView result = QueryView.create(getViewContext(), schema, settings, errors);
