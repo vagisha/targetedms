@@ -86,13 +86,10 @@ public abstract class LibSpectrumReader
     private LibSpectrum getLibSpectrum(Container container, Path libPath, SpectrumKey key) throws SQLException, DataFormatException
     {
         String localLibPath = key.forRedundantSpectrum()
-                ? getLocalLibPath(container, getRedundantLibPath(container, libPath)) // Bibliospec stores redundant spectra in a separate SQLite file
-                : getLocalLibPath(container, libPath);
+                ? getNonEmptyLocalLibPath(container, getRedundantLibPath(container, libPath)) // Bibliospec stores redundant spectra in a separate SQLite file
+                : getNonEmptyLocalLibPath(container, libPath);
 
         if (null == localLibPath)
-            return null;
-
-        if(!(new File(localLibPath).exists()))
             return null;
 
         try (Connection conn = getLibConnection(localLibPath))
@@ -105,16 +102,9 @@ public abstract class LibSpectrumReader
     @NotNull
     public List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getRetentionTimes(Container container, Path libPath, String modifiedPeptide)
     {
-        String libFilePath = getLocalLibPath(container, libPath);
+        String libFilePath = getNonEmptyLocalLibPath(container, libPath);
         if (null == libFilePath)
             return Collections.emptyList();
-
-        // We know it's local file and string may need encoding to convert to Path
-        if(!(new File(libFilePath).exists()))
-        {
-            LOG.debug("File not found: " + libFilePath + ", referenced from container " + container.getPath());
-            return Collections.emptyList();
-        }
 
         try (Connection conn = getLibConnection(libFilePath))
         {
@@ -213,15 +203,16 @@ public abstract class LibSpectrumReader
             };
 
     @Nullable
-    static String getLocalLibPath(Container container, Path libPath)
+    static String getNonEmptyLocalLibPath(Container container, Path libPath)
     {
+        String libPathString;
         // If lib is in cloud, copy it locally to read
         if (FileUtil.hasCloudScheme(libPath))
         {
             String localFilePathStr = _libCache.get(getLibCacheKey(container, FileUtil.getAbsolutePath(libPath)), new Pair<>(container, libPath));
             if (null != localFilePathStr)
             {
-                return localFilePathStr;
+                libPathString = localFilePathStr;
             }
             else
             {
@@ -229,7 +220,22 @@ public abstract class LibSpectrumReader
                 return null;
             }
         }
-        return FileUtil.getAbsolutePath(libPath);
+        else
+        {
+            libPathString = FileUtil.getAbsolutePath(libPath);
+        }
+        File f = new File(libPathString);
+        if(!f.exists())
+        {
+            LOG.debug("Library file not found: " + libPathString + ", referenced from container " + container.getPath());
+            return null;
+        }
+        if(f.length() == 0)
+        {
+            LOG.debug("Found 0 byte library file: " + libPathString + ", referenced from container " + container.getPath());
+            return null;
+        }
+        return libPathString;
     }
 
     public static void clearLibCache(Container container)
