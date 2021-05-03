@@ -251,24 +251,49 @@ public class SkylineDocImporter
         }
         catch (FileNotFoundException fnfe)
         {
-            logError("Skyline document import failed due to a missing file.", fnfe);
-            updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
+            String logMessage = "Skyline document import failed due to a missing file.";
+            _systemLog.error(logMessage, fnfe);
+            addPostRollbackCommitTask(fnfe, logMessage, "Import failed (see pipeline log)");
             throw fnfe;
         }
         catch (CancelledException e)
         {
-            _log.info("Cancelled  Skyline document import.");
-            updateRunStatus("Import cancelled (see pipeline log)", STATUS_FAILED);
+            addPostRollbackCommitTask("Cancelled  Skyline document import.", "Import cancelled (see pipeline log)");
             throw e;
         }
         catch (IOException | XMLStreamException | RuntimeException | PipelineJobException | AuditLogException e)
         {
-            _log.error("Import failed", e);
-            updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
-            throw e;
+            addPostRollbackCommitTask(e, "Import failed", "Import failed (see pipeline log)");
+            if (e instanceof PipelineJobException) throw e;
+            else throw new PipelineJobException(e); // Wrap in a PipelineJobException so that it does not show up as
+                                                    // "Uncaught exception in PipelineJob" in the "Info" column of the Data Pipeline grid
         }
     }
 
+    private void addPostRollbackCommitTask(String logMessage, String statusMessage)
+    {
+        addPostRollbackCommitTask(null, logMessage, statusMessage);
+    }
+
+    private void addPostRollbackCommitTask(Exception exception, String logMessage, String statusMessage)
+    {
+        // The entire document import code is executed inside a transaction.  If an exception is thrown by code in the transaction
+        // or in a nested transaction, the transaction is not committed and it is assumed that the whole transaction is hosed.
+        // The connection is rendered unusable. If the code that catches the exception attempts to do anything with the DB a SQLException is thrown:
+        // ExecutingSelector; uncategorized SQLException for SQL []; SQL state [null]; error code [0]; This connection has already been closed, and may have been left in a bad state
+        // We will execute any SQL updates in a CommitTask that runs it POSTROLLBACK.
+        TargetedMSManager.getSchema().getScope().addCommitTask(() -> {
+            if (exception != null)
+            {
+                _log.error(logMessage, exception);
+            }
+            else
+            {
+                _log.info(logMessage);
+            }
+            updateRunStatus(_runId, statusMessage, STATUS_FAILED);
+            }, DbScope.CommitTaskOption.POSTROLLBACK);
+    }
 
     private void importSkylineDoc(TargetedMSRun run, File f) throws XMLStreamException, IOException, PipelineJobException, AuditLogException
     {
