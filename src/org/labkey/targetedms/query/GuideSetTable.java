@@ -43,7 +43,7 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
 {
     public GuideSetTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoGuideSet(), schema);
+        super(TargetedMSManager.getTableInfoGuideSet(), schema, cf);
 
         wrapAllColumns(true);
         TargetedMSTable.fixupLookups(this);
