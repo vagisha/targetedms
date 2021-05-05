@@ -20,25 +20,27 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         this.numSampleFileStats = config ? config.sampleLimit : 3;
     },
 
-    initPanel : function(){
+    initPanel : function() {
+        this.qcPlotPanel.queryQCInstruments(this.getQCSummary, this);
+    },
 
+    getQCSummary: function () {
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'getQCSummary.api'),
             params: {
                 includeSubfolders: true
             },
             scope: this,
-            success: LABKEY.Utils.getCallbackWrapper(function (response)
-            {
+            success: LABKEY.Utils.getCallbackWrapper(function (response) {
                 var containers = response['containers'],
-                    container,
-                    childPanelItems = [],
-                    hasChildren = containers.length > 1;
+                        container,
+                        childPanelItems = [],
+                        hasChildren = containers.length > 1;
 
                 // determine the summaryView width
                 var portalWebpart = document.querySelector('.panel.panel-portal'),
-                    minWidth = 750,
-                    width = portalWebpart ? Math.max(portalWebpart.clientWidth - 50, minWidth) : minWidth;
+                        minWidth = 750,
+                        width = portalWebpart ? Math.max(portalWebpart.clientWidth - 50, minWidth) : minWidth;
                 if (hasChildren && containers.length > 1 && (width/2) > minWidth) {
                     width = (width / 2) - 5;
                 }
@@ -48,13 +50,21 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 container.showName = hasChildren;
                 container.isParent = true;
                 container.parentOnly = containers.length == 1;
+                if (this.qcPlotPanel.qcIntrumentsArr) {
+                    if (this.qcPlotPanel.qcIntrumentsArr.length > 1) {
+                        var msg = 'We recommend that each instrument use its own QC folder.'
+                        container.instrument = 'multiple instruments - ' + this.qcPlotPanel.qcIntrumentsArr.join(', ') + '. ' + msg;
+
+                    }
+                    else if (this.qcPlotPanel.qcIntrumentsArr.length === 1) {
+                        container.instrument = this.qcPlotPanel.qcIntrumentsArr[0];
+                    }
+                }
                 this.add(this.getContainerSummaryView(container, hasChildren, width));
 
                 // Add the set of child containers in an hbox layout
-                if (hasChildren)
-                {
-                    for (var i = 1; i < containers.length; i++)
-                    {
+                if (hasChildren) {
+                    for (var i = 1; i < containers.length; i++) {
                         container = containers[i];
                         container.showName = true;
                         container.parentOnly = false;
@@ -69,8 +79,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 }
 
             }, this, false),
-            failure: LABKEY.Utils.getCallbackWrapper(function (response)
-            {
+            failure: LABKEY.Utils.getCallbackWrapper(function (response) {
                 this.add(Ext4.create('Ext.Component', {
                     autoEl: 'span',
                     cls: 'labkey-error',
@@ -80,8 +89,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         });
     },
 
-    getContainerSummaryView: function (container, hasChildren, width)
-    {
+    getContainerSummaryView: function (container, hasChildren, width) {
         container.viewCmpId = Ext4.id();
         container.autoQcCalloutId = Ext4.id();
 
@@ -91,8 +99,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             tpl: this.getSummaryDisplayTpl(),
             listeners: {
                 scope: this,
-                render: function ()
-                {
+                render: function () {
                     this.queryContainerSampleFileStats(container);
 
                     // add hover event listeners for showing AutoQC message
@@ -101,14 +108,12 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             }
         };
 
-        if (Ext4.isDefined(hasChildren))
-        {
+        if (Ext4.isDefined(hasChildren)) {
             config.cls = hasChildren ? 'summary-view' : '';
             config.width = hasChildren ? width : undefined;
             config.minHeight = 21;
         }
-        else
-        {
+        else {
             config.cls = 'summary-view subfolder-view';
             config.width = width;
             config.minHeight = 136;
@@ -119,8 +124,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         return Ext4.create('Ext.view.View', config);
     },
 
-    getSummaryDisplayTpl: function ()
-    {
+    getSummaryDisplayTpl: function () {
         return new Ext4.XTemplate(
             '<tpl if="showName !== undefined">',
                 '<tpl if="showName === true &amp;&amp; (isParent !== true || docCount &gt; 0)">',
@@ -136,7 +140,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 '<tpl elseif="docCount &gt; 0">',
                     '<div class="qc-summary-text">',
                         '<a href="{path:this.getSampleFileLink}">{fileCount} sample file{fileCount:this.pluralize}</a> ' +
-                            'tracking {precursorCount} precursor{precursorCount:this.pluralize} with {metricCount} metric{metricCount:this.pluralize}',
+                            'tracking {precursorCount} precursor{precursorCount:this.pluralize} with {metricCount} metric{metricCount:this.pluralize} for {instrument}',
                     '</div>',
                     '<div class="item-text sample-file-details sample-file-details-loading" id="qc-summary-samplefiles-{id}">Loading...</div>',
                     '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
@@ -170,21 +174,18 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         );
     },
 
-    showAutoQCMessage : function(divId, autoQC, hasChildren)
-    {
+    showAutoQCMessage : function(divId, autoQC, hasChildren) {
         var divEl = Ext4.get(divId),
             content = '', width = undefined;
 
         if (!divEl)
             return;
 
-        if (autoQC == null)
-        {
+        if (autoQC == null) {
             content = 'Has never been pinged';
             width = 155;
         }
-        else
-        {
+        else {
             var modifiedFormatted = Ext4.util.Format.date(Ext4.Date.parse(autoQC.modified, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s');
             content = autoQC.isRecent ? 'Was pinged recently on ' + modifiedFormatted : 'Was pinged on ' + modifiedFormatted;
             width = autoQC.isRecent ? 160 : 140;
@@ -212,10 +213,8 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }, this);
     },
 
-    queryContainerSampleFileStats: function (container)
-    {
-        if (container.fileCount > 0)
-        {
+    queryContainerSampleFileStats: function (container) {
+        if (container.fileCount > 0) {
             LABKEY.Ajax.request({
                 url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCMetricOutliers.api', container.path),
                 params: {sampleLimit: this.sampleLimit},
@@ -245,8 +244,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 scope: this
             });
         }
-        else if (container.docCount > 0)
-        {
+        else if (container.docCount > 0) {
            this.removeSampleFilesDetailsDiv(container);
         }
     },
@@ -261,8 +259,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         var container = params.container;
             var html = '<table class="table-condensed labkey-data-region-legacy labkey-show-borders"><thead><tr><td class="labkey-column-header">Sample Name</td><td class="labkey-column-header">Acquired</td><td class="labkey-column-header">Total outliers</td></tr></thead>';
             var sampleFiles = params.sampleFiles;
-            Ext4.iterate(sampleFiles, function (sampleFile)
-            {
+            Ext4.iterate(sampleFiles, function (sampleFile) {
                 // create a new div id for each sampleFile to use for the hover details callout
                 sampleFile.calloutId = Ext4.id();
 
@@ -293,14 +290,12 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             this.doLayout();
 
             // add a hover listener for each of the sample file divs
-            Ext4.iterate(sampleFiles, function (sampleFile)
-            {
+            Ext4.iterate(sampleFiles, function (sampleFile) {
                 this.showSampleFileStatsDetails(sampleFile.calloutId, sampleFile);
             }, this);
     },
 
-    showSampleFileStatsDetails : function(divId, sampleFile)
-    {
+    showSampleFileStatsDetails : function(divId, sampleFile) {
         var task = new Ext4.util.DelayedTask(),
             divEl = Ext4.get(divId),
             content = '';

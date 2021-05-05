@@ -1321,7 +1321,9 @@ public class TargetedMSController extends SpringActionController
             GuideSet gs = null;
             for (GuideSet guideSet : guideSets)
             {
-                if (!guideSet.isDefault() && guideSet.getTrainingEnd().before(startDate))
+                // guideset end date should be before or equal start date
+                if (!guideSet.isDefault() &&
+                        (guideSet.getTrainingEnd().before(startDate) || DateUtil.getDateOnly(guideSet.getTrainingEnd()).compareTo(startDate) == 0))
                 {
                     if (null == gs)
                     {

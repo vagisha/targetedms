@@ -158,8 +158,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             this.processRawGuideSetData(plotDataRows);
         }
 
+        var tempData; // temp variable to store data for setting the date
         for (var i = this.pagingStartIndex; i < this.pagingEndIndex; i++) {
             var plotDataRow = plotDataRows[i];
+            tempData = plotDataRow;
             var fragment = plotDataRow.SeriesLabel;
             Ext4.iterate(plotDataRow.data, function (plotData) {
                 Ext4.iterate(sampleFiles, function (sampleFile) {
@@ -192,7 +194,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     // for truncating out of range guideset data find last index of plotData starting from this.startDate
                     if (plotData.AcquiredTime >= this.startDate) {
                         if (!this.filterPointsLastIndex) {
-                            // skip 5 points
                             this.filterPointsLastIndex = j;
                         }
                     }
@@ -200,12 +201,19 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             }
         }
 
-        // no need to filter if less than 6 data points are present between reference end of guideset and startdate
-        if (this.filterPointsLastIndex - this.filterPointsFirstIndex < 6) {
-            this.filterQCPoints = false;
-        }
-        else {
-            this.filterPointsLastIndex = this.filterPointsLastIndex - 6;
+        if (this.showExpRunRange && this.filterPointsLastIndex && this.filterPointsFirstIndex) {
+            // no need to filter if less than 6 data points are present between reference end of guideset and startdate
+            if (this.filterPointsLastIndex - this.filterPointsFirstIndex < 6) {
+                this.filterQCPoints = false;
+                // set the startDate field = acquired time of the 1st point of 5 points before the experiment run range
+                this.getStartDateField().setValue(this.formatDate(tempData.data[this.filterPointsFirstIndex].AcquiredTime));
+            }
+            else { // skip 5 points
+                this.filterPointsLastIndex = this.filterPointsLastIndex - 6;
+                // set the startDate field = acquired time of the 1st point of 5 points before the experiment run range
+                // adding 1 as the point is right after filter last index
+                this.getStartDateField().setValue(this.formatDate(tempData.data[this.filterPointsLastIndex + 1].AcquiredTime));
+            }
         }
 
         // Issue 31678: get the full set of dates values from the precursor data and from the annotations
@@ -285,7 +293,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         if (this.filterQCPoints && !this.groupedX) {
             this.truncateOutOfRangeQCPoints();
         }
-        this.persistSelectedFormOptions();
+        // do not persist plot options in qc folder if changed after coming through experimental folder link
+        if (!this.showExpRunRange) {
+            this.persistSelectedFormOptions();
+        }
 
         if (this.precursors.length === 0) {
             this.failureHandler({message: "There were no records found. The date filter applied may be too restrictive."});
@@ -348,40 +359,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
     getPlotWidth: function() {
         var width = this.plotWidth - 30;
         return !this.largePlot && this.plotTypes.length > 1 ? width / 2 : width;
-    },
-
-    getExperimentRunDetails: function (runId) {
-        var sql = "Select MIN(sf.AcquiredTime) AS StartDate,\n" +
-                "       MAX(sf.AcquiredTime) AS EndDate,\n" +
-                "       r.FileName,\n" +
-                "       sf.InstrumentSerialNumber,\n" +
-                "       sf.InstrumentId.model\n" +
-                "FROM targetedms.Replicate rep\n" +
-                "INNER JOIN targetedms.SampleFile sf ON rep.Id = sf.ReplicateId\n" +
-                "INNER JOIN targetedms.Runs r on r.Id = rep.RunId\n" +
-                "where rep.RunId ='" + runId + "'\n" +
-                "GROUP BY r.FileName, sf.InstrumentSerialNumber, sf.InstrumentId.model";
-
-        LABKEY.Query.executeSql({
-            schemaName: 'targetedms',
-            sql: sql,
-            containerFilter: LABKEY.Query.containerFilter.allFolders,
-            scope: this,
-            success: function (response) {
-
-                var runDetails = response.rows[0];
-                this.expRunDetails = {};
-                this.expRunDetails['instrumentName'] = runDetails.model;
-                this.expRunDetails['serialNumber'] = runDetails.InstrumentSerialNumber;
-                this.expRunDetails['fileName'] = runDetails.FileName;
-                this.expRunDetails['startDate'] = runDetails.StartDate;
-                this.expRunDetails['endDate'] = runDetails.EndDate;
-                // initialize the form panel toolbars and display the plot
-                this.add(this.initPlotFormToolbars());
-                this.displayTrendPlot();
-            },
-            failure: this.failureHandler
-        });
     },
 
     calculatePlotIndicesBetweenDates: function (precursorInfo) {
@@ -704,7 +681,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             disableRangeDisplay: this.isMultiSeries()
         };
 
-        if (this.filterQCPoints) {
+        // lines are not separated when indices are not present
+        if (this.filterQCPoints && this.filterPointsLastIndex && this.filterPointsFirstIndex) {
             trendLineProps.lineColor = '#000000';
             trendLineProps.groupBy = "ReferenceRangeSeries";
         }

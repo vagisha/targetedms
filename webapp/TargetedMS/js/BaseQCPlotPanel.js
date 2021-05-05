@@ -200,6 +200,34 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         });
     },
 
+    queryQCInstruments: function(successCallback, callbackScope) {
+        LABKEY.Query.executeSql({
+            schemaName: 'targetedms',
+            sql: 'SELECT DISTINCT instrumentSerialNumber, instrumentId.model FROM samplefile',
+            containerFilter: LABKEY.Query.containerFilter.current,
+            scope: this,
+            success: function (response) {
+
+                if (response.rows && response.rows.length > 0) {
+                    this.qcIntrumentsArr = response.rows.map(function (row) {
+                        if (row.instrumentSerialNumber && row.model) {
+                            return row.instrumentSerialNumber + ' - ' + row.model;
+                        }
+                        else if (row.instrumentSerialNumber && !row.model) {
+                            return row.instrumentSerialNumber;
+                        }
+                        else if (!row.instrumentSerialNumber && row.model) {
+                            return row.model;
+                        }
+                    })
+                }
+
+                successCallback.call(callbackScope);
+            },
+            failure: this.failureHandler
+        });
+    },
+
     formatValue: function(value) {
         return Math.round(value * 10000) / 10000;
     }
