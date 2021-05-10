@@ -196,6 +196,11 @@
 
 }
 
+.chromatogramMatrix {
+    display: inline-block;
+    white-space: nowrap;
+}
+
 #copytoclipboard {
     padding:3px;
     font:12px 'Raleway', sans-serif;
@@ -204,8 +209,6 @@
     margin-right:40px;
 }
 .feature-aa {
-    background-color:lightgray;
-    font-size:12px !important;
     font-family: monospace ;
     font-weight:400 !important;
     /*cursor: pointer;*/

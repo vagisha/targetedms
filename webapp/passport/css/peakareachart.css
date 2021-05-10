@@ -102,10 +102,8 @@ body {
     height: 6px !important;
 }
 #filteredPeptideCount {
-    font:12px 'Raleway', sans-serif;
-    font-weight:600;
-
 }
+
 green {
     color: green;
 }

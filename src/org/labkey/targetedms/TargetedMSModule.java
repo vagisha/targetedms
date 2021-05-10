@@ -43,7 +43,6 @@ import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.usageMetrics.UsageMetricsService;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.UsageReportingLevel;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.JspView;
@@ -62,6 +61,7 @@ import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.query.SkylineListSchema;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.search.ProteinSearchWebPart;
+import org.labkey.targetedms.view.CalibrationCurveView;
 import org.labkey.targetedms.view.LibraryQueryViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.QCSummaryWebPart;
@@ -102,6 +102,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String TARGETED_MS_QC_PLOTS = "Targeted MS QC Plots";
     public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
     public static final String TARGETED_MS_PARETO_PLOT = "Targeted MS Pareto Plot";
+    public static final String TARGETED_MS_CALIBRATION_CURVE = "Targeted MS Calibration Curve";
 
     public static final String PEPTIDE_TAB_NAME = "Peptides";
     public static final String PROTEIN_TAB_NAME = "Proteins";
@@ -410,6 +411,31 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                     v.setTitle("Passport");
                     v.setFrame(WebPartView.FrameType.PORTAL);
                     return v;
+                }
+            },
+
+            new BaseWebPartFactory(TARGETED_MS_CALIBRATION_CURVE)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    String calCurveIdString = webPart.getPropertyMap().get("calibrationCurveId");
+                    long calCurveId = 0;
+                    if (calCurveIdString != null)
+                    {
+                        try
+                        {
+                            calCurveId = Long.parseLong(calCurveIdString);
+                        }
+                        catch (NumberFormatException ignored) {}
+                    }
+                    return new CalibrationCurveView(portalCtx.getUser(), portalCtx.getContainer(), calCurveId);
+                }
+
+                @Override
+                public boolean isAvailable(Container c, String scope, String location)
+                {
+                    return false;
                 }
             }
         );

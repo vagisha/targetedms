@@ -139,7 +139,7 @@ public class TargetedMSQCTest extends TargetedMSTest
                     "\n" +
                     "    var testLegends = function() {\n" +
                     "        var result = '';\n" +
-                    "\t\tvar legendHelper = Ext4.create(\"LABKEY.targetedms.QCPlotLegendHelper\");\n" +
+                    "\t\tvar legendHelper = LABKEY.targetedms.QCPlotLegendHelper;\n" +
                     "        legendHelper.setupLegendPrefixes(testVals, 3);\n" +
                     "\n" +
                     "        for (var key in testVals) {\n" +

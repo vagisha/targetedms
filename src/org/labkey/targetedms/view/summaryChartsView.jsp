@@ -31,7 +31,9 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
+        dependencies.add("internal/jQuery");
         dependencies.add("TargetedMS/js/svgChart.js");
+        dependencies.add("TargetedMS/css/svgChart.css");
     }
 %>
 <%

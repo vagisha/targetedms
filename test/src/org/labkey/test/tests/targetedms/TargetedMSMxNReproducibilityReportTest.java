@@ -3,11 +3,16 @@ package org.labkey.test.tests.targetedms;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.query.Filter;
+import org.labkey.remoteapi.query.SelectRowsCommand;
+import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
-import org.labkey.test.util.DataRegionTable;
+
+import java.io.IOException;
 
 @Category({DailyB.class, MS2.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 6)
@@ -32,7 +37,7 @@ public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
     }
 
     @Test
-    public void testReproducibilityReport()
+    public void testReproducibilityReport() throws IOException, CommandException
     {
         goToProjectHome();
         importData(SKY_FILE);
@@ -48,10 +53,10 @@ public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
         checker().verifyTrue("Reproducibility Report is not present", isElementPresent(Locator.linkWithText("Reproducibility Report")));
         clickAndWait(Locator.linkWithText("Reproducibility Report"));
 
-        checker().verifyEquals("Incorrect number of graphs for EAEDLQVGQVE", getPrecursorChromeInfo("EAEDLQVGQVE"),
+        checker().verifyEquals("Incorrect number of graphs for EAEDLQVGQVE", getPrecursorChromeInfoCount("EAEDLQVGQVE"),
                 getGraphCount("EAEDLQVGQVE"));
 
-        checker().verifyEquals("Incorrect number of graphs for EAEDL[+7.0]QVGQVE", getPrecursorChromeInfo("EAEDL[+7.0]QVGQVE"),
+        checker().verifyEquals("Incorrect number of graphs for EAEDL[+7.0]QVGQVE", getPrecursorChromeInfoCount("EAEDL[+7.0]QVGQVE"),
                 getGraphCount("EAEDL[+7.0]QVGQVE"));
     }
 
@@ -78,21 +83,21 @@ public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
     private int getGraphCount(String sequence)
     {
         pushLocation();
-        Locator.linkWithText(sequence).findElement(getDriver()).click();
+        Locator.XPathLocator locator = Locator.linkWithText(sequence);
+        waitForElement(locator);
+        locator.findElement(getDriver()).click();
         // graph count
         int count = Locator.tagWithAttributeContaining("span", "id", "chrom").findElements(getDriver()).size();
         popLocation();
         return count;
     }
 
-    private int getPrecursorChromeInfo(String sequence)
+    private int getPrecursorChromeInfoCount(String sequence) throws IOException, CommandException
     {
-        pushLocation();
-        goToSchemaBrowser();
-        DataRegionTable table = viewQueryData("targetedms", "PrecursorChromInfo");
-        table.setFilter("PrecursorId", "Equals", sequence);
-        int count = table.getDataRowCount();
-        popLocation();
-        return count;
+        SelectRowsCommand rowsCommand = new SelectRowsCommand("targetedms", "PrecursorChromInfo");
+        rowsCommand.addFilter("PrecursorId/ModifiedSequence", sequence, Filter.Operator.EQUAL);
+        rowsCommand.setRequiredVersion(9.1);
+        SelectRowsResponse rowsResponse = rowsCommand.execute(createDefaultConnection(), getCurrentContainerPath());
+        return rowsResponse.getRows().size();
     }
 }

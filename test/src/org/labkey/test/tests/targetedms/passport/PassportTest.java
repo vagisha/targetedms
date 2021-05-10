@@ -65,14 +65,12 @@ public class PassportTest  extends PassportTestPart
         // enter Haptoglobin
 
         click(Locator.xpath("//tr[contains(@class,'labkey-alternate-row')]//a[@class='labkey-text-link'][contains(text(),'PASSPORT VIEW')]"));
-        assertElementContains(Locator.xpath("//h2[@id='proteinName']"), "Haptoglobin");
-        assertElementContains(Locator.xpath("//td[contains(text(),'406')]"), "406");
-        assertElementPresent(Locator.xpath("//sub[@id='dataUploaded']"));
+        assertTextPresent("Haptoglobin", "data1.sky.zip");
         assertElementPresent(Locator.xpath("//div[@id='rangesliderdeg']"));
         assertElementPresent(Locator.xpath("//div[@id='rangesliderlength']"));
         assertElementPresent(Locator.xpath("//button[@id='formreset']"));
         assertElementPresent(Locator.xpath("//button[@id='formreset']"));
-        assertElementPresent(Locator.xpath("//a[contains(text(),'Uniprot')]"));
+        assertElementPresent(Locator.xpath("//a[contains(text(),'P00738')]"));
         assertElementPresent(Locator.xpath("//div[@id='chart']"));
         String[] peptidesOrderIntensity = {"VGYVSGWGR", "GSFPWQAK","YVMLPVADQDQCIR","QLVEIEK","SCAVAEYGVYVK","TEGDGVYTLNNEK",
                 "VMPICLPSK","VTSIQDWVQK","TEGDGVYTLNDK","DYAEVGR","ILGGHLDAK","HYEGSTVPEK","DIAPTLTLYVGK","SPVGVQPILNEHTFCAGMSK",
@@ -103,11 +101,10 @@ public class PassportTest  extends PassportTestPart
         assertElementContains(Locator.xpath("//span[@id='filteredPeptideCount']//green"), "19");
 
         //features
-        assertElementPresent(Locator.xpath("//span[@class='feature-aa feature-sequencevariant']"), 5);
-        assertElementPresent(Locator.xpath("//span[@class='feature-aa feature-glycosylationsite']"), 4);
-        assertElementPresent(Locator.xpath("//span[@class='feature-aa feature-helix']"), 7);
-        assertElementPresent(Locator.xpath("//span[@class='feature-aa feature-turn']"), 6);
-
+        assertElementPresent(Locator.xpath("//td[contains(@class, 'feature-sequencevariant')]"), 5);
+        assertElementPresent(Locator.xpath("//td[contains(@class, 'feature-glycosylationsite')]"), 4);
+        assertElementPresent(Locator.xpath("//td[contains(@class, 'feature-helix')]"), 7);
+        assertElementPresent(Locator.xpath("//td[contains(@class, 'feature-turn')]"), 6);
     }
 
     @LogMethod(category = LogMethod.MethodType.VERIFICATION)

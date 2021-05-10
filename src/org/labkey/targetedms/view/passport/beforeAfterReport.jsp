@@ -33,6 +33,7 @@
         dependencies.add("passport/css/protein.css");
         dependencies.add("passport/css/peakareachart.css");
         dependencies.add("TargetedMS/js/svgChart.js");
+        dependencies.add("TargetedMS/css/svgChart.css");
     }
 %>
 
@@ -52,7 +53,7 @@
     <!--START IMPORTS-->
 
 <script type="text/javascript">
-    var proteinJSON = <%=protein.getJSON().getJavaScriptFragment(2)%>
+    var proteinJSON = <%=protein.getJSON(true).getJavaScriptFragment(2)%>
     document.addEventListener("DOMContentLoaded", function() {
         protein.initialize();
     });
@@ -63,93 +64,6 @@
 
 <!-- PROTEIN INFO HEADER START -->
 <div id="passportContainer">
-    <div id="basicproteininfo">
-        <h2 id="proteinName"><%=h(protein.getName())%>
-            <a href="<%=h(urlFor(TargetedMSController.DownloadDocumentAction.class).addParameter("id", protein.getFile().getRunId()))%>">
-                <img src="<%=h(contextPath)%>/passport/img/download.png" style="width:30px; height:30px; margin-left:5px;" alt="Download Skyline dataset" title="Download Skyline dataset">
-            </a><sub id="dataUploaded">Data Uploaded: <%=h(formatDate(protein.getFile().getCreatedDate()))%></sub>
-        </h2>
-        <p id="apiLinks">Sources:&nbsp;<a href="<%=h(urlFor(TargetedMSController.ShowProteinAction.class).addParameter("id", protein.getPepGroupId()))%>">Panorama</a> &#8759; <a href="https://www.uniprot.org/uniprot/<%=h(protein.getAccession())%>">Uniprot</a></p>
-        <ul style="max-width:300px;"><!-- Color Scheme: http://paletton.com/#uid=72X0X0kCyk3sipxvvmIKxgXRodf-->
-            <li style="border-left: 6px solid #A01C00">
-                <span>Protein:&nbsp;</span><%=h(protein.getPreferredname())%></li>
-            <li style="border-left: 6px solid #0B1A6D">
-                <span>Gene:&nbsp;</span><%=h(protein.getGene())%></li>
-            <li style="border-left: 6px solid #00742B">
-                <span>Organism:&nbsp;</span><%=h(protein.getSpecies())%></li>
-            <%
-                List<IKeyword> molecularFunctions = new ArrayList<>();
-                List<IKeyword> biologicalProcesses = new ArrayList<>();
-                List<IKeyword> keywords = protein.getKeywords();
-                for (IKeyword keyword : keywords)
-                {
-                    if (keyword.categoryId.equals("KW-9999"))
-                        biologicalProcesses.add(keyword);
-                    if (keyword.categoryId.equals("KW-9992"))
-                        molecularFunctions.add(keyword);
-                }
-            %>
-
-            <%if(biologicalProcesses.size() > 0) {%>
-            <li style="border-left: 6px solid #A07200">
-                <span title="Biological process">Biological process:&nbsp;</span><br/>
-                <%for(int i = 0; i < biologicalProcesses.size(); i++){%>
-                <a href="https://www.uniprot.org/keywords/<%=h(biologicalProcesses.get(i).id)%>" target="_blank" rel="noopener noreferrer"><%=h(biologicalProcesses.get(i).label)%></a><%if(i!= biologicalProcesses.size()-1) {%>,&nbsp;<%}%><%}%>
-            </li>
-            <%}%>
-            <%if(molecularFunctions.size() > 0) {%>
-            <li style="border-left: 6px solid #A07200">
-                <span title="Molecular function">Molecular function:&nbsp;</span><br/>
-                <%for(int i = 0; i < molecularFunctions.size(); i++){%>
-                <a href="https://www.uniprot.org/keywords/<%=h(molecularFunctions.get(i).id)%>" target="_blank" rel="noopener noreferrer"><%=h(molecularFunctions.get(i).label)%></a>
-                <%if(i != molecularFunctions.size()-1) {%>, <%}%>
-                <%}%>
-            </li>
-            <%}%>
-
-        </ul>
-        <ul id="sequenceDisplay">
-            <li style="border-left: 6px solid #550269">
-                <span>Sequence:</span>
-                <div id="sequenceDisplayTableContainer">
-                    <table><tbody>
-                        <%
-                            List<HtmlString> seqSegs = protein.getProtSeqHTML();
-                            for(int i = 0; i < seqSegs.size(); i++) {
-                                if(i % 10 == 0) {%>
-                                    <%if(i > 0) {%>
-                                        </tr>
-                                    <%}%>
-                                    <tr style="text-align:right;">
-                                        <%for(int j = i; j < i+10; j++) {
-                                            if(j+2 > seqSegs.size()) {%>
-                                                <td><%=protein.getSequence().length()%></td>
-                                            <%break;
-                                            } else {%>
-                                                <td> <%=(j+1)*10%></td>
-                                        <%}%>
-
-                                        <%}%>
-                                    </tr>
-                                    <%%>
-                                        <tr  style="text-align:left;">
-                                    <%%>
-                                <%}%>
-                                <td>
-                                    <%=seqSegs.get(i)%>
-                                </td>
-                                <%if(i == seqSegs.size() -1) {%>
-                                    </tr>
-                                <%}%>
-                            <%
-                            }
-                            %>
-                    </tbody>
-                        </table>
-                    </div>
-                </li>
-            </ul>
-        </div>
     <!-- PROTEIN INFO HEADER END -->
     <%if(protein.getPep() != null && protein.getPep().size() != 0) {%>
     <!-- FILTER OPTIONS START -->

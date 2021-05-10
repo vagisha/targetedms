@@ -1,7 +1,9 @@
 package org.labkey.targetedms.model.passport;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.labkey.api.protein.ProteinFeature;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.HtmlStringBuilder;
 
@@ -35,17 +37,16 @@ public class IProtein
     private String sequence;
     List<IPeptide> pep;
     List<IKeyword> keywords = Collections.emptyList();
-    List<IFeature> features = Collections.emptyList();
+    List<ProteinFeature> features = Collections.emptyList();
     IFile file;
 
-    public List<IFeature> getFeatures()
+    public List<ProteinFeature> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(List<IFeature> features)
+    public void setFeatures(List<ProteinFeature> features)
     {
-        features.sort(Comparator.comparingInt(IFeature::getStartIndex));
         this.features = features;
     }
 
@@ -127,7 +128,7 @@ public class IProtein
                 nameSplit = getDescription().split("OS");
             name = nameSplit[0];
         }
-        return name == null ? getLabel() : name;
+        return StringUtils.trim(name == null ? getLabel() : name);
     }
 
     public void setAccession(String accession)
@@ -185,7 +186,7 @@ public class IProtein
         this.description = description;
     }
 
-    public JSONObject getJSON()
+    public JSONObject getJSON(boolean includeFeatures)
     {
         JSONObject protJSON = new JSONObject();
         protJSON.put("id", getPepGroupId());
@@ -194,7 +195,7 @@ public class IProtein
         protJSON.put("panoramarunid", getFile().getRunId());
         protJSON.put("panoramaproteinid", getPepGroupId());
         protJSON.put("accession", getAccession());
-        protJSON.put("prefferredname", getName());
+        protJSON.put("preferredname", getName());
         protJSON.put("sequence", getSequence());
         JSONArray pepJSON = new JSONArray();
         List<IPeptide> peps = getPep();
@@ -203,9 +204,9 @@ public class IProtein
             pepJSON.put(pep.toJSON());
         }
         JSONArray featJSON = new JSONArray();
-        if (features != null)
+        if (includeFeatures && features != null)
         {
-            for (IFeature feature : features)
+            for (ProteinFeature feature : features)
             {
                 JSONObject f = new JSONObject();
                 f.put("startindex", feature.getStartIndex());
@@ -240,11 +241,11 @@ public class IProtein
         {
             for (int i = 0; i < features.size(); i++)
             {
-                IFeature f = features.get(i);
+                ProteinFeature f = features.get(i);
                 int index = f.getStartIndex() - 1;
                 HtmlString aa = htmlStrings[index];
                 htmlStrings[index] = HtmlStringBuilder.of(HtmlString.unsafe("<span class=\"feature-aa feature-")).
-                        append(f.type.replaceAll(" ", "")).
+                        append(f.getType().replaceAll(" ", "")).
                         append(HtmlString.unsafe("\" index=\"" + i + "\">")).
                         append(aa).
                         append(HtmlString.unsafe("</span>")).getHtmlString();

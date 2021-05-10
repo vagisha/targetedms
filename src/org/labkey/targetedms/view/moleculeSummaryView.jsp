@@ -23,10 +23,12 @@
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.parser.MoleculePrecursor" %>
 <%@ page import="org.labkey.targetedms.view.IconFactory" %>
+<%@ page import="org.labkey.targetedms.TargetedMSRun" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.MoleculeChromatogramsViewBean> me = (JspView<TargetedMSController.MoleculeChromatogramsViewBean>) HttpView.currentView();
     TargetedMSController.MoleculeChromatogramsViewBean bean = me.getModelBean();
+    TargetedMSRun run = bean.getRun();
 
     ActionURL precursorDetailsUrl = new ActionURL(TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class, getContainer());
 %>
@@ -34,7 +36,10 @@
 <table class="lk-fields-table">
     <tr>
         <td class="labkey-form-label">File</td>
-        <td><a href="<%= h(TargetedMSController.getShowRunURL(bean.getRun().getContainer(), bean.getRun().getRunId()))%>"><%= h(bean.getRun().getDescription())%></a></td>
+        <td>
+            <a href="<%= h(TargetedMSController.getShowRunURL(run.getContainer(), run.getRunId()))%>"><%= h(run.getDescription()) %></a> &nbsp;&nbsp;
+            <% if (run.getFileName() != null) { TargetedMSController.createDownloadMenu(run).render(out); } %>
+        </td>
     </tr>
     <tr>
         <%

@@ -27,10 +27,12 @@
 <%@ page import="org.labkey.targetedms.view.PrecursorHtmlMaker" %>
 <%@ page import="java.util.HashMap" %>
 <%@ page import="java.util.Map" %>
+<%@ page import="org.labkey.targetedms.TargetedMSRun" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.PeptideChromatogramsViewBean> me = (JspView<TargetedMSController.PeptideChromatogramsViewBean>) HttpView.currentView();
     TargetedMSController.PeptideChromatogramsViewBean bean = me.getModelBean();
+    TargetedMSRun run = bean.getRun();
     Map<Long, String> labelIdMap = new HashMap<>();
     for(PeptideSettings.IsotopeLabel label: bean.getLabels())
     {
@@ -42,7 +44,10 @@
 <table class="lk-fields-table">
     <tr>
         <td class="labkey-form-label">File</td>
-        <td><a href="<%= h(TargetedMSController.getShowRunURL(bean.getRun().getContainer(), bean.getRun().getRunId()))%>"><%= h(bean.getRun().getDescription())%></a></td>
+        <td>
+            <a href="<%= h(TargetedMSController.getShowRunURL(run.getContainer(), run.getRunId()))%>"><%= h(run.getDescription()) %></a> &nbsp;&nbsp;
+            <% if (run.getFileName() != null) { TargetedMSController.createDownloadMenu(run).render(out); } %>
+        </td>
     </tr>
     <tr>
         <%

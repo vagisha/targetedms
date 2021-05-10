@@ -1007,7 +1007,8 @@ public class TargetedMSSchema extends UserSchema
                             public @NotNull Set<ClientDependency> getClientDependencies()
                             {
                                 Set<ClientDependency> result = super.getClientDependencies();
-                                result.add(ClientDependency.fromPath("ProteinCoverageMap.css"));
+                                result.add(ClientDependency.fromPath("MS2/ProteinCoverageMap.css"));
+                                result.add(ClientDependency.fromPath("MS2/ProteinCoverageMap.js"));
                                 result.add(ClientDependency.fromPath("util.js"));
                                 return result;
                             }

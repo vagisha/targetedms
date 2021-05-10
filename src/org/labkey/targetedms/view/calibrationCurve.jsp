@@ -19,12 +19,12 @@
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
-<%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.json.JSONObject" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
 <%
-    JspView<TargetedMSController.CalibrationCurveForm> me = (JspView<TargetedMSController.CalibrationCurveForm>) HttpView.currentView();
-    TargetedMSController.CalibrationCurveForm bean = me.getModelBean();
+    JspView<JSONObject> me = (JspView<JSONObject>) HttpView.currentView();
+    JSONObject bean = me.getModelBean();
 %>
 <%!
     @Override
@@ -34,15 +34,15 @@
         dependencies.add("vis/vis");
         dependencies.add("targetedms/js/CalibrationCurve.js");
         dependencies.add("targetedms/css/CalibrationCurve.css");
+        dependencies.add("targetedms/js/svgChart.js");
+        dependencies.add("targetedms/css/svgChart.css");
+        dependencies.add("internal/jQuery");
     }
 %>
 <%
     String elementId = "targetedmsCalibrationCurve";
 %>
-<div id=<%=q(elementId)%> class="calibration-curve">
-    <div id=<%=q(elementId + "-png")%> class="export-icon" style="right: 125px;"><i class="fa fa-file-image-o"></i></div>
-    <div id=<%=q(elementId + "-pdf")%> class="export-icon" style="right: 155px;"><i class="fa fa-file-pdf-o"></i></div>
-</div>
+<div id=<%=q(elementId)%> class="calibration-curve"></div>
 
 <script type="text/javascript">
 
@@ -50,7 +50,7 @@
 
         Ext4.create('LABKEY.targetedms.CalibrationCurve', {
             renderTo: <%=q(elementId)%>,
-            data: <%=bean.getJsonData()%>
+            data: <%=bean%>
         });
 
     });

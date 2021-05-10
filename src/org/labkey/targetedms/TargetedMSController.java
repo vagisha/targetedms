@@ -134,6 +134,7 @@ import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HelpTopic;
 import org.labkey.api.util.HtmlString;
+import org.labkey.api.util.Link;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.StringUtilsLabKey;
@@ -172,6 +173,7 @@ import org.labkey.targetedms.model.GuideSetStats;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.model.QCPlotFragment;
 import org.labkey.targetedms.model.RawMetricDataSet;
+import org.labkey.targetedms.model.passport.IKeyword;
 import org.labkey.targetedms.outliers.OutlierGenerator;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
@@ -215,6 +217,7 @@ import org.labkey.targetedms.query.TargetedMSTable;
 import org.labkey.targetedms.query.TransitionManager;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.view.CalibrationCurveChart;
+import org.labkey.targetedms.view.CalibrationCurveView;
 import org.labkey.targetedms.view.CalibrationCurvesView;
 import org.labkey.targetedms.view.ChromatogramsDataRegion;
 import org.labkey.targetedms.view.DocumentPrecursorsView;
@@ -4433,38 +4436,12 @@ public class TargetedMSController extends SpringActionController
             _run = TargetedMSManager.getRun(group.getRunId());
             _proteinLabel = group.getLabel();
 
-            Integer peptideCount = TargetedMSManager.getPeptideGroupPeptideCount(_run, group.getId());
             Integer moleculeCount = TargetedMSManager.getPeptideGroupMoleculeCount(_run, group.getId());
-            boolean proteomics = peptideCount != null && peptideCount.intValue() > 0;
-
             // Peptide group details
-            JspView<PeptideGroup> detailsView = new JspView<>("/org/labkey/targetedms/view/moleculeListView.jsp", group);
-            detailsView.setFrame(WebPartView.FrameType.PORTAL);
-            detailsView.setTitle(proteomics ? "Protein" : "Molecule List");
-
-            VBox result = new VBox(detailsView);
+            VBox result = new VBox();
 
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
-
-            // Protein sequence coverage
-            if (group.getSequenceId() != null)
-            {
-                int seqId = group.getSequenceId().intValue();
-                List<String> peptideSequences = new ArrayList<>();
-                for (Peptide peptide : PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(getUser(), getContainer())))
-                {
-                    peptideSequences.add(peptide.getSequence());
-                }
-
-                ProteinService proteinService = ProteinService.get();
-                WebPartView sequenceView = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 100, true);
-
-                sequenceView.setTitle("Sequence Coverage");
-                sequenceView.enableExpandCollapse("SequenceCoverage", false);
-                result.addView(sequenceView);
-
-                result.addView(proteinService.getAnnotationsView(seqId));
-            }
+            Integer peptideCount = addProteinSummaryViews(result, group, _run, getUser(), getContainer());
 
             // List of peptides
             if (peptideCount != null && peptideCount > 0)
@@ -4545,6 +4522,52 @@ public class TargetedMSController extends SpringActionController
                 root.addChild(_proteinLabel);
             }
         }
+    }
+
+    public static Integer addProteinSummaryViews(VBox box, PeptideGroup group, TargetedMSRun run, User user, Container container)
+    {
+        Integer peptideCount = TargetedMSManager.getPeptideGroupPeptideCount(run, group.getId());
+        boolean proteomics = peptideCount != null && peptideCount.intValue() > 0;
+
+        JspView<PeptideGroup> detailsView = new JspView<>("/org/labkey/targetedms/view/moleculeListView.jsp", group);
+        detailsView.setFrame(WebPartView.FrameType.PORTAL);
+        detailsView.setTitle(proteomics ? "Protein" : "Molecule List");
+
+        box.addView(detailsView);
+
+        if (group.getSequenceId() != null)
+        {
+            int seqId = group.getSequenceId().intValue();
+            List<String> peptideSequences = new ArrayList<>();
+            for (Peptide peptide : PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(user, container)))
+            {
+                peptideSequences.add(peptide.getSequence());
+            }
+
+            ProteinService proteinService = ProteinService.get();
+            WebPartView<?> sequenceView = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[0]), 100, true, group.getAccession());
+
+            sequenceView.setTitle("Sequence Coverage");
+            sequenceView.enableExpandCollapse("SequenceCoverage", false);
+            box.addView(sequenceView);
+
+            List<IKeyword> keywords = TargetedMSManager.getKeywords(seqId);
+
+            Map<String, Collection<HtmlString>> extraAnnotations = new LinkedHashMap<>();
+
+            for (IKeyword keyword : keywords)
+            {
+                HtmlString link = new Link.LinkBuilder(keyword.label).href("https://www.uniprot.org/keywords/" + keyword.id).target("_blank").clearClasses().getHtmlString();
+                if (IKeyword.BIOLOGICAL_PROCESS_CATEGORY.equals(keyword.categoryId))
+                    extraAnnotations.computeIfAbsent("Biological Processes", k -> new ArrayList<>()).add(link);
+                if (IKeyword.MOLECULAR_FUNCTION_CATEGORY.equals(keyword.categoryId))
+                    extraAnnotations.computeIfAbsent("Molecular Functions", k -> new ArrayList<>()).add(link);
+            }
+
+            box.addView(proteinService.getAnnotationsView(seqId, extraAnnotations));
+        }
+
+        return peptideCount;
     }
 
     public static class ProteinDetailForm
@@ -4755,7 +4778,7 @@ public class TargetedMSController extends SpringActionController
                 searchURL.addParameter("seqId", group.getSequenceId().intValue());
                 searchURL.addParameter("identifier", group.getLabel());
                 getViewContext().getResponse().getWriter().write("<a href=\"" + searchURL + "\">Search for other references to this protein</a><br/>");
-                view = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 40, true);
+                view = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 40, true, null);
             }
             else
             {
@@ -7237,17 +7260,9 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(CalibrationCurveForm calibrationCurveForm, BindException errors)
         {
-            _chart = new CalibrationCurveChart(getUser(), getContainer(), calibrationCurveForm);
-            JSONObject curveData = _chart.getCalibrationCurveData();
-            if(null == curveData)
-                throw new NotFoundException("Calibration curve not found. Run ID: " + calibrationCurveForm.getId() +
-                        " Curve ID: " + calibrationCurveForm.getCalibrationCurveId());
-
+            CalibrationCurveView curvePlotView = new CalibrationCurveView(getUser(), getContainer(), calibrationCurveForm.getCalibrationCurveId());
+            _chart = curvePlotView.getChart();
             _asProteomics = _chart.getMolecule() != null && _chart.getMolecule() instanceof Peptide;
-
-            calibrationCurveForm.setJsonData(curveData);
-            JspView<CalibrationCurveForm> curvePlotView = new JspView<>("/org/labkey/targetedms/view/calibrationCurve.jsp", calibrationCurveForm);
-            curvePlotView.setTitle("Calibration Curve");
 
             // Summary charts for the precursor
             SummaryChartBean summaryChartBean = new SummaryChartBean(_run);
@@ -7286,7 +7301,6 @@ public class TargetedMSController extends SpringActionController
     public static class CalibrationCurveForm extends RunDetailsForm
     {
         int calibrationCurveId;
-        JSONObject jsonData;
 
         public int getCalibrationCurveId()
         {
@@ -7296,16 +7310,6 @@ public class TargetedMSController extends SpringActionController
         public void setCalibrationCurveId(int calibrationCurveId)
         {
             this.calibrationCurveId = calibrationCurveId;
-        }
-
-        public JSONObject getJsonData()
-        {
-            return jsonData;
-        }
-
-        public void setJsonData(JSONObject jsonData)
-        {
-            this.jsonData = jsonData;
         }
     }
 

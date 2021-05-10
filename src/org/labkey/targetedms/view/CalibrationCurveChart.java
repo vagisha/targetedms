@@ -14,6 +14,7 @@
  */
 package org.labkey.targetedms.view;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -50,61 +51,63 @@ public class CalibrationCurveChart
 {
     final User _user;
     final Container _container;
-    final TargetedMSController.CalibrationCurveForm _form;
+    final long _calibrationCurveId;
     private CalibrationCurveEntity _curveEntity;
     @Nullable
     private GeneralMolecule _molecule;
 
-    public CalibrationCurveChart(User user, Container container, TargetedMSController.CalibrationCurveForm form) {
+    public CalibrationCurveChart(User user, Container container, long calibrationCurveId) {
         _user = user;
         _container = container;
-        _form = form;
+        _calibrationCurveId = calibrationCurveId;
     }
 
-    @Nullable
+    @NotNull
     public JSONObject getCalibrationCurveData()
     {
-        TargetedMSRun run = TargetedMSManager.getRun(_form.getId());
-        JSONObject json = null;
+        CalibrationCurveEntity calibrationCurve = getCalibrationCurveEntity();
 
-        if(null != run)
+        TargetedMSRun run = TargetedMSManager.getRun(calibrationCurve.getRunId());
+
+        if (null == run || !run.getContainer().equals(_container))
         {
-            RunQuantifier runQuantifier = new RunQuantifier(run, _user, _container);
-            CalibrationCurveEntity calibrationCurve = getCalibrationCurveEntity();
-
-            if (null != calibrationCurve)
-            {
-                QuantificationSettings quantificationSettings = new TableSelector(TargetedMSManager.getTableInfoQuantificationSettings())
-                        .getObject(_container, calibrationCurve.getQuantificationSettingsId(), QuantificationSettings.class);
-
-                _molecule = PeptideManager.getPeptide(_container, calibrationCurve.getGeneralMoleculeId());
-                if (_molecule == null)
-                {
-                    _molecule = MoleculeManager.getMolecule(_container, calibrationCurve.getGeneralMoleculeId());
-                }
-
-                if (_molecule == null)
-                {
-                    throw new NotFoundException("Can't resolve molecule ID: " + calibrationCurve.getGeneralMoleculeId() + " for curve " + calibrationCurve.getId());
-                }
-
-                List<GeneralMoleculeChromInfo> chromInfos = new ArrayList<>();
-                CalibrationCurve recalcedCalibrationCurve
-                        = runQuantifier.calculateCalibrationCurve(quantificationSettings, _molecule, chromInfos);
-
-                json = processCalibrationCurveJson(_molecule, runQuantifier.getReplicateDataSet(), recalcedCalibrationCurve, chromInfos, quantificationSettings);
-            }
+            throw new NotFoundException("Could not find calibration curve: " + _calibrationCurveId);
         }
 
-        return json;
+        RunQuantifier runQuantifier = new RunQuantifier(run, _user, _container);
+
+        QuantificationSettings quantificationSettings = new TableSelector(TargetedMSManager.getTableInfoQuantificationSettings())
+                .getObject(_container, calibrationCurve.getQuantificationSettingsId(), QuantificationSettings.class);
+
+        _molecule = PeptideManager.getPeptide(_container, calibrationCurve.getGeneralMoleculeId());
+        if (_molecule == null)
+        {
+            _molecule = MoleculeManager.getMolecule(_container, calibrationCurve.getGeneralMoleculeId());
+        }
+
+        if (_molecule == null)
+        {
+            throw new NotFoundException("Can't resolve molecule ID: " + calibrationCurve.getGeneralMoleculeId() + " for curve " + calibrationCurve.getId());
+        }
+
+        List<GeneralMoleculeChromInfo> chromInfos = new ArrayList<>();
+        CalibrationCurve recalcedCalibrationCurve
+                = runQuantifier.calculateCalibrationCurve(quantificationSettings, _molecule, chromInfos);
+
+        return processCalibrationCurveJson(_molecule, runQuantifier.getReplicateDataSet(), recalcedCalibrationCurve, chromInfos, quantificationSettings);
     }
 
+    @NotNull
     public CalibrationCurveEntity getCalibrationCurveEntity()
     {
         if (_curveEntity == null)
         {
             _curveEntity = new TableSelector(TargetedMSManager.getTableInfoCalibrationCurve())
-                    .getObject(_form.getCalibrationCurveId(), CalibrationCurveEntity.class);
+                    .getObject(_calibrationCurveId, CalibrationCurveEntity.class);
+            if (_curveEntity == null)
+            {
+                throw new NotFoundException("Could not find calibration curve: " + _calibrationCurveId);
+            }
         }
         return _curveEntity;
     }

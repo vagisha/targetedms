@@ -83,6 +83,7 @@ import org.labkey.targetedms.model.GuideSetStats;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.model.QCTraceMetricValues;
 import org.labkey.targetedms.model.RawMetricDataSet;
+import org.labkey.targetedms.model.passport.IKeyword;
 import org.labkey.targetedms.outliers.OutlierGenerator;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.GeneralMolecule;
@@ -2570,5 +2571,23 @@ public class TargetedMSManager
                 .stream()
                 .filter(qcMetricConfiguration -> qcMetricConfiguration.getTraceName() != null)
                 .collect(Collectors.toList());
+    }
+
+    public static List<IKeyword> getKeywords(long sequenceId)
+    {
+        String qs = "SELECT kw.keywordid, kw.keyword, kw.category, kc.label " +
+                "FROM prot.sequences p, prot.annotations a, prot.identifiers pi, targetedms.keywords kw, targetedms.keywordcategories kc " +
+                "WHERE p.seqid = ? AND a.seqid = p.seqid AND pi.identid = a.annotident AND kw.keywordid = pi.identifier AND kc.categoryid = kw.category";
+        SQLFragment keywordQuery = new SQLFragment();
+        keywordQuery.append(qs);
+        keywordQuery.add(sequenceId);
+
+        SqlSelector sqlSelector = new SqlSelector(getSchema(), keywordQuery);
+        List<IKeyword> keywords = new ArrayList<>();
+        sqlSelector.forEach(prot -> keywords.add(new IKeyword(prot.getString("keywordid"),
+                prot.getString("category"),
+                prot.getString("keyword"),
+                prot.getString("label"))));
+        return keywords;
     }
 }

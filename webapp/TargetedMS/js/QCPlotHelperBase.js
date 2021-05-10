@@ -222,7 +222,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         }
         allPlotDateValues = Ext4.Array.unique(allPlotDateValues).sort();
 
-        this.legendHelper = Ext4.create("LABKEY.targetedms.QCPlotLegendHelper");
+        this.legendHelper = LABKEY.targetedms.QCPlotLegendHelper;
         this.legendHelper.setupLegendPrefixes(this.fragmentPlotData, 3);
 
         // merge in the annotation data to make room on the y axis
@@ -447,7 +447,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
     },
 
     testLegends: function() {
-        var legendHelper = Ext4.create("LABKEY.targetedms.QCPlotLegendHelper");
+        var legendHelper = LABKEY.targetedms.QCPlotLegendHelper;
         legendHelper.setupLegendPrefixes(this.testVals, 3);
 
         for (var key in this.testVals) {

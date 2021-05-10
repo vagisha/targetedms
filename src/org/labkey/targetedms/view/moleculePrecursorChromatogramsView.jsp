@@ -20,17 +20,22 @@
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ page import="org.labkey.targetedms.TargetedMSRun" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.MoleculePrecursorChromatogramsViewBean> me = (JspView<TargetedMSController.MoleculePrecursorChromatogramsViewBean>) HttpView.currentView();
     TargetedMSController.MoleculePrecursorChromatogramsViewBean bean = me.getModelBean();
+    TargetedMSRun run = bean.getRun();
     DecimalFormat ROUND_4 = new DecimalFormat("0.0000");
 %>
 
 <table class="lk-fields-table">
     <tr>
         <td class="labkey-form-label">File</td>
-        <td><a href="<%= h(TargetedMSController.getShowRunURL(bean.getRun().getContainer(), bean.getRun().getRunId()))%>"><%= h(bean.getRun().getDescription())%></a></td>
+        <td>
+            <a href="<%= h(TargetedMSController.getShowRunURL(run.getContainer(), run.getRunId()))%>"><%= h(run.getDescription()) %></a> &nbsp;&nbsp;
+            <% if (run.getFileName() != null) { TargetedMSController.createDownloadMenu(run).render(out); } %>
+        </td>
     </tr>
     <tr>
         <%
