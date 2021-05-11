@@ -22,7 +22,8 @@ import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.PropertySchema;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
@@ -470,7 +471,25 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             svc.registerUsageMetrics(MODULE_NAME, () ->
             {
                 Map<String, Object> metric = new HashMap<>();
-                metric.put("runCount", new SqlSelector(DbSchema.get("TargetedMS", DbSchemaType.Module), "SELECT COUNT(*) FROM TargetedMS.Runs WHERE Deleted = ?", Boolean.FALSE).getObject(Long.class));
+                DbSchema schema = TargetedMSManager.getSchema();
+                metric.put("runCount", new SqlSelector(schema, "SELECT COUNT(*) FROM TargetedMS.Runs WHERE Deleted = ?", Boolean.FALSE).getObject(Long.class));
+                metric.put("guideSetCount", new SqlSelector(schema, "SELECT COUNT(*) FROM TargetedMS.GuideSet").getObject(Long.class));
+                metric.put("guideSetContainerCount", new SqlSelector(schema, "SELECT COUNT(DISTINCT Container) FROM TargetedMS.GuideSet").getObject(Long.class));
+
+                SQLFragment folderTypeSQL = new SQLFragment("SELECT p.value, COUNT(*) AS FolderCount FROM ");
+                folderTypeSQL.append(PropertySchema.getInstance().getTableInfoProperties(), "p");
+                folderTypeSQL.append(" INNER JOIN ");
+                folderTypeSQL.append(PropertySchema.getInstance().getTableInfoPropertySets(), "ps");
+                folderTypeSQL.append(" ON p.\"set\" = ps.\"set\" WHERE ps.category = 'moduleProperties.TargetedMS' ");
+                folderTypeSQL.append(" AND p.name = ? GROUP BY value");
+                folderTypeSQL.add(FOLDER_TYPE_PROP_NAME);
+
+                Map<String, Long> folderCounts = new HashMap<>();
+                new SqlSelector(PropertySchema.getInstance().getSchema(), folderTypeSQL).forEach(rs ->
+                        folderCounts.put(rs.getString("value"), rs.getLong("FolderCount")));
+
+                metric.put("folderCounts", folderCounts);
+
                 return metric;
             });
         }
