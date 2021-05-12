@@ -565,7 +565,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
     },
 
     getSubtitle: function(precursor) {
-        return precursor + ' - ' + this.getMetricPropsById(this.metric).name;;
+        if (precursor === this.getMetricPropsById(this.metric).name)
+            return precursor;
+        else
+            return precursor + ' - ' + this.getMetricPropsById(this.metric).name;
     },
 
     addEachCombinedPrecusorPlot: function(plotIndex, id, combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, plotType, isCUSUMMean) {
