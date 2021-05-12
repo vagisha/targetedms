@@ -183,4 +183,24 @@ public class GuideSetStats
             }
         }
     }
+
+    public void setStandardDeviation(double standardDeviation)
+    {
+        _standardDeviation = standardDeviation;
+    }
+
+    public void setAverage(double average)
+    {
+        _average = average;
+    }
+
+    public void setMovingRangeAverage(double movingRangeAverage)
+    {
+        _movingRangeAverage = movingRangeAverage;
+    }
+
+    public void setMovingRangeStdDev(double movingRangeStdDev)
+    {
+        _movingRangeStdDev = movingRangeStdDev;
+    }
 }

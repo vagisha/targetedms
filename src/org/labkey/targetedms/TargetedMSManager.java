@@ -2590,4 +2590,15 @@ public class TargetedMSManager
                 prot.getString("label"))));
         return keywords;
     }
+
+    public static Map<String,Object> getQCFolderDateRange(Container container)
+    {
+        var sql = new SQLFragment("SELECT MIN(sf.AcquiredTime) AS startDate, MAX(sf.AcquiredTime) AS endDate ");
+        sql.append(" FROM ").append(getTableInfoSampleFile(), "sf");
+        sql.append(" INNER JOIN ").append(getTableInfoReplicate(), "rep").append(" ON sf.ReplicateId = rep.Id ");
+        sql.append(" INNER JOIN ").append(getTableInfoRuns(), "r").append(" ON rep.RunId = r.Id ");
+        sql.append(" WHERE r.Container = ").append(container);
+
+        return new SqlSelector(getSchema(), sql).getMap();
+    }
 }

@@ -273,6 +273,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
@@ -1297,16 +1298,59 @@ public class TargetedMSController extends SpringActionController
                 }
             }
 
-            List<QCMetricConfiguration> qcMetricConfigurations = TargetedMSManager.get()
+            final Date qcStartDate = rangeStartDate;
+            List<QCMetricConfiguration> qcMetricConfigurations = TargetedMSManager
                     .getEnabledQCMetricConfigurations(getContainer(), getUser())
                     .stream()
                     .filter(qcMetricConfiguration -> qcMetricConfiguration.getId() == passedMetricId)
                     .collect(Collectors.toList());
-            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, rangeStartDate, form.getEndDate(), form.getSelectedAnnotations(), form.isShowExcluded());
+
+            // get start date and end date for this qc folder
+            Map<String,Object> qcFolderDateRange = TargetedMSManager.getQCFolderDateRange(getContainer());
+            Date qcFolderStartDate = (Date) qcFolderDateRange.get("startDate");
+            Date qcFolderEndDate = (Date) qcFolderDateRange.get("endDate");
+
+            // always query for the full range
+            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, qcFolderStartDate, qcFolderEndDate, form.getSelectedAnnotations(), form.isShowExcluded());
             Map<GuideSetKey, GuideSetStats> stats = generator.getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
+            boolean zoomedRange = qcFolderStartDate != null &&
+                    qcFolderEndDate != null &&
+                    (DateUtil.getDateOnly(qcFolderStartDate).compareTo(rangeStartDate) != 0 ||
+                    DateUtil.getDateOnly(qcFolderEndDate).compareTo(form.getEndDate()) != 0);
+            Map<GuideSetKey, GuideSetStats> targetedStats;
+
+            if (zoomedRange)
+            {
+                // filter the stats for targeted range
+                Predicate<RawMetricDataSet> withInDateRange = rawMetricDataSet -> rawMetricDataSet.getAcquiredTime() != null &&
+                        (qcStartDate != null &&
+                        (rawMetricDataSet.getAcquiredTime().after(qcStartDate)
+                                || DateUtil.getDateOnly(rawMetricDataSet.getAcquiredTime()).compareTo(qcStartDate) == 0)) &&
+                        (form.getEndDate() != null &&
+                        (rawMetricDataSet.getAcquiredTime().before(form.getEndDate())
+                                || DateUtil.getDateOnly(rawMetricDataSet.getAcquiredTime()).compareTo(form.getEndDate()) == 0));
+                rawMetricDataSets = rawMetricDataSets
+                        .stream()
+                        .filter(withInDateRange)
+                        .collect(Collectors.toList());
+                targetedStats = generator.getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
+                // attach mean and sd stats from full stats
+                targetedStats.forEach((guideSetKey, guideSetStats) -> {
+                    GuideSetStats correctGuideSetStats = stats.get(guideSetKey);
+                    guideSetStats.setAverage(correctGuideSetStats.getAverage());
+                    guideSetStats.setStandardDeviation(correctGuideSetStats.getStandardDeviation());
+                    guideSetStats.setMovingRangeAverage(correctGuideSetStats.getMovingRangeAverage());
+                    guideSetStats.setMovingRangeStdDev(correctGuideSetStats.getMovingRangeStdDev());
+                });
+            }
+            else
+            {
+                targetedStats = stats;
+            }
+
             Map<Integer, QCMetricConfiguration> metricMap = qcMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
-            List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, getContainer(), null);
-            List<QCPlotFragment> qcPlotFragments = OutlierGenerator.get().getQCPlotFragment(rawMetricDataSets, stats);
+            List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, targetedStats, metricMap, getContainer(), null);
+            List<QCPlotFragment> qcPlotFragments = OutlierGenerator.get().getQCPlotFragment(rawMetricDataSets, targetedStats);
 
             response.put("sampleFiles", sampleFiles.stream().map(SampleFileInfo::toQCPlotJSON).collect(Collectors.toList()));
             response.put("plotDataRows", qcPlotFragments
