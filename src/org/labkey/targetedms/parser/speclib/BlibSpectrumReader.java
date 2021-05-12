@@ -482,7 +482,7 @@ public class BlibSpectrumReader extends LibSpectrumReader
                 continue;
 
             Path path = entry.getValue();
-            String blibFilePath = getLocalLibPath(run.getContainer(), path);
+            String blibFilePath = getNonEmptyLocalLibPath(run.getContainer(), path);
             if (null == blibFilePath)
                 continue;
 

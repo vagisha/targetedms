@@ -22,12 +22,15 @@ public class InstrumentSummaryWebPart extends QueryView
                 try
                 {
                     instrumentSummaryQS.setBaseFilter(new SimpleFilter(FieldKey.fromString("runId"), Long.valueOf(runId.getValue().toString())));
+                    // Avoid perf problems doing a cross-folder query when all data is scoped to this container
+                    setAllowableContainerFilterTypes();
+                    instrumentSummaryQS.setContainerFilterName(null);
                 }
                 catch (NumberFormatException ignored) {}
             }
         }
         setSettings(instrumentSummaryQS);
-        setTitle("Instruments Summary");
+        setTitle("Instrument Summary");
         setShowDetailsColumn(false);
 
         setShowBorders(true);

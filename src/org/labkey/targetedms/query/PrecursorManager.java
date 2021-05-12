@@ -31,7 +31,6 @@ import org.labkey.api.data.TableResultSet;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
-import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChromatogramDataset.RtRange;
@@ -119,12 +118,7 @@ public class PrecursorManager
         colNames.addAll(TargetedMSManager.getTableInfoPrecursor().getColumnNameSet());
         colNames.addAll(TargetedMSManager.getTableInfoGeneralPrecursor().getColumnNameSet());
 
-        List<Precursor> precursors = new TableSelector(new PrecursorTableInfo(targetedMSSchema, null, true), colNames, filter,  sort).getArrayList(Precursor.class);
-
-        if (precursors.isEmpty())
-            throw new NotFoundException(String.format("No precursors found for peptideId %d", peptideId));
-
-        return precursors;
+        return new TableSelector(new PrecursorTableInfo(targetedMSSchema, null, true), colNames, filter,  sort).getArrayList(Precursor.class);
     }
 
     @NotNull

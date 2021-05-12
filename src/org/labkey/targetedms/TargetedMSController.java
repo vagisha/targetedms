@@ -3898,9 +3898,9 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
+        protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, @Nullable String dataRegion)
         {
-            if (dataRegion.equalsIgnoreCase(INSTRUMENT_SUMMARY_DATA_REGION_NAME))
+            if (INSTRUMENT_SUMMARY_DATA_REGION_NAME.equalsIgnoreCase(dataRegion))
             {
                 return new InstrumentSummaryWebPart(getViewContext());
             }
@@ -3908,8 +3908,7 @@ public class TargetedMSController extends SpringActionController
             {
                 QuerySettings settings = new QuerySettings(getViewContext(), REPLICATE_DATA_REGION_NAME, TargetedMSSchema.SAMPLE_FILE_RUN_PREFIX + _run.getRunId());
                 settings.setBaseSort(new Sort(FieldKey.fromParts("ReplicateId", "Name")));
-                TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
-                return schema.createView(getViewContext(), settings, errors);
+                return createViewWithNoContainerFilterOptions(settings, errors);
             }
         }
 
@@ -4018,12 +4017,8 @@ public class TargetedMSController extends SpringActionController
         protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
             QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, "PeptideIds");
-            // Issue 40731- prevent expensive cross-folder queries when the results will always be scoped to the current
-            // run anyway
-            settings.setContainerFilterName(null);
             settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("PeptideGroupId", "RunId"), form.getId()));
-            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
-            return schema.createView(getViewContext(), settings, errors);
+            return createViewWithNoContainerFilterOptions(settings, errors);
         }
     }
 
@@ -4090,9 +4085,8 @@ public class TargetedMSController extends SpringActionController
         protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
             QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, LOG_QUERY_NAME);
-            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("RunId"), form.getId()));
-            return schema.createView(getViewContext(), settings, errors);
+            return createViewWithNoContainerFilterOptions(settings, errors);
         }
     }
 
@@ -4442,8 +4436,6 @@ public class TargetedMSController extends SpringActionController
 
             VBox result = new VBox(detailsView);
 
-            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
-
             // Protein sequence coverage
             if (group.getSequenceId() != null)
             {
@@ -4455,7 +4447,7 @@ public class TargetedMSController extends SpringActionController
                 }
 
                 ProteinService proteinService = ProteinService.get();
-                WebPartView sequenceView = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 100, true);
+                WebPartView<?> sequenceView = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[0]), 100, true);
 
                 sequenceView.setTitle("Sequence Coverage");
                 sequenceView.enableExpandCollapse("SequenceCoverage", false);
@@ -4471,7 +4463,7 @@ public class TargetedMSController extends SpringActionController
                 baseVisibleColumns.add(FieldKey.fromParts(ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
                 baseVisibleColumns.add(FieldKey.fromParts("CalcNeutralMass"));
                 baseVisibleColumns.add(FieldKey.fromParts("NumMissedCleavages"));
-                result.addView(getGeneralMoleculeQueryView(form, schema, errors, "Peptides", "Peptide", baseVisibleColumns));
+                result.addView(getGeneralMoleculeQueryView(form, errors, "Peptides", "Peptide", baseVisibleColumns));
             }
 
             // List of small molecules
@@ -4483,7 +4475,7 @@ public class TargetedMSController extends SpringActionController
                 baseVisibleColumns.add(FieldKey.fromParts("IonFormula"));
                 baseVisibleColumns.add(FieldKey.fromParts("MassAverage"));
                 baseVisibleColumns.add(FieldKey.fromParts("MassMonoisotopic"));
-                result.addView(getGeneralMoleculeQueryView(form, schema, errors, "Small Molecules", "Molecule", baseVisibleColumns));
+                result.addView(getGeneralMoleculeQueryView(form, errors, "Small Molecules", "Molecule", baseVisibleColumns));
             }
 
             SummaryChartBean summaryChartBean = new SummaryChartBean(_run);
@@ -4513,13 +4505,13 @@ public class TargetedMSController extends SpringActionController
             return result;
         }
 
-        private QueryView getGeneralMoleculeQueryView(ProteinDetailForm form, TargetedMSSchema schema, BindException errors,
+        private QueryView getGeneralMoleculeQueryView(ProteinDetailForm form, BindException errors,
                                                       String title, String queryName, List<FieldKey> baseVisibleColumns)
         {
             String dataRegionName = title.replaceAll(" ", "");
             QuerySettings settings = new QuerySettings(getViewContext(), dataRegionName, queryName);
             settings.getBaseFilter().addAllClauses(new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), form.getId()));
-            QueryView view = new QueryView(schema, settings, errors);
+            QueryView view = createViewWithNoContainerFilterOptions(settings, errors);
 
             if (null == view.getCustomView())
             {
@@ -4543,6 +4535,16 @@ public class TargetedMSController extends SpringActionController
                 root.addChild(_proteinLabel);
             }
         }
+    }
+
+    /** Issue 40731- prevent expensive cross-folder queries when the results will always be scoped to the current run anyway */
+    private QueryView createViewWithNoContainerFilterOptions(QuerySettings settings, BindException errors)
+    {
+        TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+        settings.setContainerFilterName(null);
+        QueryView result = schema.createView(getViewContext(), settings, errors);
+        result.setAllowableContainerFilterTypes();
+        return result;
     }
 
     public static class ProteinDetailForm
@@ -4753,7 +4755,7 @@ public class TargetedMSController extends SpringActionController
                 searchURL.addParameter("seqId", group.getSequenceId().intValue());
                 searchURL.addParameter("identifier", group.getLabel());
                 getViewContext().getResponse().getWriter().write("<a href=\"" + searchURL + "\">Search for other references to this protein</a><br/>");
-                view = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 40, true);
+                view = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[0]), 40, true);
             }
             else
             {
@@ -5718,7 +5720,6 @@ public class TargetedMSController extends SpringActionController
 
             ViewContext viewContext = getViewContext();
             QuerySettings settings = new QuerySettings(viewContext, "TargetedMSMatches", "Precursor");
-//            QuerySettings settings = new QuerySettings(viewContext, "TargetedMSMatches");
 
             if (form.isIncludeSubfolders())
                 settings.setContainerFilterName(ContainerFilter.Type.CurrentAndSubfolders.name());
@@ -7222,12 +7223,11 @@ public class TargetedMSController extends SpringActionController
         @Override
         protected QueryView createQueryView(CalibrationCurveForm form, BindException errors, boolean forExport, @Nullable String dataRegion)
         {
-            UserSchema schema = new TargetedMSSchema(getUser(), getContainer());
             String queryName = _asProteomics ? "CalibrationCurvePrecursors" : "CalibrationCurveMoleculePrecursors";
             QuerySettings settings = new QuerySettings(getViewContext(), "curveDetail", queryName);
             settings.getBaseFilter().addCondition(FieldKey.fromParts("CalibrationCurve"), form.getCalibrationCurveId());
             settings.setBaseSort(new Sort("SampleFileId/SampleName"));
-            QueryView result = QueryView.create(getViewContext(), schema, settings, errors);
+            QueryView result = createViewWithNoContainerFilterOptions(settings, errors);
             result.setTitle("Quantitation Ratios");
             return result;
         }

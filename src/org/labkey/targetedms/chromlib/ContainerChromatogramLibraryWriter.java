@@ -478,7 +478,11 @@ public class ContainerChromatogramLibraryWriter
         for(Peptide peptide: peptides)
         {
             List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), schema);
-
+            if(precursors.size() == 0)
+            {
+                throw new IllegalStateException(String.format("No precursors found for peptide '%s'. Empty peptides are not allowed in library folders." +
+                        " Empty peptides can be removed in Skyline by selecting Refine > Remove Empty Peptides.", peptide.getSequence()));
+            }
             LibPeptide libPeptide = makeLibPeptide(peptide, precursors, run);
             protein.addChild(libPeptide);
         }

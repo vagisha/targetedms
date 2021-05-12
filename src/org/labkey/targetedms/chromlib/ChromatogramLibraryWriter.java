@@ -152,6 +152,9 @@ public class ChromatogramLibraryWriter
     public void writeProtein(long rowId, LibProtein protein)
     {
         _libProteinCache.put(rowId, protein);
+        // When writing a Protein library (peptides ranked within proteins) we have to increment the
+        // peptide count here since the writePeptide() / writeMolecule() methods are not called.
+        _peptideCount += protein.getChildren().size();
     }
 
     public void writePeptide(LibPeptide libPeptide, Peptide peptide)
