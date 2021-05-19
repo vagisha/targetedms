@@ -69,8 +69,8 @@ public class TargetedMSExperimentalQCLinkTest extends TargetedMSTest
         DataRegionTable table = new DataRegionTable("TargetedMSRuns", getDriver());
         clickAndWait(table.link(0, "Replicates"));
 
-        checker().verifyTrue("Instruments Summary webpart is missing",
-                isElementPresent(Locator.tagWithAttribute("h3", "title", "Instruments Summary")));
+        checker().verifyTrue("Instrument Summary webpart is missing",
+                isElementPresent(Locator.tagWithAttribute("h3", "title", "Instrument Summary")));
         table = new DataRegionTable("InstrumentSummary", getDriver());
         checker().verifyTrue("Invalid QC Folder Name ", table.getDataAsText(0, "QCFolders").contains(QC_FOLDER_1));
 
@@ -80,8 +80,8 @@ public class TargetedMSExperimentalQCLinkTest extends TargetedMSTest
         table = new DataRegionTable("TargetedMSRuns", getDriver());
         clickAndWait(table.link(0, "Replicates"));
 
-        checker().verifyTrue("Instruments Summary webpart is missing",
-                isElementPresent(Locator.tagWithAttribute("h3", "title", "Instruments Summary")));
+        checker().verifyTrue("Instrument Summary webpart is missing",
+                isElementPresent(Locator.tagWithAttribute("h3", "title", "Instrument Summary")));
         table = new DataRegionTable("InstrumentSummary", getDriver());
         checker().verifyEquals("Invalid Instrument serial number", "Exactive Series slot #2384",
                 table.getDataAsText(0, "SerialNumber"));
