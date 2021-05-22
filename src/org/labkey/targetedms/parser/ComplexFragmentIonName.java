@@ -67,31 +67,45 @@ public class ComplexFragmentIonName
         _children.add(child);
     }
 
-    @Override
-    public String toString()
+    /**
+     * Returns true if this name uses the pre-21.1 format where crosslinked were identified by which modification they
+     * were attached to.
+     * After 21.1, crosslinked peptides are a flat list with any number of crosslinks between them
+     */
+    public boolean isLegacyFormat()
     {
+        return _children.stream().anyMatch(pair->pair.first != null);
+    }
+
+    @Override
+    public String toString() {
+        if (isLegacyFormat()) {
+            return legacyToString();
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(selfToString());
+        for (Pair<ModificationSite, ComplexFragmentIonName> child : _children) {
+            stringBuilder.append("-");
+            stringBuilder.append(child.second.selfToString());
+        }
+        return stringBuilder.toString();
+    }
+
+    private String legacyToString() {
         if (isOrphan() && _children.isEmpty())
         {
             return "-";
         }
         StringBuilder stringBuilder = new StringBuilder();
         if (!isOrphan()) {
-            if ("precursor".equals(getIonType()))
-            {
-                stringBuilder.append("p");
-            }
-            else
-            {
-                stringBuilder.append(_ionType);
-                stringBuilder.append(_ordinal);
-            }
+            stringBuilder.append(selfToString());
         }
         if (!_children.isEmpty()){
             stringBuilder.append("-");
             if (_children.size() != 1) {
                 stringBuilder.append("[");
             }
-            stringBuilder.append(_children.stream().map(this::childToString)
+            stringBuilder.append(_children.stream().map(this::legacyChildToString)
                     .collect(Collectors.joining(",")));
 
             if (_children.size() != 1) {
@@ -101,9 +115,23 @@ public class ComplexFragmentIonName
         return stringBuilder.toString();
     }
 
-    private String childToString(Pair<ModificationSite, ComplexFragmentIonName> child)
+    private String legacyChildToString(Pair<ModificationSite, ComplexFragmentIonName> child)
     {
         return "{" + child.first + ":" + child.second + "}";
+    }
+
+    private String selfToString() {
+        if (isOrphan()) {
+            return "*";
+        }
+        if ("precursor".equals(getIonType()))
+        {
+            return "p";
+        }
+        else
+        {
+            return _ionType + _ordinal;
+        }
     }
 
     public boolean hasChildren()
@@ -122,6 +150,15 @@ public class ComplexFragmentIonName
         if (!name.startsWith("p")) {
             return false;
         }
+        // Current format: Precursors always look like some number of "p" separated by hyphens
+        if ("".equals(name.substring(1).replace("-p", ""))) {
+            return true;
+        }
+        if (name.indexOf('}') < 0) {
+            return false;
+        }
+
+        // Legacy Format (20.21 and earlier):
         // All of the sub-components need to be precursors as well, which means that they all end
         // with ":p}".
         int indexCloseBrace = 0;

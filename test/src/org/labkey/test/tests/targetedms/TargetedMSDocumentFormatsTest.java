@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 LabKey Corporation
+ * Copyright (c) 2017-2021 LabKey Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may obtain a copy of the License at
@@ -76,6 +76,12 @@ public class TargetedMSDocumentFormatsTest extends TargetedMSTest
 
         validateCrossLinked(fileName,
                 596,
+                "C[+57.021464]C[+57.021464]TKPESER-EKVLTSSAR-[+138.06808@4,2]",
+                "p-{4:DSS:p}",
+                765.3753,
+                765.3753, 765.7096, 766.0435);
+        validateCrossLinked(fileName,
+                596,
                 "AMNFS[+79.966331]GSPGAV-STSPT[+79.966331]QSFM[+15.994915]NTLPR-[-18.010565@11,1]",
                 "p-{11:Hydrolysis:b4}",
                 921.0515,
@@ -92,9 +98,45 @@ public class TargetedMSDocumentFormatsTest extends TargetedMSTest
         validateCrossLinked(fileName,
                 596,
                 "C[+57.021464]C[+57.021464]TKPESER-EKVLTSSAR-[+138.06808@4,2]",
-                "-{4:DSS:p}",
+                "p-{4:DSS:p}",
                 765.3753,
-                765.3753, 765.7096, 766.0435, 987.5287);
+                765.3753, 765.7096, 766.0435);
+        validateCrossLinked(fileName,
+                596,
+                "AMNFS[+79.966331]GSPGAV-STSPT[+79.966331]QSFM[+15.994915]NTLPR-[-18.010565@11,1]",
+                "p-{11:Hydrolysis:b4}",
+                921.0515,
+                458.5433, 491.2023, 687.3114, 736.2998, 1373.6154, 1471.5923);
+    }
+
+    @Test
+    public void testComplexCrosslinking() throws IOException, CommandException
+    {
+        goToProjectHome(getProjectName());
+        String fileName = "ComplexCrosslinking.sky.zip";
+        importData(SAMPLEDATA_FOLDER + fileName, ++JOB_COUNT);
+
+        validateCrossLinked(fileName,
+                612,
+                "AGKA-LKDAVN-QGGKAR-[-18.010565@4,1][+138.06808@*,2,4]",
+                "p-b2-y3",
+                435.7495,
+                540.8480);
+    }
+
+    @Test
+    public void testComplexCrosslinkingCompact() throws IOException, CommandException
+    {
+        goToProjectHome(getProjectName());
+        String fileName = "ComplexCrosslinking_Compact.sky.zip";
+        importData(SAMPLEDATA_FOLDER + fileName, ++JOB_COUNT);
+
+        validateCrossLinked(fileName,
+                612,
+                "AGKA-LKDAVN-QGGKAR-[-18.010565@4,1][+138.06808@*,2,4]",
+                "p-b2-y3",
+                435.7495,
+                540.8480);
     }
 
     private void validateCrossLinked(String file, int countWithAnyIon, String modifiedPeptide, String ion, double precursorMz, double... transitionMz) throws IOException, CommandException
