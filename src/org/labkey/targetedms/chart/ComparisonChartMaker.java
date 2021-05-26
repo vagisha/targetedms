@@ -24,7 +24,6 @@ import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
@@ -389,7 +388,7 @@ public class ComparisonChartMaker
             pciPlusList = getPrecursorChromInfo(molecule, precursor, user, container);
         }
 
-        if (pciPlusList == null || pciPlusList.size() == 0)
+        if (pciPlusList.size() == 0)
         {
             return null;
         }

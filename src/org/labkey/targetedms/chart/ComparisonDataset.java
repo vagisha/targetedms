@@ -110,7 +110,7 @@ public class ComparisonDataset
         categoryDatasets.sort((o1, o2) ->
         {
             if (_setSortByValues)
-                return Double.valueOf(o2.getSeriesMaxValue()).compareTo(o1.getSeriesMaxValue());
+                return Double.compare(o2.getSeriesMaxValue(), o1.getSeriesMaxValue());
             else
             {
                 if (_numericSort)
@@ -198,7 +198,7 @@ public class ComparisonDataset
 
     public static class ComparisonCategoryItem
     {
-        private ComparisonCategory _category;
+        private final ComparisonCategory _category;
         private Map<SeriesLabel, ComparisonSeriesItem> _seriesDatasetsMap;
         private double _maxCategoryValue;
 
@@ -239,12 +239,7 @@ public class ComparisonDataset
                 seriesLabel.setIsotopeLabel(pciPlus.getIsotopeLabel());
                 seriesLabel.setIsotopeLabelId(pciPlus.getIsotopeLabelId());
 
-                List<PrecursorChromInfoLitePlus> seriesData = seriesDataMap.get(seriesLabel);
-                if(seriesData == null)
-                {
-                    seriesData = new ArrayList<>();
-                    seriesDataMap.put(seriesLabel, seriesData);
-                }
+                List<PrecursorChromInfoLitePlus> seriesData = seriesDataMap.computeIfAbsent(seriesLabel, k -> new ArrayList<>());
                 seriesData.add(pciPlus);
             }
 
@@ -376,9 +371,7 @@ public class ComparisonDataset
             if (_charge != that._charge) return false;
             if (_isotopeLabel != null ? !_isotopeLabel.equals(that._isotopeLabel) : that._isotopeLabel != null)
                 return false;
-            if(_isotopeLabelId != that._isotopeLabelId) return false;
-
-            return true;
+            return _isotopeLabelId == that._isotopeLabelId;
         }
 
         @Override
@@ -394,14 +387,14 @@ public class ComparisonDataset
         @Override
         public int compareTo(@NotNull SeriesLabel o)
         {
-            int cmp = Integer.valueOf(this.getCharge()).compareTo(o.getCharge());
+            int cmp = Integer.compare(this.getCharge(), o.getCharge());
             if (cmp != 0)
             {
                 return cmp;
             }
             else
             {
-                return Integer.valueOf(this.getIsotopeLabelId()).compareTo(o.getIsotopeLabelId());
+                return Integer.compare(this.getIsotopeLabelId(), o.getIsotopeLabelId());
             }
         }
     }
@@ -522,11 +515,11 @@ public class ComparisonDataset
         return scale == 1 ? "" : (scale == 1000 ? "10^3" : "10^6");
     }
 
-    private static interface SeriesItemData
+    private interface SeriesItemData
     {
-        public double getValue();
+        double getValue();
 
-        public boolean isStatistical();
+        boolean isStatistical();
     }
 
     private static class BarChartSeriesItemData implements SeriesItemData
@@ -623,9 +616,9 @@ public class ComparisonDataset
         }
     }
 
-    static interface SeriesItemMaker
+    interface SeriesItemMaker
     {
-        public SeriesItemData make(List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues);
+        SeriesItemData make(List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues);
     }
 
     public static abstract class BarChartSeriesItemMaker implements SeriesItemMaker
@@ -760,8 +753,8 @@ public class ComparisonDataset
 
     public static class RetentionTimeDatasetItem extends BoxAndWhiskerItem
     {
-        private Number _fwhmStart;
-        private Number _fwhmEnd;
+        private final Number _fwhmStart;
+        private final Number _fwhmEnd;
 
         public RetentionTimeDatasetItem(Number rtAtPeak, Number minRt, Number maxRt, Number fwhmStart, Number fwhmEnd)
         {

@@ -103,12 +103,7 @@ public class ComparisonChartInputMaker
                 if (!StringUtils.isBlank(_groupByAnnotationName) && !categoryLabel.hasAnnotationValue())
                     continue;
 
-                List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.get(categoryLabel);
-                if (categoryPciList == null)
-                {
-                    categoryPciList = new ArrayList<>();
-                    datasetMap.put(categoryLabel, categoryPciList);
-                }
+                List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.computeIfAbsent(categoryLabel, k -> new ArrayList<>());
                 categoryPciList.add(pciPlus);
             }
 
@@ -169,12 +164,7 @@ public class ComparisonChartInputMaker
 
                 categoryLabelToSampleFileId.put(categoryLabel, pciPlus.getSampleFileId());
 
-                List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.get(categoryLabel);
-                if (categoryPciList == null)
-                {
-                    categoryPciList = new ArrayList<>();
-                    datasetMap.put(categoryLabel, categoryPciList);
-                }
+                List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.computeIfAbsent(categoryLabel, k -> new ArrayList<>());
                 categoryPciList.add(pciPlus);
             }
 
@@ -182,7 +172,7 @@ public class ComparisonChartInputMaker
 
             for (String categoryLabel : datasetMap.keySet())
             {
-                ComparisonCategory.ReplicateCategory replicateCategory = null;
+                ComparisonCategory.ReplicateCategory replicateCategory;
                 if(StringUtils.isBlank(_groupByAnnotationName))
                 {
                     // Display replicates in document order (replicate.getId()) if we are not grouping by annotations.

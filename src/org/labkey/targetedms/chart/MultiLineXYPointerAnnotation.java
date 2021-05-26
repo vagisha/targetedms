@@ -25,17 +25,16 @@ import org.jfree.ui.RectangleEdge;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The base class {@Link XYPointerAnnotation} draws the arrow at (x,y).
+ * The base class {@link XYPointerAnnotation} draws the arrow at (x,y).
  * The labels are drawn by the draw() method override, which accepts a List of String labels.
  * The labels are drawn one below the other.
  */
 public class MultiLineXYPointerAnnotation extends XYPointerAnnotation
 {
-    private java.util.List<String> _labels = new ArrayList<>();
+    private final java.util.List<String> _labels;
 
     /**
      * Creates a new multi line label.

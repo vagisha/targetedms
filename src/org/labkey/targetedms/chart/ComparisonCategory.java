@@ -16,6 +16,7 @@
 package org.labkey.targetedms.chart;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.targetedms.parser.PeptideSettings;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -34,13 +36,13 @@ import java.util.Set;
 */
 public interface ComparisonCategory
 {
-    public String getCategoryLabel();
+    String getCategoryLabel();
 
-    public String getDisplayLabel();
+    String getDisplayLabel();
 
-    public String getSortingLabel();
+    String getSortingLabel();
 
-    public class ReplicateCategory implements ComparisonCategory
+    class ReplicateCategory implements ComparisonCategory
     {
         private final String _label;
         private final String _sortingLabel;
@@ -76,13 +78,13 @@ public interface ComparisonCategory
         }
     }
 
-    public class PeptideCategory implements ComparisonCategory
+    class PeptideCategory implements ComparisonCategory
     {
-        private String _modifiedSequence;
-        private int _charge;
-        private String _isotopeLabel;
-        private String _annotationValue;
-        private String _sequence;
+        private final String _modifiedSequence;
+        private final int _charge;
+        private final String _isotopeLabel;
+        private final String _annotationValue;
+        private final String _sequence;
         private String _seqPrefix;
         private boolean _useChargeInDisplayLabel = true;
 
@@ -108,7 +110,7 @@ public interface ComparisonCategory
                     sb.append(modifiedSequence.substring(index));
                     return sb.toString();
                 }
-                sb.append(modifiedSequence.substring(index, modificationIndex - 1));
+                sb.append(modifiedSequence, index, modificationIndex - 1);
                 sb.append(Character.toLowerCase(modifiedSequence.charAt(modificationIndex - 1)));
                 index = modifiedSequence.indexOf(']', modificationIndex + 1) + 1;
                 if (index == 0)
@@ -181,13 +183,11 @@ public interface ComparisonCategory
             PeptideCategory that = (PeptideCategory) o;
 
             if (_charge != that._charge) return false;
-            if (_annotationValue != null ? !_annotationValue.equals(that._annotationValue) : that._annotationValue != null)
+            if (!Objects.equals(_annotationValue, that._annotationValue))
                 return false;
-            if (_isotopeLabel != null ? !_isotopeLabel.equals(that._isotopeLabel) : that._isotopeLabel != null)
+            if (!Objects.equals(_isotopeLabel, that._isotopeLabel))
                 return false;
-            if (!_modifiedSequence.equals(that._modifiedSequence)) return false;
-
-            return true;
+            return Objects.equals(_modifiedSequence, that._modifiedSequence);
         }
 
         @Override
@@ -238,13 +238,14 @@ public interface ComparisonCategory
             Map<String, Set<Integer>> peptideChargeMap = getPeptideChargeMap(peptideCategories);
             for(ComparisonCategory.PeptideCategory pepCategory: peptideCategories)
             {
-                if(peptideChargeMap != null && peptideChargeMap.get(getPeptideChargeMapKey(pepCategory)).size() == 1)
+                if(peptideChargeMap.get(getPeptideChargeMapKey(pepCategory)).size() == 1)
                     pepCategory.setUseChargeInDisplayLabel(false);
             }
 
             makeUniquePrefixes(new ArrayList<>(peptideCategories), 3);
         }
 
+        @NotNull
         private static Map<String, Set<Integer>> getPeptideChargeMap(Set<ComparisonCategory.PeptideCategory> peptideCategories)
         {
             Map<String, Set<Integer>> pepChargeMap = new HashMap<>();
@@ -254,12 +255,7 @@ public interface ComparisonCategory
                 String peptideChargeMapKey = getPeptideChargeMapKey(pepCategory);
                 if(peptideChargeMapKey == null)
                     continue;
-                Set<Integer> pepChargeStates = pepChargeMap.get(peptideChargeMapKey);
-                if(pepChargeStates == null)
-                {
-                    pepChargeStates = new HashSet<>();
-                    pepChargeMap.put(peptideChargeMapKey, pepChargeStates);
-                }
+                Set<Integer> pepChargeStates = pepChargeMap.computeIfAbsent(peptideChargeMapKey, k -> new HashSet<>());
                 pepChargeStates.add(pepCategory.getCharge());
             }
 
@@ -313,13 +309,7 @@ public interface ComparisonCategory
             {
                 String sequence = category.getSequence();
                 String prefix = category.getSequence().substring(0, Math.min(sequence.length(), prefixLen));
-                List<ComparisonCategory.PeptideCategory> categoriesForPrefix = prefixCategoryMap.get(prefix);
-                if(categoriesForPrefix == null)
-                {
-                    categoriesForPrefix = new ArrayList<>();
-                    prefixCategoryMap.put(prefix, categoriesForPrefix);
-
-                }
+                List<ComparisonCategory.PeptideCategory> categoriesForPrefix = prefixCategoryMap.computeIfAbsent(prefix, k -> new ArrayList<>());
                 categoriesForPrefix.add(category);
             }
 
@@ -331,11 +321,11 @@ public interface ComparisonCategory
         }
     }
 
-    public class MoleculeCategory implements ComparisonCategory
+    class MoleculeCategory implements ComparisonCategory
     {
-        private String _customIonName;
-        private int _charge;
-        private String _annotationValue;
+        private final String _customIonName;
+        private final int _charge;
+        private final String _annotationValue;
         private boolean _useChargeInDisplayLabel = true;
 
         public MoleculeCategory(String customIonName, int charge, String annotValue)
@@ -413,11 +403,9 @@ public interface ComparisonCategory
             MoleculeCategory that = (MoleculeCategory) o;
 
             if (_charge != that._charge) return false;
-            if (_annotationValue != null ? !_annotationValue.equals(that._annotationValue) : that._annotationValue != null)
+            if (!Objects.equals(_annotationValue, that._annotationValue))
                 return false;
-            if (!_customIonName.equals(that._customIonName)) return false;
-
-            return true;
+            return Objects.equals(_customIonName, that._customIonName);
         }
 
         @Override
@@ -453,7 +441,7 @@ public interface ComparisonCategory
         }
     }
 
-    public static class TestCase extends Assert
+    class TestCase extends Assert
     {
         @Test
         public void testTrimPeptideCategoryLabels()
@@ -487,30 +475,30 @@ public interface ComparisonCategory
             peptideCategoryList.add(category12);
 
             PeptideCategory.trimPeptideCategoryLabels(peptideCategoryList);
-            assertTrue(category1.getCategoryLabel().equals("A++"));
-            assertTrue(category1.getDisplayLabel().equals("A"));
-            assertTrue(category2.getCategoryLabel().equals("AB++"));
-            assertTrue(category2.getDisplayLabel().equals("AB"));
-            assertTrue(category3.getCategoryLabel().equals("ABCXYZ++"));
-            assertTrue(category3.getDisplayLabel().equals("ABC++"));
-            assertTrue(category4.getCategoryLabel().equals("ABCXYZ+++"));
-            assertTrue(category4.getDisplayLabel().equals("ABC+++"));
-            assertTrue(category5.getCategoryLabel().equals("ABCXYZ++ (heavy)"));
-            assertTrue(category5.getDisplayLabel().equals("ABC++"));
-            assertTrue(category6.getCategoryLabel().equals("ABCXYZ+++ (heavy)"));
-            assertTrue(category6.getDisplayLabel().equals("ABC+++"));
-            assertTrue(category7.getCategoryLabel().equals("ABDAAA++"));
-            assertTrue(category7.getDisplayLabel().equals("ABDA"));
-            assertTrue(category8.getCategoryLabel().equals("ABDEEEE++"));
-            assertTrue(category8.getDisplayLabel().equals("ABDE"));
-            assertTrue(category9.getCategoryLabel().equals("ABDFAAA++"));
-            assertTrue(category9.getDisplayLabel().equals("ABDF"));
-            assertTrue(category10.getCategoryLabel().equals("UVWXYZ++"));
-            assertTrue(category10.getDisplayLabel().equals("UVW"));
-            assertTrue(category11.getCategoryLabel().equals("S[+122.0]DKPDM[+16.0]AEIEKFDK++"));
-            assertTrue(category11.getDisplayLabel().equals("sDKPDm"));
-            assertTrue(category12.getCategoryLabel().equals("S[+122.0]DKPDMAEIEKFDK++"));
-            assertTrue(category12.getDisplayLabel().equals("sDKPDM"));
+            assertEquals("A++", category1.getCategoryLabel());
+            assertEquals("A", category1.getDisplayLabel());
+            assertEquals("AB++", category2.getCategoryLabel());
+            assertEquals("AB", category2.getDisplayLabel());
+            assertEquals("ABCXYZ++", category3.getCategoryLabel());
+            assertEquals("ABC++", category3.getDisplayLabel());
+            assertEquals("ABCXYZ+++", category4.getCategoryLabel());
+            assertEquals("ABC+++", category4.getDisplayLabel());
+            assertEquals("ABCXYZ++ (heavy)", category5.getCategoryLabel());
+            assertEquals("ABC++", category5.getDisplayLabel());
+            assertEquals("ABCXYZ+++ (heavy)", category6.getCategoryLabel());
+            assertEquals("ABC+++", category6.getDisplayLabel());
+            assertEquals("ABDAAA++", category7.getCategoryLabel());
+            assertEquals("ABDA", category7.getDisplayLabel());
+            assertEquals("ABDEEEE++", category8.getCategoryLabel());
+            assertEquals("ABDE", category8.getDisplayLabel());
+            assertEquals("ABDFAAA++", category9.getCategoryLabel());
+            assertEquals("ABDF", category9.getDisplayLabel());
+            assertEquals("UVWXYZ++", category10.getCategoryLabel());
+            assertEquals("UVW", category10.getDisplayLabel());
+            assertEquals("S[+122.0]DKPDM[+16.0]AEIEKFDK++", category11.getCategoryLabel());
+            assertEquals("sDKPDm", category11.getDisplayLabel());
+            assertEquals("S[+122.0]DKPDMAEIEKFDK++", category12.getCategoryLabel());
+            assertEquals("sDKPDM", category12.getDisplayLabel());
         }
     }
 }
