@@ -9,7 +9,9 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QuerySettings;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HttpView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSManager;
@@ -48,8 +50,25 @@ public class SamplePivotCustomizer implements TableCustomizer
         if (HttpView.hasCurrentView())
         {
             ViewContext context = HttpView.currentContext();
-            // Grab any filters that have been applied
-            SimpleFilter filter = new SimpleFilter(context.getActionURL(), "query");
+
+            ActionURL filterURL;
+
+            if (context.getActionURL().getAction().equalsIgnoreCase("getQueryDetails"))
+            {
+                // When getting the query metadata to customize the view, the Run ID parameter doesn't get propagated to
+                // the current URL. Look for it from the referrer URL
+                String referer = context.getRequest().getHeader("Referer");
+                filterURL = referer == null ? context.getActionURL() : new ActionURL(referer);
+            }
+            else
+            {
+                // Grab any filters that have been applied. Use QuerySettings, which will find the right values whether it's
+                // a GET or POST
+                QuerySettings settings = new QuerySettings(context, "query");
+                filterURL = settings.getSortFilterURL();
+            }
+
+            SimpleFilter filter = new SimpleFilter(filterURL, "query");
             for (SimpleFilter.FilterClause clause : filter.getClauses())
             {
                 // Look for an equals filter on the RunId column that has a value specified
