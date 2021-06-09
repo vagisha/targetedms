@@ -57,7 +57,7 @@ tr.spaceUnder > td
             </tr>
             <tr class="spaceUnder">
                 <td>
-                    <input type="radio" name="folderType" id="multiAttributeMethod" value="<%= h(TargetedMSService.FolderType.ExperimentMAM.toString()) %>"> <label for="multiAttributeMethod"><strong>Multi-attribute method (MAM)</strong></label> - An experimental data folder variant with additional reporting for multi-attribute method analyses
+                    <input type="radio" name="folderType" id="QC" value="<%= h(TargetedMSService.FolderType.QC.toString()) %>"> <label for="QC"><strong>Quality control</strong></label> - System suitability monitoring of reagents and instruments
                 </td>
             </tr>
             <tr>
@@ -70,9 +70,9 @@ tr.spaceUnder > td
                     <input type="checkbox" name="precursorNormalized" id="precursorNormalized" value="true"><label for="precursorNormalized">Rank peptides within proteins by peak area</label>
                 </td>
             </tr>
-            <tr>
+            <tr class="spaceUnder">
                 <td>
-                    <input type="radio" name="folderType" id="QC" value="<%= h(TargetedMSService.FolderType.QC.toString()) %>"> <label for="QC"><strong>Quality control</strong></label> - System suitability monitoring of reagents and instruments
+                    <input type="radio" name="folderType" id="multiAttributeMethod" value="<%= h(TargetedMSService.FolderType.ExperimentMAM.toString()) %>"> <label for="multiAttributeMethod"><strong>Multi-attribute method (MAM)</strong></label> - An experimental data folder variant with additional reporting for multi-attribute method analyses
                 </td>
             </tr>
             <tr>
