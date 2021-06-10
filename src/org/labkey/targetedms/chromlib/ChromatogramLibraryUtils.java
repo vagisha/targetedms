@@ -23,6 +23,7 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSController;
@@ -164,7 +165,10 @@ public class ChromatogramLibraryUtils
     private static Path getChromLibDir(Container container, boolean createLibDir) throws IOException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(container);
-        assert root != null;
+        if (root == null)
+        {
+            throw new ConfigurationException("Unable to resolve a pipeline root for " + container.getPath());
+        }
         Path chromLibDir = root.getRootNioPath().resolve(Constants.LIB_FILE_DIR);
         if(!Files.exists(chromLibDir) && createLibDir)
         {

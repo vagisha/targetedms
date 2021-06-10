@@ -91,7 +91,8 @@ public abstract class AbstractChromInfo extends ChromInfo<PrecursorChromInfoAnno
         }
         catch (IOException e)
         {
-            throw new UnexpectedException(e);
+            LOG.warn("Unable to fetch chromatogram from " + path, e);
+            return null;
         }
     });
 

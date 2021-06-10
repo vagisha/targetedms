@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.chart;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jfree.chart.ChartColor;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -65,6 +67,8 @@ import java.util.stream.Collectors;
  */
 public abstract class ChromatogramDataset
 {
+    private static final Logger LOG = LogManager.getLogger(ChromatogramDataset.class);
+
     XYSeriesCollection _jfreeDataset;
     Double _maxDisplayIntensity; // This is set only when we are synchronizing plots on intensity
     Double _minDisplayRt;
@@ -844,7 +848,8 @@ public abstract class ChromatogramDataset
             }
             else
             {
-                throw new IllegalStateException("Pipeline root not found.");
+                LOG.warn("Could not find pipeline root for container " + _container.getPath());
+                return Collections.emptyList();
             }
 
         }
