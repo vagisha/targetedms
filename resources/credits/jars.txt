@@ -1,7 +1,0 @@
-{table}
-Filename|Component|Version|Source|License|LabKey Dev|Purpose
-commons-math3-3.6.1.jar|Commons Math|3.6.1|{link:Apache|http://commons.apache.org/math/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}||Lightweight, self-contained mathematics and statistics components
-jcommon-1.0.17.jar|JFree Chart|1.0.17|{link:JFreeChart|http://www.jfree.org/jfreechart/}|{link:LGPL|http://www.gnu.org/licenses/lgpl.txt}||PNG encoder
-protobuf-java-3.12.2.jar|Protocol Buffers|3.12.2|{link:Github Google|https://github.com/google/protobuf/releases}|{link:Custom|https://github.com/google/protobuf/blob/master/LICENSE}|nicksh|Binary data parsing
-sqlite-jdbc-3.7.2.jar|SQLite JDBC Driver|3.7.2|{link:bitbucket.org|https://bitbucket.org/xerial/sqlite-jdbc/wiki/Home}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|vsharma|SQLite JDBC Driver
-{table}
