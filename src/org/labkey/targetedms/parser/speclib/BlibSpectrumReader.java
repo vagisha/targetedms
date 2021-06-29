@@ -494,14 +494,17 @@ public class BlibSpectrumReader extends LibSpectrumReader
                     continue;
                 }
                 Map<Integer, Set<String>> scoreTypes = new HashMap<>(); // file id -> score types
-                try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT DISTINCT r.fileID, s.scoreType FROM RefSpectra as r JOIN ScoreTypes s ON r.scoreType = s.id"))
+                if(hasTable(conn, "ScoreTypes")) // Older .blib files do not have a ScoreTypes table
                 {
-                    while (rs.next())
+                    try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT DISTINCT r.fileID, s.scoreType FROM RefSpectra as r JOIN ScoreTypes s ON r.scoreType = s.id"))
                     {
-                        int fileId = rs.getInt(1);
-                        String scoreType = rs.getString(2);
-                        scoreTypes.putIfAbsent(fileId, new HashSet<>());
-                        scoreTypes.get(fileId).add(scoreType);
+                        while (rs.next())
+                        {
+                            int fileId = rs.getInt(1);
+                            String scoreType = rs.getString(2);
+                            scoreTypes.putIfAbsent(fileId, new HashSet<>());
+                            scoreTypes.get(fileId).add(scoreType);
+                        }
                     }
                 }
                 try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT * FROM SpectrumSourceFiles"))

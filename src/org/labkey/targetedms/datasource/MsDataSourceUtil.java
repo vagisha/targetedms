@@ -176,16 +176,24 @@ public class MsDataSourceUtil
 
         TableInfo expDataTInfo = expSvc.getTinfoData();
         SimpleFilter filter = MsDataSource.getExpDataFilter(container, pathPrefixString);
-        filter.addCondition(FieldKey.fromParts("name"), fileName, CompareType.STARTS_WITH);
+        // Issue 43375: Use exp.data.DataFileUrl column instead of the Name column to find matching raw files
+        // Not all reserved characters in the DataFileUrl are percent-encoded.
+        // Example: "Space !#$&'()+,;=@[].raw" gets encoded as "Space%20!%23$&'()+,;=@%5B%5D.raw"
+        // The way to get this appears to be java.nio.file.Path.toUri().toString().
+        // See DavController.updateDataObject(WebdavResource resource)
+        String encodedPath = pathPrefix.resolve(fileName).toUri().toString();
+        String encodedName = org.labkey.api.util.Path.parse(encodedPath).getName();
+        filter.addCondition(FieldKey.fromParts("datafileurl"), encodedName, CompareType.CONTAINS);
 
         // Get the rowId and name of matching rows.
         Map<Integer, String> expDatas = new TableSelector(expDataTInfo,
-                expDataTInfo.getColumns("RowId", "Name"), filter, null).getValueMap();
+                expDataTInfo.getColumns("RowId", "DataFileUrl"), filter, null).getValueMap();
 
         List<Integer> expDataIds = new ArrayList<>();
+        expDatas.entrySet().forEach(e -> e.setValue(org.labkey.api.util.Path.parse(e.getValue()).getName())); // Replace path with file name
         // Look for the file and file.zip (e.g. sample_1.raw and sample_1.raw.zip)
         expDatas.entrySet().stream()
-                           .filter(e -> fileName.equals(e.getValue()) || (isZip(e.getValue()) && fileName.equals(FileUtil.getBaseName(e.getValue()))))
+                           .filter(e -> encodedName.equals(e.getValue()) || (isZip(e.getValue()) && encodedName.equals(FileUtil.getBaseName(e.getValue()))))
                            .forEach(e -> expDataIds.add(e.getKey()));
 
         return expSvc.getExpDatas(expDataIds);
@@ -608,6 +616,24 @@ public class MsDataSourceUtil
             data.setDataFileURI(rawDataDir.resolve(subfolder).resolve(fileName).toUri());
             data.save(_user);
             return data;
+        }
+
+        @Test
+        public void testEncodedDataFileUrl() throws IOException
+        {
+            Lsid lsid = new Lsid(ExperimentService.get().generateGuidLSID(_container, new DataType("UploadedFile")));
+            String fileName = "Space !#$%&'(+)+,;=@[+].raw";
+            ExpData data = ExperimentService.get().createData(_container, fileName, lsid.toString());
+            data.setContainer(_container);
+            Path rawDataDir = JunitUtil.getSampleData(ModuleLoader.getInstance().getModule(TargetedMSModule.class), TEST_DATA_FOLDER).toPath();
+            data.setDataFileURI(rawDataDir.resolve(fileName).toUri());  // Path.toUri() will give us a URI where not all reserved characters are percent-encoded.
+            data.save(_user);
+
+            SampleFile sf = new SampleFile();
+            sf.setFilePath("C:\\rawfiles\\" + fileName);
+            sf.setInstrumentId(_thermo.getId());
+
+            assertNotNull("Expected row in exp.data for " + fileName, _util.getDataForSampleFile(sf, _container, rawDataDir, ExperimentService.get(), false));
         }
 
         @Test
