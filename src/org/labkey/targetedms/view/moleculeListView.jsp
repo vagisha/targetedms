@@ -58,12 +58,6 @@
         <td class="labkey-form-label">Note</td>
         <td><%= h(bean.getNote()) %></td>
     </tr>
-    <% if ((folderType == TargetedMSService.FolderType.Library || folderType == TargetedMSService.FolderType.LibraryProtein) && run.getReplicateCount() > 1) { %>
-    <tr>
-        <td class="labkey-form-label"></td>
-        <td><%= link("Reproducibility Report", new ActionURL(PassportController.ProteinAction.class, me.getViewContext().getContainer()).addParameter("proteinId", bean.getId())) %></td>
-    </tr>
-    <% } %>
 </table>
 
 

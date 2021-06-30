@@ -610,7 +610,7 @@ public class ContainerChromatogramLibraryWriter
 
         // Add transitions.
         Collection<Transition> transitions = TransitionManager.getTransitionsForPrecursor(precursor.getId(), _user, _container);
-        addTransitions(libPrecursor, transitions, bestChromInfo, (t, tci) -> new LibTransition(t, tci, precursor, TransitionManager.getOptimizations(t.getId())));
+        addTransitions(libPrecursor, transitions, bestChromInfo, (t, tci) -> new LibTransition(t, tci, precursor, TransitionManager.getOptimizations(t.getId()), TargetedMSManager.getTransitionFullScanSettings(run.getId())));
         _precursorCount++;
         return libPrecursor;
     }
@@ -625,7 +625,7 @@ public class ContainerChromatogramLibraryWriter
 
         Collection<MoleculeTransition> transitions = MoleculeTransitionManager.getTransitionsForPrecursor(precursor.getId(), _user, _container);
         // Add transitions.
-        addTransitions(libPrecursor, transitions, bestChromInfo, (t, tci) -> new LibTransition(t, tci, precursor, TransitionManager.getOptimizations(t.getId())));
+        addTransitions(libPrecursor, transitions, bestChromInfo, (t, tci) -> new LibTransition(t, tci, precursor, TransitionManager.getOptimizations(t.getId()), run.fetchFullScanSettings()));
         _precursorCount++;
         return libPrecursor;
     }

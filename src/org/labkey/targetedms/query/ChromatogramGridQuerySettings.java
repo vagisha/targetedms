@@ -26,7 +26,7 @@ import org.labkey.api.view.ViewContext;
  */
 public class ChromatogramGridQuerySettings extends QuerySettings
 {
-    private int _maxRowSize;
+    private int _maxRowSize = 2;
 
     public ChromatogramGridQuerySettings(ViewContext context, String dataRegionName)
     {
@@ -41,8 +41,15 @@ public class ChromatogramGridQuerySettings extends QuerySettings
     public void init(ViewContext context)
     {
         super.init(context);
-         String param = _getParameter("maxRowSize");
-        _maxRowSize = param == null ? 2 : Integer.parseInt(param);
+        String param = _getParameter("maxRowSize");
+        if (param != null)
+        {
+            try
+            {
+                _maxRowSize = Integer.parseInt(param);
+            }
+            catch (NumberFormatException ignored) {}
+        }
         assert _maxRowSize >= 1 : _maxRowSize + " is an illegal value for maxRowSize; should be positive.";
         // Adjust _maxRows if _maxRowSize * number of displayed rows is more than _maxRows,
         // but only if we are not showing all rows.

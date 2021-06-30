@@ -63,7 +63,6 @@ import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.admin.AdminUrls;
 import org.labkey.api.analytics.AnalyticsService;
-import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
@@ -141,7 +140,6 @@ import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.DetailsView;
 import org.labkey.api.view.GridView;
 import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.HttpView;
@@ -175,6 +173,7 @@ import org.labkey.targetedms.model.QCPlotFragment;
 import org.labkey.targetedms.model.RawMetricDataSet;
 import org.labkey.targetedms.model.passport.IKeyword;
 import org.labkey.targetedms.outliers.OutlierGenerator;
+import org.labkey.targetedms.parser.CalibrationCurveEntity;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.Molecule;
@@ -223,6 +222,7 @@ import org.labkey.targetedms.view.ChromatogramsDataRegion;
 import org.labkey.targetedms.view.DocumentPrecursorsView;
 import org.labkey.targetedms.view.DocumentTransitionsView;
 import org.labkey.targetedms.view.DocumentView;
+import org.labkey.targetedms.view.FiguresOfMeritView;
 import org.labkey.targetedms.view.GroupComparisonView;
 import org.labkey.targetedms.view.InstrumentSummaryWebPart;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
@@ -3439,32 +3439,36 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowPKAction extends SimpleViewAction<PKForm>
+    public class ShowPKAction extends SimpleViewAction<GeneralMoleculeForm>
     {
         private TargetedMSRun _run;  // save for use in appendNavTrail
         private GeneralMolecule _molecule;
 
         @Override
-        public void validate(PKForm form, BindException errors)
+        public void validate(GeneralMoleculeForm form, BindException errors)
         {
-            if (form.getRunId() == null || form.getGeneralMoleculeId() == null)
+            if (form.getGeneralMoleculeId() == null)
                 throw new NotFoundException("Missing one of the required parameters, RunId or GeneralMoleculeId.");
-
-            _run = validateRun(form.getRunId());
 
             _molecule = PeptideManager.getPeptide(getContainer(), form.getGeneralMoleculeId());
             if (_molecule == null)
                 _molecule = MoleculeManager.getMolecule(getContainer(), form.getGeneralMoleculeId());
             if (_molecule == null)
                 throw new NotFoundException("Could not find Molecule " + form.getGeneralMoleculeId());
+
+            PeptideGroup group = PeptideGroupManager.getPeptideGroup(getContainer(), _molecule.getPeptideGroupId());
+            if (group == null)
+                throw new NotFoundException("Could not find group " + _molecule.getPeptideGroupId());
+            _run = TargetedMSManager.getRun(group.getRunId());
+
+            if (_run == null || !_run.getContainer().equals(getContainer()))
+                throw new NotFoundException("Could not find run " + group.getRunId());
         }
 
         @Override
-        public ModelAndView getView(PKForm form, BindException errors)
+        public ModelAndView getView(GeneralMoleculeForm form, BindException errors)
         {
-            List<String> subgroupNames = TargetedMSManager.get().getReplicateSubgroupNames(getUser(), getContainer(), _molecule);
-            form.setSampleGroupNames(subgroupNames);
-            return new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp", form);
+            return new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp", _molecule);
         }
         
         @Override
@@ -7055,93 +7059,46 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowFiguresOfMeritAction extends SimpleViewAction<FomForm>
+    public class ShowFiguresOfMeritAction extends SimpleViewAction<GeneralMoleculeForm>
     {
-        private TargetedMSRun _run;
-        private GeneralMolecule _generalMolecule;
+        private FiguresOfMeritView _figuresOfMeritView;
 
         @Override
-        public void validate(FomForm form, BindException errors)
+        public void validate(GeneralMoleculeForm form, BindException errors)
         {
-            if (form.getRunId() == null || form.getGeneralMoleculeId() == null)
-                throw new NotFoundException("Missing one of the required parameters, RunId or GeneralMoleculeId.");
+            if (form.getGeneralMoleculeId() == null)
+                throw new NotFoundException("Missing required parameter GeneralMoleculeId.");
 
-            _run = TargetedMSManager.getRun(form.getRunId());
-            if (_run == null || !_run.getContainer().equals(getContainer()))
-                throw new NotFoundException("Could not find RunId " + form.getRunId());
         }
 
         @Override
-        public ModelAndView getView(FomForm form, BindException errors)
+        public ModelAndView getView(GeneralMoleculeForm form, BindException errors)
         {
-            UserSchema schema = QueryService.get().getUserSchema(getUser(), getViewContext().getContainer(), TargetedMSSchema.SCHEMA_NAME);
-            TableInfo tableInfo = schema.getTable(TargetedMSSchema.TABLE_MOLECULE_INFO);
-            if (tableInfo == null)
-            {
-                throw new NotFoundException("Query " + TargetedMSSchema.SCHEMA_NAME + "." + TargetedMSSchema.TABLE_MOLECULE_INFO + " not found.");
-            }
-
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("GeneralMoleculeId"), form.getGeneralMoleculeId(), CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("RunId"), form.getRunId(), CompareType.EQUAL);
-            TableSelector ts = new TableSelector(tableInfo, filter, null);
-
-            if (ts.getRowCount() < 1)
-            {
-                throw new NotFoundException("GeneralMoleculeId " + form.getGeneralMoleculeId() + " not found for RunId " + form.getRunId());
-            }
-
-            form = ts.getObject(FomForm.class);
-
-            JspView<FomForm> figuresOfMeritView = new JspView<>("/org/labkey/targetedms/view/figuresOfMerit.jsp", form);
-            figuresOfMeritView.setTitle("Figures of Merit");
-
-            QuantificationSettings settings = new TableSelector(schema.getTable(TargetedMSSchema.TABLE_QUANTIIFICATION_SETTINGS), new SimpleFilter(FieldKey.fromParts("RunId"), form.getRunId()), null).getObject(QuantificationSettings.class);
-            form.setQuantificationSettings(settings);
-
-            if (form.getPeptideName() != null)
-            {
-                _generalMolecule = PeptideManager.getPeptide(getContainer(), form.getGeneralMoleculeId());
-            }
-            else
-            {
-                _generalMolecule = MoleculeManager.getMolecule(getContainer(), form.getGeneralMoleculeId());
-            }
-
-            return figuresOfMeritView;
+            _figuresOfMeritView = new FiguresOfMeritView(getUser(), getContainer(), form.getGeneralMoleculeId().longValue(), false);
+            return _figuresOfMeritView;
         }
 
         @Override
         public void addNavTrail(NavTree root)
         {
-            if (null != _run)
+            if (_figuresOfMeritView != null && _figuresOfMeritView.getModelBean() != null)
             {
+                TargetedMSRun run = _figuresOfMeritView.getModelBean().getRun();
                 root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
-                root.addChild(_run.getDescription(), getShowCalibrationCurvesURL(getContainer(), _run.getId()));
+                root.addChild(run.getDescription(), getShowCalibrationCurvesURL(getContainer(), run.getId()));
 
-                if (_generalMolecule != null)
+                GeneralMolecule molecule = _figuresOfMeritView.getModelBean().getGeneralMolecule();
+                if (molecule != null)
                 {
-                    root.addChild(_generalMolecule.getTextId());
+                    root.addChild("Figures of Merit: " + molecule.getTextId());
                 }
-
             }
         }
     }
 
-    public static class PKForm
+    public static class GeneralMoleculeForm
     {
-        Integer _runId;
         Integer _generalMoleculeId;
-        private List<String> _sampleGroupNames;
-
-        public Integer getRunId()
-        {
-            return _runId;
-        }
-
-        public void setRunId(Integer runId)
-        {
-            _runId = runId;
-        }
 
         public Integer getGeneralMoleculeId()
         {
@@ -7152,118 +7109,14 @@ public class TargetedMSController extends SpringActionController
         {
             _generalMoleculeId = generalMoleculeId;
         }
-
-        public void setSampleGroupNames(List<String> sampleGroupNames)
-        {
-            _sampleGroupNames = sampleGroupNames;
-        }
-
-        public List<String> getSampleGroupNames()
-        {
-            return _sampleGroupNames;
-        }
-    }
-
-    public static class FomForm
-    {
-        Integer _runId;
-        Integer _generalMoleculeId;
-        String _peptideName;
-        String _moleculeName;
-        String _fileName;
-        String _sampleFiles;
-        QuantificationSettings _settings;
-
-        public Integer getRunId()
-        {
-            return _runId;
-        }
-
-        public void setRunId(Integer runId)
-        {
-            _runId = runId;
-        }
-
-        public Integer getGeneralMoleculeId()
-        {
-            return _generalMoleculeId;
-        }
-
-        public void setGeneralMoleculeId(Integer moleculeId)
-        {
-            _generalMoleculeId = moleculeId;
-        }
-
-        public String getPeptideName()
-        {
-            return _peptideName;
-        }
-
-        public void setPeptideName(String peptideName)
-        {
-            _peptideName = peptideName;
-        }
-
-        public String getMoleculeName()
-        {
-            return _moleculeName;
-        }
-
-        public void setMoleculeName(String moleculeName)
-        {
-            _moleculeName = moleculeName;
-        }
-
-        public String getFileName()
-        {
-            return _fileName;
-        }
-
-        public void setFileName(String fileName)
-        {
-            _fileName = fileName;
-        }
-
-        public String getSampleFiles()
-        {
-            return _sampleFiles;
-        }
-
-        public void setSampleFiles(String sampleFiles)
-        {
-            _sampleFiles = sampleFiles;
-        }
-
-        private void setQuantificationSettings(QuantificationSettings settings)
-        {
-            _settings = settings;
-        }
-
-        /** Defaults to 30 if nothing is set */
-        public double getMaxLOQBias()
-        {
-            return _settings == null || _settings.getMaxLOQBias() == null ? 30.0 : _settings.getMaxLOQBias().doubleValue();
-        }
-
-        /** Defaults to null if nothing is set */
-        public Double getMaxLOQCV()
-        {
-            return _settings == null ? null : _settings.getMaxLOQCV();
-        }
-
-        /** Defaults to "none" if nothing is set */
-        public String getLODCalculation()
-        {
-            return _settings == null || _settings.getLODCalculation() == null ? "none" : _settings.getLODCalculation();
-        }
     }
 
     @RequiresPermission(ReadPermission.class)
     public class ShowCalibrationCurveAction extends QueryViewAction<CalibrationCurveForm, QueryView>
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
-        private CalibrationCurveChart _chart;
         private boolean _asProteomics;
+        private CalibrationCurveView _curvePlotView;
 
         public ShowCalibrationCurveAction()
         {
@@ -7277,9 +7130,9 @@ public class TargetedMSController extends SpringActionController
             {
                 root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
                 root.addChild(_run.getDescription(), getShowCalibrationCurvesURL(getContainer(), _run.getId()));
-                if (_chart.getMolecule() != null)
+                if (_curvePlotView.getChart().getMolecule() != null)
                 {
-                    root.addChild(_chart.getMolecule().getTextId());
+                    root.addChild("Calibration Curve: " + _curvePlotView.getChart().getMolecule().getTextId());
                 }
             }
         }
@@ -7287,8 +7140,10 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void validate(CalibrationCurveForm form, BindException errors)
         {
+            _curvePlotView = new CalibrationCurveView(getUser(), getContainer(), form.getCalibrationCurveId());
+            CalibrationCurveEntity chart = _curvePlotView.getChart().getCalibrationCurveEntity();
             //ensure that the experiment run is valid and exists within the current container
-            _run = validateRun(form.getId());
+            _run = validateRun(chart.getRunId());
         }
 
         @Override
@@ -7306,9 +7161,13 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(CalibrationCurveForm calibrationCurveForm, BindException errors)
         {
-            CalibrationCurveView curvePlotView = new CalibrationCurveView(getUser(), getContainer(), calibrationCurveForm.getCalibrationCurveId());
-            _chart = curvePlotView.getChart();
-            _asProteomics = _chart.getMolecule() != null && _chart.getMolecule() instanceof Peptide;
+            CalibrationCurveChart chart = _curvePlotView.getChart();
+            GeneralMolecule molecule = chart.getMolecule();
+            if (molecule == null)
+            {
+                throw new NotFoundException("Could not find molecule");
+            }
+            _asProteomics = molecule instanceof Peptide;
 
             // Summary charts for the precursor
             SummaryChartBean summaryChartBean = new SummaryChartBean(_run);
@@ -7317,30 +7176,27 @@ public class TargetedMSController extends SpringActionController
             summaryChartBean.setInitialWidth(1200);
 
             // Use different setter and details URL for Peptide vs Small Molecule
-            ActionURL detailsUrl = null;
-            if (_chart.getMolecule() != null)
+            ActionURL detailsUrl;
+            if (_asProteomics)
             {
-                if (_asProteomics)
-                {
-                    summaryChartBean.setPeptideId(_chart.getMolecule().getId());
-                    detailsUrl = new ActionURL(ShowPeptideAction.class, getContainer());
-                }
-                else
-                {
-                    summaryChartBean.setMoleculeId(_chart.getMolecule().getId());
-                    detailsUrl = new ActionURL(ShowMoleculeAction.class, getContainer());
-                }
+                summaryChartBean.setPeptideId(molecule.getId());
+                detailsUrl = new ActionURL(ShowPeptideAction.class, getContainer());
             }
+            else
+            {
+                summaryChartBean.setMoleculeId(molecule.getId());
+                detailsUrl = new ActionURL(ShowMoleculeAction.class, getContainer());
+            }
+
+            FiguresOfMeritView fomView = new FiguresOfMeritView(getUser(), getContainer(), molecule.getId(), true);
+            fomView.setTitleHref(new ActionURL(ShowFiguresOfMeritAction.class, getContainer()).addParameter("GeneralMoleculeId", molecule.getId()));
 
             JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp", summaryChartBean);
             summaryChartView.setTitle("Summary Charts");
-            if (detailsUrl != null)
-            {
-                detailsUrl.addParameter("id", _chart.getMolecule().getId());
-                summaryChartView.setTitleHref(detailsUrl);
-            }
+            detailsUrl.addParameter("id", molecule.getId());
+            summaryChartView.setTitleHref(detailsUrl);
 
-            return new VBox(curvePlotView, summaryChartView, createQueryView(calibrationCurveForm, errors, false, null));
+            return new VBox(_curvePlotView, fomView, summaryChartView, createQueryView(calibrationCurveForm, errors, false, null));
         }
     }
 
@@ -7356,6 +7212,12 @@ public class TargetedMSController extends SpringActionController
         public void setCalibrationCurveId(int calibrationCurveId)
         {
             this.calibrationCurveId = calibrationCurveId;
+        }
+
+        @Override
+        public long getId()
+        {
+            return super.getId();
         }
     }
 

@@ -196,11 +196,6 @@
 
 }
 
-.chromatogramMatrix {
-    display: inline-block;
-    white-space: nowrap;
-}
-
 #copytoclipboard {
     padding:3px;
     font:12px 'Raleway', sans-serif;
@@ -239,26 +234,24 @@
     max-height: 200px;
 }
 #selectedPeptideChromatogramContainer {
-    padding-bottom: 5px;
+    padding-bottom: 20px;
     padding-top: 10px;
-    height:400px;
-    display: table;
-    margin: auto;
 }
 
 #selectedPeptideChromatogramContainer span
 {
     text-align: center;
-    margin: 20px;
-    width: 250px;
+    margin: 10px 10px 0 10px;
     display: inline-grid;
 }
 
-.peptideDetails {
-    min-height:70px;
-    display: table;
-    margin: auto;
-    padding-top: 10px;
+.chromatogramGrid tr td {
+    padding: 10px;
+    border: 1px solid black;
+}
+
+#seriesLegend td {
+    border: none;
 }
 
 .external-link-icon {

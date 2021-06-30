@@ -13,26 +13,27 @@ peakareachart = {
         highlighted.remove();
         highlightBoundsText.remove();
 
-        var proteinSequenceLength= d3.select("#protein svg").selectAll("g.domain_plot").selectAll("text.protein_label_text")[0][1].textContent;
-        var width = d3.select("#protein svg").selectAll("g.domain_plot").selectAll("rect.protein_sequence")[0][0].getAttribute("width");
-        var relativeLength = sequence.length/proteinSequenceLength;
-        var relativeWidth = relativeLength * width;
-        var relativeStart = (start / proteinSequenceLength) * width;
-        protein_domain.append("rect")
-            .attr("class", "highlight_peptide")
-            .attr("x",relativeStart)
-            .attr("width", relativeWidth)
-            .attr("y", yRelative(46))
-            .attr("height", 16);
+        var domainPlot = d3.select("#protein svg").selectAll("g.domain_plot").selectAll("text.protein_label_text");
+        if (domainPlot.length > 0) {
+            var proteinSequenceLength = d3.select("#protein svg").selectAll("g.domain_plot").selectAll("text.protein_label_text")[0][1].textContent;
+            var width = d3.select("#protein svg").selectAll("g.domain_plot").selectAll("rect.protein_sequence")[0][0].getAttribute("width");
+            var relativeLength = sequence.length / proteinSequenceLength;
+            var relativeWidth = relativeLength * width;
+            var relativeStart = (start / proteinSequenceLength) * width;
+            protein_domain.append("rect")
+                    .attr("class", "highlight_peptide")
+                    .attr("x", relativeStart)
+                    .attr("width", relativeWidth)
+                    .attr("y", yRelative(46))
+                    .attr("height", 16);
 
-
-        protein_domain.append("text")
-            .attr("class", "highlight_peptide_bounds_text")
-            .style("text-anchor", "middle")
-            .attr("x", relativeStart + relativeWidth/2)
-            .attr("y", yRelative(31 - 12 - 8)) //12px font  8px for highlight_peptide_bounds
-            .text((start + 1) +  " - " + (start + sequence.length)); // subtract 1 because end index will be base 2
-
+            protein_domain.append("text")
+                    .attr("class", "highlight_peptide_bounds_text")
+                    .style("text-anchor", "middle")
+                    .attr("x", relativeStart + relativeWidth / 2)
+                    .attr("y", yRelative(31 - 12 - 8)) //12px font  8px for highlight_peptide_bounds
+                    .text((start + 1) + " - " + (start + sequence.length)); // subtract 1 because end index will be base 2
+        }
     },
     paintPeptide: function paintPeptide(d) {
         var parentWidth = parseInt(d3.select('#chart').style('width'), 10);
@@ -105,6 +106,11 @@ peakareachart = {
 
         function plotProtein(sequence) {
             d3.select("#protein").selectAll("svg").remove();
+
+            if (!sequence) {
+                return;
+            }
+
             var svg = d3.select("#protein").append("svg")
                 .attr("width", width)
                 .attr("height", 80)

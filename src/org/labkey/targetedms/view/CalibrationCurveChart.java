@@ -134,6 +134,7 @@ public class CalibrationCurveChart
         jsonCurve.put("count", calibrationCurve.getPointCount());
         jsonCurve.put("rSquared", calibrationCurve.getRSquared());
         jsonCurve.put("quadraticCoefficient", calibrationCurve.getQuadraticCoefficient());
+        jsonCurve.put("errorMessage", calibrationCurve.getErrorMessage());
         jsonCurve.put("msLevel", quantificationSettings.getMsLevel());
         jsonCurve.put("normalizationMethod", quantificationSettings.getNormalizationMethod());
         jsonCurve.put("regressionFit", quantificationSettings.getRegressionFit());

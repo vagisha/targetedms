@@ -176,20 +176,22 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
     showAutoQCMessage : function(divId, autoQC, hasChildren) {
         var divEl = Ext4.get(divId),
-            content = '', width = undefined;
+            content = '';
 
         if (!divEl)
             return;
 
         if (autoQC == null) {
             content = 'Has never been pinged';
-            width = 155;
         }
         else {
             var modifiedFormatted = Ext4.util.Format.date(Ext4.Date.parse(autoQC.modified, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s');
             content = autoQC.isRecent ? 'Was pinged recently on ' + modifiedFormatted : 'Was pinged on ' + modifiedFormatted;
-            width = autoQC.isRecent ? 160 : 140;
         }
+
+        content = '<div>' + content + '</div><br/><div>To point AutoQC at this folder, go to configuration\'s Panorama setting tab. ' +
+                'Check the Publish to Panorama checkbox. Use <strong>' + LABKEY.Utils.encodeHtml(LABKEY.ActionURL.getBaseURL()) +
+                '</strong> as the URL and <strong>' + LABKEY.Utils.encodeHtml(LABKEY.ActionURL.getContainer()) + '</strong> as the folder.</div>'
 
         // add mouse listeners to the div element for when to show the AutoQC message
         divEl.on('mouseover', function() {
@@ -201,7 +203,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 placement: 'left',
                 yOffset: -22,
                 arrowOffset: 7,
-                width: width,
+                width: 300,
                 showCloseButton: false,
                 content: content
             });

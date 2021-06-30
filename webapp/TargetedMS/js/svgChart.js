@@ -22,9 +22,13 @@ if (!LABKEY.targetedms.SVGChart) {
                 success: function (xhr) {
                     var parsedResponse = JSON.parse(xhr.responseText);
 
-                    var plotAndTitleHtml = '<div style="text-align: center; word-break: break-word">' +
-                            LABKEY.Utils.encodeHtml(titleTransformer(parsedResponse.title)).split('\n').join('<br>') +
-                            '</div>';
+                    var plotAndTitleHtml = '';
+                    if (titleTransformer) {
+                        plotAndTitleHtml += '<div style="text-align: center; word-break: break-word">' +
+                                LABKEY.Utils.encodeHtml(titleTransformer(parsedResponse.title)).split('\n').join('<br>') +
+                                '</div>';
+                    }
+
                     plotAndTitleHtml += parsedResponse.svg;
 
                     if (parsedResponse.xLabel)
@@ -41,7 +45,7 @@ if (!LABKEY.targetedms.SVGChart) {
 
                     if (legendElement) {
                         var legend = parsedResponse.series;
-                        var h = '<table><tr>';
+                        var h = '<table align="center"><tr>';
                         for (var i = 0; i < legend.length; i++) {
                             h += (i % 3 === 0 && i !== 0) ? '</tr><tr>' : '';
                             h += '<td style="white-space:nowrap; padding: 0 10px"><span style="color: #' + legend[i].color + '">&block; &nbsp;</span>' + LABKEY.Utils.encodeHtml(legend[i].label) + '</td> ';
@@ -50,8 +54,8 @@ if (!LABKEY.targetedms.SVGChart) {
                         legendElement.innerHTML = h;
                     }
 
-                    this.createExportIcon(targetElement.id, 'fa-file-pdf-o', 'Export to PDF', 0, 800, function() { document.location = originalUrl + '&format=pdf' });
-                    this.createExportIcon(targetElement.id, 'fa-file-image-o', 'Export to PNG', 1, 800, function() { document.location = originalUrl + '&format=pngDownload' });
+                    this.createExportIcon(targetElement.id, 'fa-file-pdf-o', 'Export to PDF', 0, 300, function() { document.location = originalUrl + '&format=pdf' });
+                    this.createExportIcon(targetElement.id, 'fa-file-image-o', 'Export to PNG', 1, 300, function() { document.location = originalUrl + '&format=pngDownload' });
                 }
             });
         },

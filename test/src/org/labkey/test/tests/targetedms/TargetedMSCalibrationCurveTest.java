@@ -81,8 +81,8 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         FiguresOfMerit fom = new FiguresOfMerit("VIFDANAPVAVR");
         fom.setLoq("1.0");
         fom.setUloq("10.0");
-        fom.setBiasLimit("20%");
-        fom.setCvLimit("20%");
+        fom.setBiasLimit("20.0%");
+        fom.setCvLimit("20.0%");
         fom.setLod("0.11");
         fom.setCalc("Blank plus 2 * SD");
 
@@ -96,7 +96,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         FiguresOfMerit fom = new FiguresOfMerit("VIFDANAPVAVR");
         fom.setLoq("0.05");
         fom.setUloq("10.0");
-        fom.setBiasLimit("30%");
+        fom.setBiasLimit("30.0%");
         fom.setCvLimit("N/A");
         fom.setLod("0.10");
         fom.setCalc("Blank plus 3 * SD");
@@ -117,8 +117,8 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         FiguresOfMerit fom = new FiguresOfMerit("Gly");
         fom.setLoq("500.0");
         fom.setUloq("500.0");
-        fom.setBiasLimit("30%");
-        fom.setCvLimit("1%");
+        fom.setBiasLimit("30.0%");
+        fom.setCvLimit("1.0%");
         fom.setLod("-5.84");
         fom.setCalc("Blank plus 2 * SD");
 
@@ -518,12 +518,12 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
     private void verifyFomSummary(FiguresOfMerit fom)
     {
-        assertElementContains(Locator.tagWithId("td", "loq-stat"), "Lower: " + fom.getLoq());
-        assertElementContains(Locator.tagWithId("td", "uloq-stat"), "Upper: " + fom.getUloq());
-        assertElementContains(Locator.tagWithId("td", "bias-limit"), "Bias Limit: " + fom.getBiasLimit());
-        assertElementContains(Locator.tagWithId("td", "cv-limit"), "CV Limit: " + fom.getCvLimit());
-        assertElementContains(Locator.tagWithId("td", "lod-value"), "Lower: " + fom.getLod());
-        assertElementContains(Locator.tagWithId("td", "lod-calc"), "Calculation: " + fom.getCalc());
+        assertElementContains(Locator.tagWithId("td", "lloq-stat"), fom.getLoq());
+        assertElementContains(Locator.tagWithId("td", "uloq-stat"), fom.getUloq());
+        assertElementContains(Locator.tagWithId("td", "bias-limit"), fom.getBiasLimit());
+        assertElementContains(Locator.tagWithId("td", "cv-limit"), fom.getCvLimit());
+        assertElementContains(Locator.tagWithId("td", "llod-value"), fom.getLod());
+        assertElementContains(Locator.tagWithId("td", "lod-calc"), fom.getCalc());
     }
 
     private void testFiguresOfMerit(String scenario, @Nullable FiguresOfMerit fom)
@@ -586,11 +586,10 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText(scenario + ".sky.zip"));
         clickAndWait(Locator.linkContainingText("calibration curve"));
 
-        calibrationCurvesTable = new DataRegionTable((peptide?"calibration_curves":"calibration_curves_sm_mol"), this);
-        calibrationCurvesTable.setFilter("GeneralMoleculeId", "Equals", (fom!=null?fom.getName():molName));
-
-        clickAndWait(Locator.linkContainingText("Fom"));
-
+        // Go to the calibration curve detail page
+        clickAndWait(Locator.linkContainingText(fom != null ? fom.getName() : molName));
+        // Drill into the FOM details page
+        clickAndWait(Locator.linkContainingText("Show Details"));
         waitForElement(Locators.pageSignal("targetedms-fom-loaded"));
 
         verifyFomTable("fom-table-standard", stdGroups, stdConcentrations, stdBiases, stdExcluded);
@@ -744,16 +743,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 goBack();
                 calibrationCurvesTable.clickRowDetails(rowWithoutData);
 
-                calibrationCurveWebpart = new CalibrationCurveWebpart(getDriver());
-                assertEquals("Calibration curve with no data shouldn't have any points", 0, calibrationCurveWebpart.getSvgPoints().size());
-                actualLegendText = calibrationCurveWebpart.getSvgLegendItems();
-                expectedLegendText = new ArrayList<>(baseLegendText);
-                expectedLegendText.addAll(Arrays.asList(
-                    "Slope: 0",
-                    "Intercept: 0",
-                    "rSquared: 0"
-                ));
-                assertEquals("Wrong legend text", expectedLegendText, actualLegendText);
+                assertTextPresent("Unable to calculate curve, since there are no data points available");
             }
         }
 

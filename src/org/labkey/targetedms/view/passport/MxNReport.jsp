@@ -3,6 +3,7 @@
 <%@ page import="org.labkey.targetedms.model.passport.IProtein" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.api.util.HelpTopic" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
@@ -42,6 +43,10 @@
             success: function(data) {
                 protein.initialize(data);
             },
+            failure: function(response) {
+                document.getElementById('cvTableBody').innerHTML =
+                        '<tr><td colspan="12">Failed to load. ' + (response && response.exception ? LABKEY.Utils.encodeHtml(response.exception) : '') + '</td></tr>';
+            },
             filterArray: [ LABKEY.Filter.create('PepGroupId', <%= protein.getPepGroupId() %>)],
             sort: 'AcquiredTime'
         });
@@ -57,12 +62,18 @@
     <tr>
         <td>
             <label for="peptideSort">Sort by:&nbsp;</label>
-        </td>
-        <td style="padding-left: 1em">
             <select id="peptideSort" name="peptideSort">
                 <option value="intensity">Intensity</option>
                 <option value="sequencelocation">Sequence Location</option>
                 <option value="cv">Coefficient of Variation</option>
+            </select>
+        </td>
+        <td style="padding-left: 2em">
+            <label for="valueType">Value type:&nbsp;</label>
+            <select id="valueType" name="valueType">
+                <option value="calibratedArea">Calibrated</option>
+                <option value="normalizedArea">Normalized</option>
+                <option value="totalArea">Raw</option>
             </select>
         </td>
         <td style="padding-left: 2em">
@@ -76,13 +87,35 @@
         </td>
         <td style="padding-left: 2em">
             Matching precursors:
-        </td>
-        <td style="padding-left: 1em">
             <span id="filteredPeptideCount">
                 <green><%=protein.getPep().size()%></green>/<%=protein.getPep().size()%>
             </span>
         </td>
-</tr>
+    </tr>
+    <tr>
+        <td colspan="6" id="noCalibratedValuesError" style="display: none; padding-top: 0.5em">
+            <span class="labkey-error">
+                No calibrated values present.
+            </span>
+            <span>
+                Showing raw values instead. You can
+                <%= new HelpTopic("panoRepro#config").getSimpleLinkHtml("configure your Skyline document") %>
+                so that it includes normalized values.
+            </span>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="6" id="noNormalizedValuesError" style="display: none; padding-top: 0.5em">
+            <span class="labkey-error">
+                No normalized values present.
+            </span>
+            <span>
+                Showing raw values instead. You can
+                <%= new HelpTopic("panoRepro#config").getSimpleLinkHtml("configure your Skyline document") %>
+                so that it includes normalized values.
+            </span>
+        </td>
+    </tr>
 </table>
 </div>
 
@@ -103,6 +136,8 @@
         <th class="labkey-column-header" style="text-align: right">Min Intensity</th>
     </tr>
     </thead>
-    <tbody id="cvTableBody"></tbody>
+    <tbody id="cvTableBody">
+        <tr><td colspan="12">Loading...</td></tr>
+    </tbody>
 </table>
 

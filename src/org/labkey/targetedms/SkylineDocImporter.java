@@ -97,7 +97,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 import static org.labkey.targetedms.TargetedMSManager.getTableInfoPrecursorChromInfo;
 import static org.labkey.targetedms.TargetedMSManager.getTableInfoTransitionChromInfo;
@@ -158,6 +157,7 @@ public class SkylineDocImporter
     private File _auditLogFile;
 
     private final Set<String> _missingLibraries = new HashSet<>();
+    private boolean _hasDayAnnotation;
 
     @JsonCreator
     private SkylineDocImporter(@JsonProperty("_expData") ExpData expData, @JsonProperty("_context") XarContext context,
@@ -487,6 +487,7 @@ public class SkylineDocImporter
                 List<Portal.PortalPage> tabPages = Portal.getTabPages(_container);
                 Portal.PortalPage peptidesTab = null;
                 Portal.PortalPage moleculesTab = null;
+                Portal.PortalPage proteinsTab = null;
                 for (Portal.PortalPage tabPage : tabPages)
                 {
                     if (TargetedMSModule.PEPTIDE_TAB_NAME.equals(tabPage.getPageId()))
@@ -497,14 +498,25 @@ public class SkylineDocImporter
                     {
                         moleculesTab = tabPage;
                     }
+                    if (TargetedMSModule.PROTEIN_TAB_NAME.equals(tabPage.getPageId()))
+                    {
+                        proteinsTab = tabPage;
+                    }
                 }
                 if (TargetedMSManager.containerHasSmallMolecules(_container) && moleculesTab == null)
                 {
                     TargetedMSController.addDashboardTab(TargetedMSModule.MOLECULE_TAB_NAME, _container, TargetedMSModule.MOLECULE_TAB_WEB_PARTS);
                 }
-                if (TargetedMSManager.containerHasPeptides(_container) && peptidesTab == null)
+                if (TargetedMSManager.containerHasPeptides(_container))
                 {
-                    TargetedMSController.addDashboardTab(TargetedMSModule.PEPTIDE_TAB_NAME, _container, TargetedMSModule.PEPTIDE_TAB_WEB_PARTS);
+                    if (peptidesTab == null)
+                    {
+                        TargetedMSController.addDashboardTab(TargetedMSModule.PEPTIDE_TAB_NAME, _container, TargetedMSModule.PEPTIDE_TAB_WEB_PARTS);
+                    }
+                    if (proteinsTab == null && (calCurvesCount > 0 || _hasDayAnnotation))
+                    {
+                        TargetedMSController.addDashboardTab(TargetedMSModule.PROTEIN_TAB_NAME, _container, TargetedMSModule.PROTEIN_TAB_WEB_PARTS);
+                    }
                 }
             }
 
@@ -590,6 +602,10 @@ public class SkylineDocImporter
             {
                 annotation.setReplicateId(replicate.getId());
                 annotation.setSource(ReplicateAnnotation.SOURCE_SKYLINE);
+                if (annotation.getName().equals("Day"))
+                {
+                    _hasDayAnnotation = true;
+                }
                 Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
 
                 if (annotation.isIgnoreInQC() && folderType == TargetedMSService.FolderType.QC)
@@ -1238,19 +1254,19 @@ public class SkylineDocImporter
         while((molType = parser.hasNextPeptideOrMolecule()) != null)
         {
             GeneralMolecule generalMolecule = null;
-            switch(molType)
+            switch (molType)
             {
-                case PEPTIDE:
+                case PEPTIDE -> {
                     Peptide peptide = parser.nextPeptide(pepGroup.isDecoy());
                     peptides.add(peptide.getSequence());
                     generalMolecule = peptide;
-                    if(_isProteinLibraryDoc)
+                    if (_isProteinLibraryDoc)
                     {
                         Peptide p = (Peptide) generalMolecule;
                         // Issue 24571: Proteins in protein library folders should not have duplicate peptides.
                         if (libProteinPeptides.contains(p.getPeptideModifiedSequence()))
                         {
-                            throw new PanoramaBadDataException("Duplicate peptide ("+ p.getPeptideModifiedSequence() + ") found for protein " + pepGroup.getLabel()
+                            throw new PanoramaBadDataException("Duplicate peptide (" + p.getPeptideModifiedSequence() + ") found for protein " + pepGroup.getLabel()
                                     + ". Proteins in documents uploaded to a protein library folder should contain unique peptides.");
                         }
                         else
@@ -1259,12 +1275,12 @@ public class SkylineDocImporter
                         }
                     }
                     peptideCount++;
-                    if(peptideCount % 50 == 0)
+                    if (peptideCount % 50 == 0)
                     {
                         _log.debug(String.format("Inserted %d peptides", peptideCount));
                     }
-                    break;
-                case MOLECULE:
+                }
+                case MOLECULE -> {
                     Molecule molecule = parser.nextMolecule(pepGroup.isDecoy());
                     if (molecule.getIonFormula() != null)
                     {
@@ -1273,11 +1289,11 @@ public class SkylineDocImporter
                     }
                     generalMolecule = molecule;
                     moleculeCount++;
-                    if(moleculeCount % 50 == 0)
+                    if (moleculeCount % 50 == 0)
                     {
                         _log.debug(String.format("Inserted %d molecules", moleculeCount));
                     }
-                    break;
+                }
             }
 
             insertPeptideOrSmallMolecule(skylineIdSampleFileIdMap, modInfo,
@@ -1730,15 +1746,15 @@ public class SkylineDocImporter
                 if(loss.getLossIndex() == null)
                 {
                     throw new PanoramaBadDataException("No loss index found for transition loss."
-                                                    +" Loss: "+loss.toString()
-                                                    +"; Transition: "+transition.toString()
+                                                    +" Loss: "+ loss
+                                                    +"; Transition: "+ transition
                                                     +"; Precursor: "+precursor.getModifiedSequence());
                 }
                 if(loss.getLossIndex() < 0 || loss.getLossIndex() >= potentialLosses.size())
                 {
                     throw new PanoramaBadDataException("Loss index out of bounds for transition loss."
-                                                    +" Loss: "+loss.toString()
-                                                    +"; Transition: "+transition.toString()
+                                                    +" Loss: "+ loss
+                                                    +"; Transition: "+ transition
                                                     +"; Precursor: "+precursor.getModifiedSequence());
                 }
 
@@ -1751,8 +1767,8 @@ public class SkylineDocImporter
                 // This is a custom neutral loss; it is not associated with a structural modifcation.
                 // Skyline does not yet support this case.
                 throw new PanoramaBadDataException(" Unsupported custom neutral loss found."
-                                                +" Loss: "+loss.toString()
-                                                +"; Transition: "+transition.toString()
+                                                +" Loss: "+ loss
+                                                +"; Transition: "+ transition
                                                 +"; Precursor: "+precursor.getModifiedSequence());
             }
         }
@@ -1861,7 +1877,7 @@ public class SkylineDocImporter
             Long precursorChromInfoId = sampleFilePrecursorChromInfoIdMap.get(sampleFileKey);
             if (precursorChromInfoId == null)
             {
-                throw new PanoramaBadDataException("Could not find precursor peak for " + sampleFileKey.toString());
+                throw new PanoramaBadDataException("Could not find precursor peak for " + sampleFileKey);
             }
 
             transChromInfo.setPrecursorChromInfoId(precursorChromInfoId);

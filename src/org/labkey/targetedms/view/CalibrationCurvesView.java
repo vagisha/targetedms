@@ -14,7 +14,7 @@
  */
 package org.labkey.targetedms.view;
 
-import org.labkey.api.data.SimpleDisplayColumn;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
 import org.labkey.api.data.TableInfo;
@@ -31,8 +31,10 @@ import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.targetedms.parser.QuantificationSettings;
 import org.labkey.targetedms.query.CalibrationCurveTable;
+import org.labkey.targetedms.query.ReplicateManager;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Shows a list of calibration curves.  Users can click on the details to see the {@link CalibrationCurveChart}.
@@ -67,18 +69,15 @@ public class CalibrationCurvesView extends QuantificationView
     {
         super.setupDataView(ret);
 
-        ActionURL url = new ActionURL(TargetedMSController.ShowFiguresOfMeritAction.class, getContainer());
-        url.addParameter("RunId", "${RunId}");
-        url.addParameter("GeneralMoleculeId", "${GeneralMoleculeId}");
-        SimpleDisplayColumn urlColumn = new UrlColumn(url.toString(), "Fom");
-        ret.getDataRegion().addDisplayColumn(1, urlColumn);
-
-        url = new ActionURL(TargetedMSController.ShowPKAction.class, getContainer());
-        url.addParameter("RunId", "${RunId}");
-        url.addParameter("GeneralMoleculeId", "${GeneralMoleculeId}");
-        urlColumn = new UrlColumn(url.toString(), "PK");
-        ret.getDataRegion().addDisplayColumn(2, urlColumn);
-
+        // Only add PK link if we have at least a some of the required annotations
+        Set<String> replicateAnnotations = new CaseInsensitiveHashSet(ReplicateManager.getReplicateAnnotationNamesForRun(_runId));
+        if (replicateAnnotations.contains("dose") && replicateAnnotations.contains("time"))
+        {
+            ActionURL url = new ActionURL(TargetedMSController.ShowPKAction.class, getContainer());
+            url.addParameter("RunId", "${RunId}");
+            url.addParameter("GeneralMoleculeId", "${GeneralMoleculeId}");
+            ret.getDataRegion().addDisplayColumn(Math.min(ret.getDataRegion().getDisplayColumns().size(), 2), new UrlColumn(url.toString(), "PK"));
+        }
     }
 
     @Override
@@ -93,11 +92,11 @@ public class CalibrationCurvesView extends QuantificationView
     public static void addCalibrationCurvesViewSwitcherMenuItems(TargetedMSController.RunDetailsForm runDetailsForm, NavTree menu)
     {
         Collection<QuantificationSettings> quantSettingsList = getQuantificationSettings(runDetailsForm.getId());
-        if (!quantSettingsList.stream().filter(setting ->
+        if (quantSettingsList.stream().noneMatch(setting ->
         {
             RegressionFit regressionFit = RegressionFit.parse(setting.getRegressionFit());
             return null != regressionFit && !RegressionFit.NONE.equals(regressionFit);
-        }).findAny().isPresent())
+        }))
         {
             return;
         }

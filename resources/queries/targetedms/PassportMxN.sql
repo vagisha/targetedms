@@ -1,13 +1,10 @@
+SELECT * FROM (
+
 SELECT
     PrecursorId.Id,
     SampleFileId.ReplicateId.Name AS Replicate,
     SampleFileId.AcquiredTime AS AcquiredTime,
-    COALESCE(ifdefined(SampleFileId.ReplicateId.Day),
-      ifdefined(SampleFileId.ReplicateId.SampleGroup),
-      YEAR(SampleFileId.AcquiredTime) || '-' ||
-        CASE WHEN MONTH(SampleFileId.AcquiredTime) < 10 THEN '0' ELSE '' END || MONTH(SampleFileId.AcquiredTime) || '-' ||
-        CASE WHEN DAYOFMONTH(SampleFileId.AcquiredTime) < 10 THEN '0' ELSE '' END || DAYOFMONTH(SampleFileId.AcquiredTime))
-      AS Timepoint,
+    COALESCE(ifdefined(SampleFileId.ReplicateId.Day), ifdefined(SampleFileId.ReplicateId.SampleGroup)) AS Timepoint,
     ifdefined(SampleFileId.ReplicateId.SampleGroup2) AS Grouping,
     PrecursorId.PeptideId.PeptideGroupId.Label AS ProteinName,
     PrecursorId.PeptideId.PeptideGroupId.SequenceId.SeqId AS seq,
@@ -23,8 +20,18 @@ SELECT
     PrecursorId.PeptideId.EndIndex,
     SampleFileId,
     TotalArea,
+    pci.SampleFileId.ReplicateId.SampleType AS SampleType,
+    CAST(ifdefined(CalibratedArea) AS DOUBLE) AS CalibratedArea,
+--     TotalArea * 2 / PrecursorId.Charge + 1000000 AS CalibratedArea,
+    CAST(ifdefined(NormalizedArea) AS DOUBLE) AS NormalizedArea,
+--     TotalArea * 3 * PrecursorId.Charge AS NormalizedArea,
     PrecursorId.PeptideId.PeptideGroupId.id as PepGroupId,
     cc.Id AS CalibrationCurveId
 FROM precursorchrominfo pci
     LEFT OUTER JOIN CalibrationCurve cc ON PrecursorId.PeptideId = cc.GeneralMoleculeId
-WHERE TotalArea IS NOT NULL
+WHERE
+    TotalArea IS NOT NULL
+
+) X
+
+WHERE (SampleType IS NULL OR SampleType IN ('qc'))

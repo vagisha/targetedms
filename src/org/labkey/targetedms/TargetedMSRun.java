@@ -20,6 +20,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.MemTracker;
+import org.labkey.targetedms.parser.TransitionSettings;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -85,6 +86,8 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     private GUID _documentGUID;
 
     private Long _documentSize;
+
+    private TransitionSettings.FullScanSettings _fullScanSettings;
 
     public TargetedMSRun()
     {
@@ -424,5 +427,14 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     public void setListCount(int listCount)
     {
         _listCount = listCount;
+    }
+
+    public TransitionSettings.FullScanSettings fetchFullScanSettings()
+    {
+        if (_fullScanSettings == null)
+        {
+            _fullScanSettings = TargetedMSManager.get().getTransitionFullScanSettings(getId());
+        }
+        return _fullScanSettings;
     }
 }

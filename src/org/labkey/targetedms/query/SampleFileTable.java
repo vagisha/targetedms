@@ -65,7 +65,7 @@ import java.util.Set;
 public class SampleFileTable extends TargetedMSTable
 {
     @Nullable
-    private TargetedMSRun _run;
+    private final TargetedMSRun _run;
 
     public SampleFileTable(TargetedMSSchema schema, ContainerFilter cf)
     {
@@ -86,7 +86,7 @@ public class SampleFileTable extends TargetedMSTable
         {
             addCondition(new SQLFragment("ReplicateId IN (SELECT Id FROM ").
                     append(TargetedMSManager.getTableInfoReplicate(), "r").
-                    append(" WHERE RunId = ?)").add(run.getId()), FieldKey.fromParts("ReplicateId"));
+                    append(" WHERE RunId = ?)").add(_run.getId()), FieldKey.fromParts("ReplicateId"));
         }
 
         SQLFragment excludedSQL = new SQLFragment("CASE WHEN ReplicateId IN (SELECT ReplicateId FROM ");
@@ -112,7 +112,7 @@ public class SampleFileTable extends TargetedMSTable
         var downloadCol = addWrapColumn("Download", getRealTable().getColumn("Id"));
         downloadCol.setKeyField(false);
         downloadCol.setTextAlign("left");
-        downloadCol.setDisplayColumnFactory(colInfo -> new DownloadLinkColumn(colInfo));
+        downloadCol.setDisplayColumnFactory(DownloadLinkColumn::new);
 
         DetailsURL instrumentURL = new DetailsURL(new ActionURL(TargetedMSController.ShowInstrumentAction.class, getContainer()), Collections.singletonMap("serialNumber", "InstrumentSerialNumber"));
         getMutableColumn("InstrumentSerialNumber").setURL(instrumentURL);
@@ -126,6 +126,7 @@ public class SampleFileTable extends TargetedMSTable
             // Always include these columns
             List<FieldKey> defaultCols = new ArrayList<>(Arrays.asList(
                     FieldKey.fromParts("ReplicateId"),
+                    FieldKey.fromParts("SampleName"),
                     FieldKey.fromParts("File"),
                     FieldKey.fromParts("Download"),
                     FieldKey.fromParts("AcquiredTime"),
@@ -223,9 +224,9 @@ public class SampleFileTable extends TargetedMSTable
                 .append(" ELSE ").append(filePathColSql).append(" END");
     }
 
-    private class DownloadLinkColumn extends DataColumn
+    private static class DownloadLinkColumn extends DataColumn
     {
-        private FieldKey _containerFieldKey = FieldKey.fromParts("ReplicateId", "RunId", "Container");
+        private final FieldKey _containerFieldKey = FieldKey.fromParts("ReplicateId", "RunId", "Container");
 
         public DownloadLinkColumn(ColumnInfo col)
         {

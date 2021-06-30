@@ -40,7 +40,8 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             this.maxX = calcMaxX;
 
         this.addCurvePoints();
-        this.addPlot();
+
+        this.refreshPlot();
 
         var me = this;
         window.addEventListener("resize", function () {
@@ -51,6 +52,20 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             // Plot re-renders so need to shrink dots to get back to initial state
             d3.selectAll('a.point path').transition().attr("stroke-width", 1);
         }, false);
+    },
+
+    refreshPlot: function() {
+        // Clear out child <svg> elements
+        let children = document.getElementById(this.renderTo).childNodes;
+        for (let i = 0; i < children.length; ) {
+            if (children[i].localName === 'svg') {
+                children[i].parentNode.removeChild(children[i]);
+            }
+            else {
+                i++;
+            }
+        }
+        this.addPlot();
     },
 
     // Add points for quadratic calculated concentration curve
@@ -121,6 +136,11 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
     addPlot: function () {
         var me = this;
 
+        if (this.data.calibrationCurve.errorMessage) {
+            document.getElementById(this.renderTo).innerText = this.data.calibrationCurve.errorMessage;
+            return;
+        }
+
         // This is a dummy layer to be overwritten by the line layer when selecting a point
         this.selectedPointLayer = new LABKEY.vis.Layer({
             geom: new LABKEY.vis.Geom.Path({size: 3, opacity: 0}),
@@ -146,7 +166,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             height: this.plotHeight,
             labels: {
                 main: {value: this.data.molecule.name},
-                y: {value: 'Light:Heavy Peak Area Ratio'},
+                y: {value: 'Normalized Peak Areas'},
                 x: {value: 'Analyte Concentration ' + units}
             },
             layers: [
@@ -186,7 +206,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                             d3.selectAll('svg g.layer path[stroke-opacity="0"').transition().attr('stroke-opacity', .5)
                         },
                         hoverText: function (row) {
-                            return 'Name: ' + row.name + '\nPeak Area Ratio: ' + me.formatLegendValue(row.y) + '\nConcentration: ' + me.formatLegendValue(row.x) + (row.excluded ? '\nExcluded from calibration' : '');
+                            return 'Name: ' + row.name + '\nPeak Area: ' + me.formatLegendValue(row.y, true) + '\nConcentration: ' + me.formatLegendValue(row.x) + (row.excluded ? '\nExcluded from calibration' : '');
                         }
                     }
                 })
@@ -207,12 +227,20 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                             return me.colors[group];
 
                         return 'blue';
-                    }
+                    },
                 },
                 y: {
                     scaleType: 'continuous',
-                    trans: 'linear',
-                    domain: [me.minY, me.maxY]
+                    trans: document.getElementById('calCurveYScale').value,
+                    domain: [me.minY, me.maxY],
+                    tickFormat: function (d) {
+                        if (d < 1000 && d > 0.001)
+                            return d;
+                        return d.toExponential();
+                    }
+                },
+                x: {
+                    trans: document.getElementById('calCurveXScale').value
                 }
             },
             legendData: this.getLegendDataInfo(me).concat(this.getLegendDataSlopeCalculations(me)),
@@ -229,7 +257,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         var result = [
             {text: 'Selected Point', separator: true},
             {text: 'Replicate: ' + point.name, color: 'white'},
-            {text: 'Peak Area Ratio: ' + scope.formatLegendValue(point.y), color: 'white'},
+            {text: 'Peak Area: ' + scope.formatLegendValue(point.y, true), color: 'white'},
             {text: 'Concentration: ' + scope.formatLegendValue(point.x), color: 'white'},
             {
                 text: 'Calc. Concentration: ' + scope.formatLegendValue(scope.getQuadraticIntersect(scope, point.y)),
@@ -250,8 +278,8 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             {text: 'Regression Weighting: ' + Ext4.util.Format.htmlEncode(this.data.calibrationCurve.regressionWeighting), color: 'white'},
             {text: 'MS Level: ' + (this.data.msLevel > 0 ? this.data.msLevel : 'All'), color: 'white'},
             {text: '', separator: true},
-            {text: 'Slope: ' + scope.formatLegendValue(this.data.calibrationCurve.slope), color: 'white'},
-            {text: 'Intercept: ' + scope.formatLegendValue(this.data.calibrationCurve.intercept), color: 'white'}
+            {text: 'Slope: ' + scope.formatLegendValue(this.data.calibrationCurve.slope, true), color: 'white'},
+            {text: 'Intercept: ' + scope.formatLegendValue(this.data.calibrationCurve.intercept, true), color: 'white'}
         ];
         if (this.data.calibrationCurve.quadraticCoefficient && this.data.calibrationCurve.quadraticCoefficient != 0.0) {
             result.push({text: 'Quadratic Coefficient: ' + scope.formatLegendValue(this.data.calibrationCurve.quadraticCoefficient), color: 'white'});
@@ -272,7 +300,11 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         ];
     },
 
-    formatLegendValue: function (value) {
-        return Math.round(value * 100000) / 100000;
+    formatLegendValue: function (value, exp) {
+        var rounded = Math.round(value * 100000) / 100000;
+        // Use scientific notation if the number is large or very small
+        if (exp && (rounded > 10000 || rounded < -10000 || (rounded > -0.00001 && rounded < 0.00001)))
+            rounded.toExponential(4)
+        return rounded;
     }
 });

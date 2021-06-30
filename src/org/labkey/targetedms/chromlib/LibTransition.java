@@ -23,6 +23,7 @@ import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.parser.TransitionOptimization;
+import org.labkey.targetedms.parser.TransitionSettings;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,6 +52,7 @@ public class LibTransition extends AbstractLibEntity
     protected Double _massErrorPPM;
     private Double _collisionEnergy;
     private Double _declusteringPotential;
+    private Boolean _quantitative;
 
 
     // Proteomics fields
@@ -67,23 +69,23 @@ public class LibTransition extends AbstractLibEntity
 
     public LibTransition() {}
 
-    public LibTransition(Transition transition, TransitionChromInfo tci, Precursor precursor, List<TransitionOptimization> optimizations)
+    public LibTransition(Transition transition, TransitionChromInfo tci, Precursor precursor, List<TransitionOptimization> optimizations, TransitionSettings.FullScanSettings settings)
     {
-        this((GeneralTransition) transition, tci, precursor, optimizations);
+        this((GeneralTransition) transition, tci, precursor, optimizations, settings);
         setNeutralMass(transition.getNeutralMass());
         setNeutralLossMass(transition.getNeutralLossMass());
         setFragmentOrdinal(transition.getFragmentOrdinal());
     }
 
-    public LibTransition(MoleculeTransition transition, TransitionChromInfo tci, MoleculePrecursor precursor, List<TransitionOptimization> optimizations)
+    public LibTransition(MoleculeTransition transition, TransitionChromInfo tci, MoleculePrecursor precursor, List<TransitionOptimization> optimizations, TransitionSettings.FullScanSettings settings)
     {
-        this((GeneralTransition) transition, tci, precursor, optimizations);
+        this((GeneralTransition) transition, tci, precursor, optimizations, settings);
         setFragmentName(transition.getCustomIonName());
         setChemicalFormula(transition.getChemicalFormula());
         setAdduct(transition.getAdduct());
     }
 
-    private LibTransition(GeneralTransition transition, TransitionChromInfo tci, GeneralPrecursor<?> precursor, List<TransitionOptimization> optimizations)
+    private LibTransition(GeneralTransition transition, TransitionChromInfo tci, GeneralPrecursor<?> precursor, List<TransitionOptimization> optimizations, TransitionSettings.FullScanSettings settings)
     {
         setMz(transition.getMz());
         if (transition.getCharge() == null)
@@ -125,6 +127,7 @@ public class LibTransition extends AbstractLibEntity
         {
             _optimizations.add(new LibTransitionOptimization(optimization));
         }
+        _quantitative = transition.isQuantitative(settings);
     }
 
     public Double getMz()
@@ -307,6 +310,15 @@ public class LibTransition extends AbstractLibEntity
         _adduct = adduct;
     }
 
+    public Boolean isQuantitative()
+    {
+        return _quantitative;
+    }
+
+    public void setQuantitative(Boolean quantitative)
+    {
+        _quantitative = quantitative;
+    }
 
     @Override
     public boolean equals(Object o)

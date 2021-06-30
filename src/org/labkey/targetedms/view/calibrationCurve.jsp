@@ -42,13 +42,13 @@
 <%
     String elementId = "targetedmsCalibrationCurve";
 %>
-<div id=<%=q(elementId)%> class="calibration-curve"></div>
-
 <script type="text/javascript">
+
+    var calibrationCurvePlot;
 
     Ext4.onReady(function () {
 
-        Ext4.create('LABKEY.targetedms.CalibrationCurve', {
+        calibrationCurvePlot = Ext4.create('LABKEY.targetedms.CalibrationCurve', {
             renderTo: <%=q(elementId)%>,
             data: <%=bean%>
         });
@@ -56,3 +56,17 @@
     });
 
 </script>
+
+<div style="width: 100%; text-align: center">
+    <label for="calCurveXScale">X-axis:</label>
+    <select id="calCurveXScale"onchange="calibrationCurvePlot.refreshPlot();">
+        <option value="linear" selected>Linear</option>
+        <option value="log">Log</option>
+    </select>
+    &nbsp;&nbsp;
+    <label for="calCurveYScale">Y-axis:</label>
+    <select id="calCurveYScale" onchange="calibrationCurvePlot.refreshPlot();">
+        <option value="linear" selected>Linear</option>
+        <option value="log">Log</option>
+    </select>
+</div><div id=<%=q(elementId)%> class="calibration-curve"></div>

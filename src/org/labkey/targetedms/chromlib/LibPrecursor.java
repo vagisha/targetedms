@@ -76,6 +76,7 @@ public class LibPrecursor extends AbstractLibEntity
 
     // Small molecule fields
     private String _adduct;
+    private Double _qValue;
 
 
     public LibPrecursor() {}
@@ -112,6 +113,7 @@ public class LibPrecursor extends AbstractLibEntity
             setIonMobilityMS1(bestChromInfo.getIonMobilityMs1());
             setIonMobilityType(bestChromInfo.getIonMobilityType());
             setIonMobilityWindow(bestChromInfo.getIonMobilityWindow());
+            setQValue(bestChromInfo.getQvalue());
 
             long sampleFileId = bestChromInfo.getSampleFileId();
             Integer libSampleFileId = sampleFileIdMap.get(sampleFileId);
@@ -171,6 +173,7 @@ public class LibPrecursor extends AbstractLibEntity
         setExplicitIonMobilityUnits(rs.getString(Constants.PrecursorColumn.ExplicitIonMobilityUnits.baseColumn().name()));
         setExplicitCcsSqa(readDouble(rs, Constants.PrecursorColumn.ExplicitCcsSqa.baseColumn().name()));
         setExplicitCompensationVoltage(readDouble(rs, Constants.PrecursorColumn.ExplicitCompensationVoltage.baseColumn().name()));
+        setQValue(readDouble(rs, Constants.PrecursorColumn.QValue.baseColumn().name()));
 
         // Small molecule
         setAdduct(rs.getString(Constants.PrecursorColumn.Adduct.baseColumn().name()));
@@ -500,4 +503,13 @@ public class LibPrecursor extends AbstractLibEntity
         _adduct = adduct;
     }
 
+    public void setQValue(Double qValue)
+    {
+        _qValue = qValue;
+    }
+
+    public Double getQValue()
+    {
+        return _qValue;
+    }
 }

@@ -15,12 +15,13 @@
  * limitations under the License.
  */
 %>
-
-
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
+<%@ page import="org.labkey.targetedms.view.FiguresOfMeritView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.TargetedMSRun" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%!
@@ -32,32 +33,85 @@
     }
 %>
 <%
-    JspView<TargetedMSController.FomForm> me = (JspView<TargetedMSController.FomForm>) HttpView.currentView();
-    TargetedMSController.FomForm bean = me.getModelBean();
+    JspView<FiguresOfMeritView.MoleculeInfo> me = (JspView<FiguresOfMeritView.MoleculeInfo>) HttpView.currentView();
+    FiguresOfMeritView.MoleculeInfo bean = me.getModelBean();
+    TargetedMSRun run = bean.getRun();
+
+    var lodCalculation = switch (bean.getLODCalculation()) {
+            case "blank_plus_2_sd" -> "Blank plus 2 * SD";
+            case "blank_plus_3_sd" -> "Blank plus 3 * SD";
+            default -> "None";
+        };
 %>
-<div class="container-fluid targetedms-fom">
-    <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
-        <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
-    </div>
-    <span id="fom-loading">Loading...<i class="fa fa-spinner fa-pulse"></i></span>
-    <h3 id="fom-title1"></h3>
-    <h4 id="fom-title2"></h4>
-    <h4 id="fom-title3"></h4><div id="fom-title3-value" class="collapse"></div>
+
+<table class="lk-fields-table">
+    <% if (!bean.getMinimize()) { %>
+        <tr>
+            <td class="labkey-form-label">File</td>
+            <td>
+                <a href="<%= h(TargetedMSController.getShowRunURL(run.getContainer(), run.getRunId()))%>"><%= h(run.getDescription()) %></a> &nbsp;&nbsp;
+                <% if (run.getFileName() != null) { TargetedMSController.createDownloadMenu(run).render(out); } %>
+            </td>
+        </tr>
+        <tr>
+            <td class="labkey-form-label"><%= h(bean.getPeptideName() != null ? "Peptide" : "Molecule") %></td>
+            <td><% if (bean.getPeptideName() != null) { %>
+                    <a href="<%= h(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()).addParameter("id", bean.getGeneralMoleculeId())) %>"><%= h(bean.getPeptideName()) %></a>
+                <% } else { %>
+                    <a href="<%= h(new ActionURL(TargetedMSController.ShowMoleculeAction.class, getContainer()).addParameter("id", bean.getGeneralMoleculeId())) %>"><%= h(bean.getMoleculeName()) %></a>
+                <% } %>
+            </td>
+        </tr>
+        <tr>
+            <td class="labkey-form-label">Samples</td>
+            <td>
+                <div id="fom-sampleList"></div>
+            </td>
+        </tr>
+    <% } %>
+    <tr>
+        <td class="labkey-form-label">Lower Limit of Detection</td>
+        <td id="llod-value">...</td>
+    </tr>
+    <tr>
+        <td class="labkey-form-label">Lower Limit of Quantitation</td>
+        <td id="lloq-stat">...</td>
+    </tr>
+    <tr>
+        <td class="labkey-form-label">Upper Limit of Quantitation</td>
+        <td id="uloq-stat">...</td>
+    </tr>
+    <tr>
+        <td class="labkey-form-label">LOQ Bias Limit</td>
+        <td id="bias-limit"><%= h(bean.getMaxLOQBias()) %>%</td>
+    </tr>
+    <tr>
+        <td class="labkey-form-label">LOQ CV Limit</td>
+        <td id="cv-limit"><%= h(bean.getMaxLOQCV() == null ? "N/A" : (bean.getMaxLOQCV() + "%")) %></td>
+    </tr>
+    <tr>
+        <td class="labkey-form-label">LOD Calculation</td>
+        <td id="lod-calc"><%= h(lodCalculation) %></td>
+    </tr>
+    <tr>
+        <td class="labkey-form-label"></td>
+        <td>
+            <% if (!bean.getMinimize()) { %>
+                <div class="export-icon" data-toggle="tooltip" title="Export to Excel">
+                    <a id="targetedms-fom-export" href="javascript:exportExcel()"><i class="fa fa-file-excel-o"></i> Export to Excel</a>
+                </div>
+            <% } else { %>
+                <%= link("Show Details", new ActionURL(TargetedMSController.ShowFiguresOfMeritAction.class, getContainer()).addParameter("GeneralMoleculeId", bean.getGeneralMoleculeId()))%>
+            <% } %>
+            <span id="fom-loading">Loading...<i class="fa fa-spinner fa-pulse"></i></span>
+        </td>
+    </tr>
+</table>
+
+<div class="container-fluid targetedms-fom" <%= unsafe(bean.getMinimize() ? "style=\"display: none;\" " : "") %>>
     <br>
+
     <div class="container-fluid targetedms-fom">
-        <div class="row">
-            <labkey:panel title="Summary">
-                <table id="fom-table-summary" class="table table-responsive fom-table summary">
-                    <thead id="summary-header"><tr><td>Limit of Quantitation</td><td class="shaded left">Limit of Detection</td></tr></thead>
-                    <tbody id="summary-body">
-                    <tr><td id="loq-stat"></td><td class="shaded left" id="lod-value"></td></tr>
-                        <tr><td id="uloq-stat"></td><td class="shaded left" id="lod-calc"></td></tr>
-                        <tr><td id="bias-limit"></td><td class="shaded left"></td></tr>
-                        <tr><td id="cv-limit"></td><td class="shaded left"></td></tr>
-                    </tbody>
-                </table>
-            </labkey:panel>
-        </div>
         <div class="row">
             <labkey:panel title="Concentrations in Standards">
                 <table id="fom-table-standard" class="table table-responsive fom-table">
@@ -97,8 +151,6 @@
         this.lodCalculation = <%=q(bean.getLODCalculation())%>;  // 'none', etc
         this.xlsExport = [];
         this.title = "Molecule ID: " + this.moleculeId;
-        this.sampleListCollapsed = true;
-        this.tableCount = 0;
 
         if (this.peptideName !== null) {
             this.title = "Peptide: " + this.peptideName;
@@ -126,38 +178,23 @@
             });
         };
 
-        this.toggleSampleList = function () {
-            if (this.sampleListCollapsed) {
-                expandSampleList();
-                this.sampleListCollapsed = false;
-            }
-            else {
-                collapseSampleList();
-                this.sampleListCollapsed = true;
-
-            }
-        };
-
-        var collapseSampleList = function () {
-            $('#fom-title3-icon').attr("class", "fa fa-caret-down");
-            $('#fom-title3-value').collapse("hide");
-        };
-
-        var expandSampleList = function () {
-            $('#fom-title3-icon').attr("class", "fa fa-caret-up");
-            $('#fom-title3-value').collapse("show");
+        this.expandSampleList = function () {
+            $('.hiddenSample').css('display', '');
+            $('#sampleExpando').css('display', 'none')
         };
 
         var getSampleFilesHtml = function (samples) {
-            var html = "<ul>";
-            html += samples.reduce(function(list, file) { return list + "<li>" + file + "</li>"; }, "");
-            html += "</ul>";
+            var html = '';
+            var displayLimit = 3;
+            html += samples.reduce(function(list, file, index) {
+                var extra = index >= displayLimit ? ' class="hiddenSample" style="display: none"' : '';
+                if (index === displayLimit) {
+                    list += '<div onClick="expandSampleList();" id="sampleExpando">and ' + (samples.length - displayLimit) + ' more <i class="fa fa-caret-down" ></i></div>';
+                }
+                return list + '<div' + extra + '>' + LABKEY.Utils.encodeHtml(file) + '</div>';
+                }, "");
 
             return html;
-        };
-
-        var getSampleListIcon = function () {
-            return '<i id="fom-title3-icon" onClick="toggleSampleList();" class="fa fa-caret-down" ></i>';
         };
 
         var standardHeader = function (hdrs, sampleType) {
@@ -188,14 +225,9 @@
             return hdrs;
         };
 
-        var displayHeader = function(blanks, sampleType) {
-            $('#fom-title1').html(this.title);
-            $('#fom-title2').html("Skyline File: " + this.fileName);
-
+        var displayHeader = function(sampleType) {
             var samples = this.sampleFiles.split(", ");
-            $('#fom-title3').html(samples.length + " Sample" + (samples.length!=1 ? "s " : " ") + getSampleListIcon());
-            $('#fom-title3-value').html(getSampleFilesHtml(samples));
-            collapseSampleList();
+            $('#fom-sampleList').html(getSampleFilesHtml(samples));
 
             // Add title to export
             if (this.xlsExport.length < 1) {
@@ -232,7 +264,7 @@
                 hdrs.hdr += "No data of this type";
             }
             else {
-                if (!blanks) {
+                if (sampleType !== 'blank') {
                     hdrs = standardHeader(hdrs, sampleType);
                 }
             }
@@ -241,20 +273,21 @@
             this[sampleType + 'xlsExport'].push(hdrs.expHdrs);
         };
 
-        var displayBody = function(blanks, sampleType) {
+        var displayBody = function(sampleType) {
             if (this[sampleType + 'hdrLabels'] != null && this[sampleType + 'hdrLabels'].length > 0) {
-                var html = getRawDataHtml(blanks, sampleType);
-                html += getSummaryHtml(blanks, sampleType);
+                var html = getRawDataHtml(sampleType);
+                html += getSummaryHtml(sampleType);
 
                 $('#' + sampleType + '-body').html(html);
             }
         };
 
-        var getSummaryHtml = function(blanks, sampleType) {
+        var getSummaryHtml = function(sampleType) {
 
             var stats = ["n", "Mean", "StdDev", "CV", "Bias"];
             var units = "";
             var exportRow, summaryValue, html = "";
+            var blanks = sampleType === 'blank';
 
             stats.forEach(function(stat) {
                 if (stat === "CV" || stat === "Bias") {
@@ -327,7 +360,8 @@
             return html;
         };
 
-        var getRawDataHtml = function(blanks, sampleType) {
+        var getRawDataHtml = function(sampleType) {
+            var blanks = sampleType === 'blank';
             var index = 0;
             var found;
             var html = "", exportRow;
@@ -405,12 +439,14 @@
 
         var parseRawData = function(data, sampleType) {
 
-            // No data
-            if (data.rows.length < 1)
-                return;
+            this[sampleType + 'rawData'] = {};
+            this[sampleType + 'hdrLabels'] = [];
 
             // Process data to collapse rows
             data.rows.forEach(function (row) {
+                if (row.SampleType !== sampleType)
+                    return;
+
                 var analyteConc = row["AnalyteConcentration"];
                 if (analyteConc != null) {
                     analyteConc = formatConcentration(analyteConc);
@@ -436,9 +472,7 @@
 
         var parseSummaryData = function (data, sampleType) {
 
-            // No data
-            if (data.rows.length < 1)
-                return;
+            this[sampleType + 'summaryData'] = {};
 
             // Process data to collapse rows
             data.rows.forEach(function (row) {
@@ -460,37 +494,28 @@
             }, this);
         };
 
-        var handleData = function (blanks, sampleType) {
+        var handleData = function () {
 
-            displayHeader(blanks, sampleType);
-            displayBody(blanks, sampleType);
+            displayHeader('blank');
+            displayHeader('qc');
+            displayHeader('standard');
 
-            if (sampleType === 'standard')
-                createLoqStats(sampleType);
+            displayBody('blank');
+            displayBody('qc');
+            displayBody('standard');
 
-            if (sampleType === 'blank')
-                createLodStats(sampleType);
+            createLoqStats();
+            createLodStats();
 
-            if (this[sampleType + 'callback'] != null)
-                this[sampleType + 'callback']();
-
-            if (--this.tableCount === 0)
-                LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
+            LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
 
             $('#fom-loading').hide();
         };
 
-        var createFomTable = function(sampleType, callback) {
-            this.tableCount++;
-            this[sampleType + 'rawData'] = {};
-            this[sampleType + 'summaryData'] = {};
-            this[sampleType + 'hdrLabels'] = [];
-
-            this[sampleType + 'callback'] = callback;
+        var createFomTables = function () {
             var multi = new LABKEY.MultiRequest();
             var filter = [LABKEY.Filter.create('RunId', this.runId),
-                LABKEY.Filter.create('MoleculeId', this.moleculeId),
-                LABKEY.Filter.create('SampleType', sampleType)
+                LABKEY.Filter.create('MoleculeId', this.moleculeId)
             ];
 
             multi.add(LABKEY.Query.selectRows, {
@@ -499,7 +524,9 @@
                 filterArray: filter,
                 scope: this,
                 success: function(data) {
-                    parseRawData(data, sampleType);
+                    parseRawData(data, 'blank');
+                    parseRawData(data, 'qc');
+                    parseRawData(data, 'standard');
                 },
                 failure: function (response) {
                     LABKEY.Utils.alert('Error', response.exception);
@@ -512,7 +539,9 @@
                 filterArray: filter,
                 scope: this,
                 success: function(data) {
-                    parseSummaryData(data, sampleType);
+                    parseSummaryData(data, 'standard');
+                    parseSummaryData(data, 'qc');
+                    parseSummaryData(data, 'blank');
                 },
                 failure: function (response) {
                     LABKEY.Utils.alert('Error', response.exception);
@@ -520,23 +549,23 @@
             });
 
             multi.send(function() {
-                handleData(sampleType === "blank", sampleType);
+                handleData();
             }, this);
         };
 
-        var createLoqStats = function(sampleType) {
+        var createLoqStats = function() {
             var loq = 'NA', uloq = 'NA', bias, cv, label;
-            var hdrs = this[sampleType + 'hdrLabels'].reverse();
+            var hdrs = this['standardhdrLabels'].reverse();
 
             for (var i=0; i<hdrs.length; i++) {
                 label = hdrs[i];
 
                 // All excluded data points
-                if (!this[sampleType + 'summaryData'][label]) {
+                if (!this['standardsummaryData'][label]) {
                     continue;
                 }
-                bias = Math.abs(Number(this[sampleType + 'summaryData'][label]["Bias"]));
-                cv = Math.abs(Number(this[sampleType + 'summaryData'][label]["CV"]));
+                bias = Math.abs(Number(this['standardsummaryData'][label]["Bias"]));
+                cv = Math.abs(Number(this['standardsummaryData'][label]["CV"]));
                 if (bias <= this.biasLimit && (this.cvLimit === null || cv <= this.cvLimit)) {
                     if (uloq === 'NA') {
                         uloq = label;
@@ -549,30 +578,28 @@
             }
 
             var units = this.Units ? this.Units : '';
-            $('#bias-limit').html('Bias Limit: ' + this.biasLimit + '%');
-            $('#cv-limit').html('CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A'));
-            $('#loq-stat').html('Lower: ' + loq + ' ' + LABKEY.Utils.encodeHtml(units));
-            $('#uloq-stat').html('Upper: ' + uloq + ' ' + LABKEY.Utils.encodeHtml(units));
+            $('#lloq-stat').html(loq + ' ' + LABKEY.Utils.encodeHtml(units));
+            $('#uloq-stat').html(uloq + ' ' + LABKEY.Utils.encodeHtml(units));
 
-            this[sampleType + 'xlsExport'].push([]);
-            this[sampleType + 'xlsExport'].push(['Limit of Quantitation']);
-            this[sampleType + 'xlsExport'].push(['Lower: ' + loq + ' ' + units]);
-            this[sampleType + 'xlsExport'].push(['Upper: ' + uloq + ' ' + units]);
-            this[sampleType + 'xlsExport'].push(['Bias Limit: ' + this.biasLimit + '%']);
-            this[sampleType + 'xlsExport'].push(['CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A')]);
+            this['standardxlsExport'].push([]);
+            this['standardxlsExport'].push(['Limit of Quantitation']);
+            this['standardxlsExport'].push(['Lower: ' + loq + ' ' + units]);
+            this['standardxlsExport'].push(['Upper: ' + uloq + ' ' + units]);
+            this['standardxlsExport'].push(['Bias Limit: ' + this.biasLimit + '%']);
+            this['standardxlsExport'].push(['CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A')]);
         };
 
-        var createLodStats = function (sampleType) {
+        var createLodStats = function () {
             var lodValue = "NA";
 
             if (this.lodCalculation != "none") {
                 var mean = "NA", stddev = 0;
-                if (this[sampleType + 'summaryData'][null] && this[sampleType + 'summaryData'][null]["Mean"]) {
-                    mean = Number(this[sampleType + 'summaryData'][null]["Mean"]);
+                if (this['blanksummaryData'][null] && this['blanksummaryData'][null]["Mean"]) {
+                    mean = Number(this['blanksummaryData'][null]["Mean"]);
                 }
 
-                if (this[sampleType + 'summaryData'][null] && this[sampleType + 'summaryData'][null]["StdDev"]) {
-                    stddev = Number(this[sampleType + 'summaryData'][null]["StdDev"]);
+                if (this['blanksummaryData'][null] && this['blanksummaryData'][null]["StdDev"]) {
+                    stddev = Number(this['blanksummaryData'][null]["StdDev"]);
                 }
 
                 if (mean !== "NA") {
@@ -585,26 +612,15 @@
                 }
             }
 
-            var calculation = "None";
-            if (this.lodCalculation === "blank_plus_2_sd") {
-                calculation = "Blank plus 2 * SD";
-            }
-            else if (this.lodCalculation === "blank_plus_3_sd") {
-                calculation = "Blank plus 3 * SD";
-            }
+            $('#llod-value').html(lodValue);
 
-            $('#lod-value').html('Lower: ' + lodValue);
-            $('#lod-calc').html('Calculation: ' + calculation);
-
-            this[sampleType + 'xlsExport'].push([]);
-            this[sampleType + 'xlsExport'].push(["Limit of Detection"]);
-            this[sampleType + 'xlsExport'].push(['Lower: ' + lodValue]);
-            this[sampleType + 'xlsExport'].push(['Calculation: ' + calculation]);
+            this['blankxlsExport'].push([]);
+            this['blankxlsExport'].push(["Limit of Detection"]);
+            this['blankxlsExport'].push(['Lower: ' + lodValue]);
+            this['blankxlsExport'].push(['Calculation: ' + <%= q(lodCalculation)%>]);
         };
 
-        createFomTable('standard', null);
-        createFomTable('blank', null);
-        createFomTable('qc', null);
+        createFomTables();
 
     }(jQuery);
 

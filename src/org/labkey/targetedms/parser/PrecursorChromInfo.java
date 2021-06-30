@@ -18,6 +18,7 @@ package org.labkey.targetedms.parser;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.util.UnexpectedException;
@@ -36,7 +37,7 @@ import java.util.List;
  * Date: 4/16/12
  * Time: 3:39 PM
  */
-public class PrecursorChromInfo extends AbstractChromInfo
+public class PrecursorChromInfo extends AbstractChromInfo implements Comparable<PrecursorChromInfo>
 {
     private static final Logger LOG = LogManager.getLogger(PrecursorChromInfo.class);
 
@@ -471,5 +472,53 @@ public class PrecursorChromInfo extends AbstractChromInfo
             _transitionChromatogramIndices = new ArrayList<>();
         }
         _transitionChromatogramIndices.add(matchIndex);
+    }
+
+    /**
+     * Order first by q-values (ascending) and second by total area (descending) so that it's easy to pluck the "best"
+     * entry from the start of a list.
+     */
+    @Override
+    public int compareTo(@NotNull PrecursorChromInfo o2)
+    {
+        // First sort via q-values
+        if (getQvalue() != null && o2.getQvalue() == null)
+        {
+            // Entries with a q-value are preferred over those without, so sort them to the beginning
+            return -1;
+        }
+        if (o2.getQvalue() != null && getQvalue() == null)
+        {
+            return 1;
+        }
+        if (getQvalue() != null && o2.getQvalue() != null)
+        {
+            // Sort low to high
+            int result = getQvalue().compareTo(o2.getQvalue());
+            // If q-values are equal, fall back to total area
+            if (result != 0)
+            {
+                return result;
+            }
+        }
+
+        // If we don't have a winner based on q-value, look at total area
+
+        if (getTotalArea() == null && o2.getTotalArea() != null)
+        {
+            // Entries with a total area are preferred over those without, so sort them to the beginning
+            return 1;
+        }
+        else if (o2.getTotalArea() == null && getTotalArea() != null)
+        {
+            return -1;
+        }
+        if (getTotalArea() != null && o2.getTotalArea() != null)
+        {
+            // We prefer items with the highest total area
+            return o2.getTotalArea().compareTo(getTotalArea());
+        }
+
+        return 0;
     }
 }

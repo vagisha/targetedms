@@ -1,13 +1,16 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         label="Library Proteins">
     <columns>
-        <column name="RunId/File" />
         <column name="Label" />
+        <column name="Reproducibility" />
+        <column name="CalibrationCurves" />
+        <column name="RunId/File" />
         <column name="Description" />
         <column name="NoteAnnotations" />
+        <column name="RepresentativeDataState" />
     </columns>
     <filters>
-        <filter column="RepresentativeDataState" operator="eq" value="1"/>
+        <filter column="RepresentativeDataState" operator="notin" value="2"/>
     </filters>
     <sorts>
        <sort column="Label" />

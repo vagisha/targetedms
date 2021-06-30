@@ -1,4 +1,4 @@
-<%
+    <%
 /*
  * Copyright (c) 2018-2019 LabKey Corporation
  *
@@ -19,12 +19,14 @@
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page extends="org.labkey.api.jsp.JspBase" %>
+    <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
+    <%@ page import="org.labkey.targetedms.parser.GeneralMolecule" %>
+    <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ taglib prefix="h" uri="http://www.labkey.org/taglib" %>
 <%
-    JspView<TargetedMSController.PKForm> me = (JspView<TargetedMSController.PKForm>) HttpView.currentView();
-    TargetedMSController.PKForm bean = me.getModelBean();
+    JspView<GeneralMolecule> me = (JspView<GeneralMolecule>) HttpView.currentView();
+    GeneralMolecule molecule = me.getModelBean();
 %>
 
 <%!
@@ -44,7 +46,7 @@
     <h4 id="pk-title3"></h4>
     <br/>
     <%
-        for (String subgroup : bean.getSampleGroupNames() )
+        for (String subgroup : TargetedMSManager.get().getReplicateSubgroupNames(getUser(), getContainer(), molecule))
         {
             String subgroupTitle = "Subgroup: " + (subgroup != null ? subgroup : "");
     %>
@@ -102,7 +104,7 @@
 <script type="application/javascript">
     +function ($) {
 
-        var moleculeId = <%=bean.getGeneralMoleculeId()%>;
+        var moleculeId = <%=molecule.getId()%>;
         var peptide='';
         var ion='';
         var fileName='';

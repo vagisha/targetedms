@@ -34,7 +34,10 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.util.DOM;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
@@ -62,6 +65,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.labkey.targetedms.TargetedMSController.getShowListURL;
+import static org.labkey.targetedms.TargetedMSController.getShowRunURL;
 import static org.labkey.targetedms.TargetedMSManager.getSqlDialect;
 
 public class PassportController extends SpringActionController
@@ -75,7 +80,7 @@ public class PassportController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class BeginAction extends SimpleViewAction<Object>
+    public static class BeginAction extends SimpleViewAction<Object>
     {
         @Override
         public ModelAndView getView(Object o, BindException errors)
@@ -123,6 +128,7 @@ public class PassportController extends SpringActionController
     {
         private String _title;
         private IProtein _protein;
+        private TargetedMSRun _run;
 
         @Override
         public ModelAndView getView(ProteinForm form, BindException errors) throws IOException, SAXException, ParserConfigurationException
@@ -142,8 +148,8 @@ public class PassportController extends SpringActionController
 
             VBox result = new VBox();
             PeptideGroup group = PeptideGroupManager.getPeptideGroup(getContainer(), _protein.getPepGroupId());
-            TargetedMSRun run = TargetedMSManager.getRun(group.getRunId());
-            TargetedMSController.addProteinSummaryViews(result, group, run, getUser(), getContainer());
+            _run = TargetedMSManager.getRun(group.getRunId());
+            TargetedMSController.addProteinSummaryViews(result, group, _run, getUser(), getContainer());
 
             if (beforeAfter)
             {
@@ -156,15 +162,37 @@ public class PassportController extends SpringActionController
                 filterSection.setFrame(WebPartView.FrameType.PORTAL);
                 result.addView(filterSection);
 
-                JspView<?> chartSection = new JspView<>("/org/labkey/targetedms/view/passport/charts.jsp");
-                chartSection.setTitle("Comparison Plots");
-                chartSection.setFrame(WebPartView.FrameType.PORTAL);
-                result.addView(chartSection);
+                HtmlView intensityChart = new HtmlView(DOM.DIV(DOM.at().cl("exportable-plot").id("intensityChart"), "Loading..."));
+                intensityChart.setTitle("Peak Areas");
+                intensityChart.setFrame(WebPartView.FrameType.PORTAL);
+                result.addView(intensityChart);
+
+                HtmlView cvChart = new HtmlView(
+                        DOM.createHtmlFragment(
+                            DOM.DIV(DOM.at(DOM.Attribute.style, "text-align: center"),"Show:",
+                                    HtmlString.NBSP, HtmlString.NBSP, DOM.INPUT(DOM.at(DOM.Attribute.checked, null).type("checkbox").id("totalCVCheckbox")), "Total CV",
+                                    HtmlString.NBSP, HtmlString.NBSP, DOM.INPUT(DOM.at(DOM.Attribute.checked, null).type("checkbox").id("intraCVCheckbox")), "Average intra-day CV",
+                                    HtmlString.NBSP, HtmlString.NBSP, DOM.INPUT(DOM.at(DOM.Attribute.checked, null).type("checkbox").id("interCVCheckbox")), "Average inter-day CV"
+                            ),
+                            DOM.DIV(DOM.at().cl("exportable-plot").id("cvChart"), "Loading...")
+                        )
+                );
+                cvChart.setTitle("Coefficient of Variation");
+                cvChart.setFrame(WebPartView.FrameType.PORTAL);
+                result.addView(cvChart);
 
                 JspView<?> chromatogramSection = new JspView<>("/org/labkey/targetedms/view/passport/chromatograms.jsp");
                 chromatogramSection.setTitle("Chromatograms");
                 chromatogramSection.setFrame(WebPartView.FrameType.PORTAL);
                 result.addView(chromatogramSection);
+
+                JspView<?> calCurveSection = new JspView<>("/org/labkey/targetedms/view/passport/webPartPlaceholder.jsp", "calibrationCurveDiv");
+                calCurveSection.setFrame(WebPartView.FrameType.NONE);
+                result.addView(calCurveSection);
+
+                JspView<?> fomSection = new JspView<>("/org/labkey/targetedms/view/passport/webPartPlaceholder.jsp", "figuresOfMeritDiv");
+                fomSection.setFrame(WebPartView.FrameType.NONE);
+                result.addView(fomSection);
             }
 
             return result;
@@ -173,6 +201,11 @@ public class PassportController extends SpringActionController
         @Override
         public void addNavTrail(NavTree root)
         {
+            root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+            if (_run != null)
+            {
+                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
+            }
             if (_protein != null)
             {
                 root.addChild(_protein.getName(), new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer()).addParameter("id", _protein.getPepGroupId()));

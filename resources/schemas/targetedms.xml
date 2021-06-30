@@ -233,7 +233,7 @@
             <column columnName="Note"/>
             <column columnName="Description">
                 <inputType>text</inputType>
-                <displayWidth>800</displayWidth>
+                <displayWidth>500</displayWidth>
             </column>
             <column columnName="Modified">
                 <formatString>DateTime</formatString>

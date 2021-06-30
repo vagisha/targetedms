@@ -33,7 +33,7 @@ function Settings(updateCallback) {
     };
     $( "#peptideSort" )
             .change(function () {
-                $( "select option:selected" ).each(function() {
+                $( "#peptideSort option:selected" ).each(function() {
                     var newSort = $( this ).text();
                     if(newSort !== sortBy) {
                         sortBy = newSort;

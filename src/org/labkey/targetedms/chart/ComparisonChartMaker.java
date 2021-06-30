@@ -126,8 +126,6 @@ public class ComparisonChartMaker
     /** @return pair of the chart title and type */
     private Pair<String, ComparisonDataset.ChartType> getChartConfig(PeptideGroup peptideGroup, Peptide peptide)
     {
-        String title;
-        ComparisonDataset.ChartType chartType;
         if (peptide == null)
         {
             if (peptideGroup == null)

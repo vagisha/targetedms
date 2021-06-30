@@ -136,6 +136,7 @@ class Constants
         UncompressedSize("INTEGER"),
         ChromatogramFormat("INTEGER"),
         Adduct("VARCHAR(200)"),
+        Quantitative("BOOL"),
         ExplicitIonMobility("DOUBLE"),
         CCS("DOUBLE"),
         IonMobilityMS1("DOUBLE"),
@@ -145,6 +146,7 @@ class Constants
         ExplicitIonMobilityUnits("VARCHAR(200)"),
         ExplicitCcsSqa("DOUBLE"),
         ExplicitCompensationVoltage("DOUBLE"),
+        QValue("DOUBLE"),
 
         PrecursorId("INTEGER NOT NULL", Table.Precursor, Id),
         IsotopeModId("INTEGER NOT NULL", Table.IsotopeModification, Id),
@@ -531,6 +533,7 @@ class Constants
         ExplicitIonMobilityUnits(Column.ExplicitIonMobilityUnits),
         ExplicitCcsSqa(Column.ExplicitCcsSqa),
         ExplicitCompensationVoltage(Column.ExplicitCompensationVoltage),
+        QValue(Column.QValue),
 
         Adduct(Column.Adduct);
 
@@ -637,7 +640,8 @@ class Constants
 
         FragmentName(Column.FragmentName),
         ChemicalFormula(Column.ChemicalFormula),
-        Adduct(Column.Adduct);
+        Adduct(Column.Adduct),
+        Quantitative(Column.Quantitative);
 
         private final Column _column;
         private final String _definition;

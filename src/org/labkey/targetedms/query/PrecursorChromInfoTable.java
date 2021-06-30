@@ -91,7 +91,7 @@ public class PrecursorChromInfoTable extends AnnotatedTargetedMSTable
         setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.PrecursorChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
 
         // TotalAreaNormalized  = (area of precursor in the replicate) / (total area of all precursors in the replicate / sample file)
-        SQLFragment totalAreaNormalizedSQL = new SQLFragment("(SELECT TotalArea / X.TotalPrecursorAreaInReplicate FROM ");
+        SQLFragment totalAreaNormalizedSQL = new SQLFragment("(SELECT CASE WHEN X.TotalPrecursorAreaInReplicate > 0 THEN TotalArea / X.TotalPrecursorAreaInReplicate END FROM ");
         totalAreaNormalizedSQL.append(" ( ");
         totalAreaNormalizedSQL.append(" SELECT SUM(TotalArea) AS TotalPrecursorAreaInReplicate FROM ");
         totalAreaNormalizedSQL.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");

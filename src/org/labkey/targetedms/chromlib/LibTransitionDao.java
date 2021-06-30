@@ -62,8 +62,16 @@ public class LibTransitionDao extends BaseDaoImpl<LibTransition>
         stmt.setString(colIndex++, transition.getFragmentName());
         stmt.setString(colIndex++, transition.getChemicalFormula());
         stmt.setString(colIndex++, transition.getAdduct());
+        Boolean quantitative = transition.isQuantitative();
+        if (quantitative == null)
+        {
+            stmt.setNull(colIndex++, Types.BOOLEAN);
+        }
+        else
+        {
+            stmt.setBoolean(colIndex++, quantitative.booleanValue());
+        }
     }
-
     @Override
     public String getTableName()
     {
@@ -101,6 +109,16 @@ public class LibTransitionDao extends BaseDaoImpl<LibTransition>
             transition.setFragmentName(rs.getString(TransitionColumn.FragmentName.baseColumn().name()));
             transition.setChemicalFormula(rs.getString(TransitionColumn.ChemicalFormula.baseColumn().name()));
             transition.setAdduct(rs.getString(TransitionColumn.Adduct.baseColumn().name()));
+
+            boolean quantitative = rs.getBoolean(rs.getInt(TransitionColumn.Quantitative.baseColumn().name()));
+            if (rs.wasNull())
+            {
+                transition.setQuantitative(null);
+            }
+            else
+            {
+                transition.setQuantitative(quantitative);
+            }
 
             transitions.add(transition);
         }

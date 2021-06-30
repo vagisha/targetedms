@@ -200,15 +200,11 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     // Look at TransitionDocNode.IsQuantitative(SrmSettings settings) in the Skyline code
     public boolean isQuantitative(@Nullable TransitionSettings.FullScanSettings settings)
     {
-        if(!explicitQuantitative())
+        if (!explicitQuantitative())
         {
             return false;
         }
-        if(!isMs1() && isFullScanAcquisitionDDA(settings))
-        {
-            return false;
-        }
-        return true;
+        return isMs1() || !isFullScanAcquisitionDDA(settings);
     }
 
     boolean isMs1()
@@ -273,12 +269,12 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
 
     public boolean isCustomIon()
     {
-        return fragmentType != null ? fragmentType.equalsIgnoreCase(CUSTOM) : false;
+        return CUSTOM.equalsIgnoreCase(fragmentType);
     }
 
     public boolean isPrecursorIon()
     {
-        return fragmentType != null ? fragmentType.equalsIgnoreCase(PRECURSOR) : false;
+        return PRECURSOR.equalsIgnoreCase(fragmentType);
     }
 
     public boolean isNterm()

@@ -59,10 +59,12 @@ import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogParser;
 import org.labkey.targetedms.passport.PassportController;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
+import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.SkylineListSchema;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.search.ProteinSearchWebPart;
 import org.labkey.targetedms.view.CalibrationCurveView;
+import org.labkey.targetedms.view.FiguresOfMeritView;
 import org.labkey.targetedms.view.LibraryQueryViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.QCSummaryWebPart;
@@ -104,6 +106,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
     public static final String TARGETED_MS_PARETO_PLOT = "Targeted MS Pareto Plot";
     public static final String TARGETED_MS_CALIBRATION_CURVE = "Targeted MS Calibration Curve";
+    public static final String TARGETED_MS_FIGURES_OF_MERIT = "Targeted MS Figures of Merit";
 
     public static final String PEPTIDE_TAB_NAME = "Peptides";
     public static final String PROTEIN_TAB_NAME = "Proteins";
@@ -438,6 +441,31 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 {
                     return false;
                 }
+            },
+
+            new BaseWebPartFactory(TARGETED_MS_FIGURES_OF_MERIT)
+            {
+                @Override
+                public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+                {
+                    String idString = webPart.getPropertyMap().get("generalMoleculeId");
+                    long id = 0;
+                    if (idString != null)
+                    {
+                        try
+                        {
+                            id = Long.parseLong(idString);
+                        }
+                        catch (NumberFormatException ignored) {}
+                    }
+                    return new FiguresOfMeritView(portalCtx.getUser(), portalCtx.getContainer(), id, true);
+                }
+
+                @Override
+                public boolean isAvailable(Container c, String scope, String location)
+                {
+                    return false;
+                }
             }
         );
     }
@@ -577,7 +605,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             ReplicateLabelMinimizer.TestCase.class,
             SampleFile.TestCase.class,
             SkylineAuditLogParser.TestCase.class,
-            TargetedMSController.TestCase.class
+            TargetedMSController.TestCase.class,
+            PrecursorManager.TestCase.class
         );
     }
 

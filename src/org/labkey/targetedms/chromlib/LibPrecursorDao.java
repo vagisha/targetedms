@@ -111,6 +111,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         stmt.setString(colIndex++, precursor.getExplicitIonMobilityUnits());
         stmt.setObject(colIndex++, precursor.getExplicitCcsSqa(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getExplicitCompensationVoltage(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getQValue(), Types.DOUBLE);
 
         stmt.setString(colIndex++, precursor.getAdduct());
     }

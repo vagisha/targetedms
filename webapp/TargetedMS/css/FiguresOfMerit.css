@@ -13,19 +13,7 @@
     margin-bottom: 5px;
 }
 
-.targetedms-fom .export-icon {
-    opacity: 0.4;
-    font-size: 24px;
-    color: #707070;
-    padding-top: 10px;
-    position: absolute;
-    right: 100px;
-}
 .targetedms-fom:hover .export-icon {
-    display: block;
-}
-.targetedms-fom .export-icon:hover {
-    opacity: 1;
     cursor: pointer;
 }
 

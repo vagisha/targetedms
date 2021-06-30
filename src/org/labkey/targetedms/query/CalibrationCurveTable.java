@@ -24,7 +24,9 @@ import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,6 +46,10 @@ public class CalibrationCurveTable extends TargetedMSTable
         getMutableColumn(FieldKey.fromParts("RunId")).setHidden(true);
         getMutableColumn(FieldKey.fromParts("QuantificationSettingsId")).setHidden(true);
         getMutableColumn(FieldKey.fromParts("GeneralMoleculeId")).setURL(detailsURL);
+
+        List<FieldKey> visibleCols = new ArrayList<>(getDefaultVisibleColumns());
+        visibleCols.add(FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "Label"));
+        setDefaultVisibleColumns(visibleCols);
     }
 
     public static class PeptideCalibrationCurveTable extends CalibrationCurveTable
