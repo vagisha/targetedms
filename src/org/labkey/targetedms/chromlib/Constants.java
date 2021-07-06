@@ -292,7 +292,7 @@ class Constants
     {
         Id(Column.Id),
         Name(Column.Name, "VARCHAR(100) NOT NULL"),
-        AminoAcid(Column.AminoAcid, "VARCHAR(30)"),
+        AminoAcid(Column.AminoAcid, "VARCHAR(100)"),
         Terminus(Column.Terminus),
         Formula(Column.Formula),
         MassDiffMono(Column.MassDiffMono),
@@ -361,7 +361,7 @@ class Constants
         Id(Column.Id),
         Name(Column.Name, "VARCHAR(100) NOT NULL"),
         IsotopeLabel(Column.IsotopeLabel),
-        AminoAcid(Column.AminoAcid, "VARCHAR(30)"),
+        AminoAcid(Column.AminoAcid, "VARCHAR(100)"),
         Terminus(Column.Terminus),
         Formula(Column.Formula),
         MassDiffMono(Column.MassDiffMono),
