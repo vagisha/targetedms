@@ -15,7 +15,6 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.Lsid;
-import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
@@ -45,6 +44,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.labkey.api.files.FileContentService.UPLOADED_FILE;
 import static org.labkey.targetedms.datasource.MsDataSource.isZip;
 
 public class MsDataSourceUtil
@@ -609,7 +609,7 @@ public class MsDataSourceUtil
 
         private ExpData addData(String fileName, Path rawDataDir, String subfolder)
         {
-            Lsid lsid = new Lsid(ExperimentService.get().generateGuidLSID(_container, new DataType("UploadedFile")));
+            Lsid lsid = new Lsid(ExperimentService.get().generateGuidLSID(_container, UPLOADED_FILE));
             ExpData data = ExperimentService.get().createData(_container, fileName, lsid.toString());
 
             data.setContainer(_container);
@@ -621,7 +621,7 @@ public class MsDataSourceUtil
         @Test
         public void testEncodedDataFileUrl() throws IOException
         {
-            Lsid lsid = new Lsid(ExperimentService.get().generateGuidLSID(_container, new DataType("UploadedFile")));
+            Lsid lsid = new Lsid(ExperimentService.get().generateGuidLSID(_container, UPLOADED_FILE));
             String fileName = "Space !#$%&'(+)+,;=@[+].raw";
             ExpData data = ExperimentService.get().createData(_container, fileName, lsid.toString());
             data.setContainer(_container);
