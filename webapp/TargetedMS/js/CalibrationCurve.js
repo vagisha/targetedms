@@ -45,12 +45,15 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
         var me = this;
         window.addEventListener("resize", function () {
-            me.setWidth(me.getPanelSize());
-            me.plot.setWidth(me.getWidth());
-            me.plot.render();
+            // Issue 43532 - may have been loaded even if we don't have a curve to plot
+            if (me.plot) {
+                me.setWidth(me.getPanelSize());
+                me.plot.setWidth(me.getWidth());
+                me.plot.render();
 
-            // Plot re-renders so need to shrink dots to get back to initial state
-            d3.selectAll('a.point path').transition().attr("stroke-width", 1);
+                // Plot re-renders so need to shrink dots to get back to initial state
+                d3.selectAll('a.point path').transition().attr("stroke-width", 1);
+            }
         }, false);
     },
 
@@ -281,7 +284,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             {text: 'Slope: ' + scope.formatLegendValue(this.data.calibrationCurve.slope, true), color: 'white'},
             {text: 'Intercept: ' + scope.formatLegendValue(this.data.calibrationCurve.intercept, true), color: 'white'}
         ];
-        if (this.data.calibrationCurve.quadraticCoefficient && this.data.calibrationCurve.quadraticCoefficient != 0.0) {
+        if (this.data.calibrationCurve.quadraticCoefficient && this.data.calibrationCurve.quadraticCoefficient !== 0.0) {
             result.push({text: 'Quadratic Coefficient: ' + scope.formatLegendValue(this.data.calibrationCurve.quadraticCoefficient), color: 'white'});
         }
         result.push({text: 'rSquared: ' + scope.formatLegendValue(this.data.calibrationCurve.rSquared), color: 'white'});
