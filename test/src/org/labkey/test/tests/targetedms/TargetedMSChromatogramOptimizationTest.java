@@ -83,6 +83,8 @@ public class TargetedMSChromatogramOptimizationTest extends TargetedMSTest
                 sizeOfTable(downloadedClibFile2, "TransitionOptimization"));
         checker().verifyEquals("Invalid number of rows in TransitionOptimization", 28,
                 sizeOfTable(downloadedClibFile2, "TransitionOptimization"));
+        checker().verifyEquals("Inconsistent rows in PrecursorRetentionTime",27,
+                sizeOfTable(downloadedClibFile, "PrecursorRetentionTime"));
     }
 
     private int getServerTableRowCount(String tableName, @Nullable String viewName)
