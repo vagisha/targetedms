@@ -22,6 +22,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.RunRepresentativeDataState;
 import org.labkey.api.util.FileUtil;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
@@ -96,7 +97,7 @@ public class ContainerChromatogramLibraryWriter
     // PredictorId(Panorama) -> PredictorId(SQLite Library)
     private Map<Long, Integer> _predictorIdMap;
 
-    private TargetedMSRun.RepresentativeDataState _libraryType = null;
+    private RunRepresentativeDataState _libraryType = null;
     private Long _bestReplicateIdForCurrentPeptideGroup;
 
     private final User _user;
@@ -207,7 +208,7 @@ public class ContainerChromatogramLibraryWriter
                                              " does not match library type "+_libraryType);
         }
 
-        if(run.getRepresentativeDataState() == TargetedMSRun.RepresentativeDataState.Representative_Protein)
+        if(run.getRepresentativeDataState() == RunRepresentativeDataState.Representative_Protein)
         {
             // If the run has representative protein data write the representative peptide groups.
             List<PeptideGroup> pepGroups = PeptideGroupManager.getRepresentativePeptideGroups(runId);
@@ -581,12 +582,12 @@ public class ContainerChromatogramLibraryWriter
 
     private PrecursorChromInfo getBestPrecursorChromInfo(GeneralPrecursor<?> precursor)
     {
-        if(_libraryType == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
+        if(_libraryType == RunRepresentativeDataState.Representative_Peptide)
         {
             // Get the precursor chrom info for this precursor that has the max total area across all replicates.
             return PrecursorManager.getBestPrecursorChromInfoForPrecursor(precursor.getId());
         }
-        else if(_libraryType == TargetedMSRun.RepresentativeDataState.Representative_Protein)
+        else if(_libraryType == RunRepresentativeDataState.Representative_Protein)
         {
             if(_bestReplicateIdForCurrentPeptideGroup != null)
             {

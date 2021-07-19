@@ -32,6 +32,7 @@ import org.labkey.api.data.TableResultSet;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChromatogramDataset.RtRange;
@@ -39,7 +40,6 @@ import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
-import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

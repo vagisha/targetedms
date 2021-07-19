@@ -59,6 +59,8 @@ import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.RepresentativeDataState;
+import org.labkey.api.targetedms.RunRepresentativeDataState;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.StringExpression;
@@ -70,7 +72,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.ChromatogramBinaryFormat;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
-import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.query.*;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
@@ -937,9 +938,9 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
         {
             return new EnumTableInfo<>(
-                    TargetedMSRun.RepresentativeDataState.class,
+                    RunRepresentativeDataState.class,
                     this,
-                    TargetedMSRun.RepresentativeDataState::getLabel,
+                    RunRepresentativeDataState::getLabel,
                     true,
                     "Possible states a run might be in for resolving representative data after upload"
                     );

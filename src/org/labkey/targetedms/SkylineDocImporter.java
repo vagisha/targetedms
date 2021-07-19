@@ -47,6 +47,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.RunRepresentativeDataState;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
@@ -118,7 +119,7 @@ public class SkylineDocImporter
 
     private User _user;
     private Container _container;
-    private final TargetedMSRun.RepresentativeDataState _representative;
+    private final RunRepresentativeDataState _representative;
     private final ExpData _expData;
     private String _description;
 
@@ -161,7 +162,7 @@ public class SkylineDocImporter
 
     @JsonCreator
     private SkylineDocImporter(@JsonProperty("_expData") ExpData expData, @JsonProperty("_context") XarContext context,
-                               @JsonProperty("_representative") TargetedMSRun.RepresentativeDataState representative,
+                               @JsonProperty("_representative") RunRepresentativeDataState representative,
                                @JsonProperty("_localDirectory") LocalDirectory localDirectory, @JsonProperty("_pipeRoot") PipeRoot pipeRoot)
     {
         _representative = representative;
@@ -172,7 +173,7 @@ public class SkylineDocImporter
     }
 
     public SkylineDocImporter(User user, Container c, String description, ExpData expData, Logger log, XarContext context,
-                              TargetedMSRun.RepresentativeDataState representative, @Nullable LocalDirectory localDirectory, @Nullable PipeRoot pipeRoot)
+                              RunRepresentativeDataState representative, @Nullable LocalDirectory localDirectory, @Nullable PipeRoot pipeRoot)
     {
         _context = context;
         _user = user;
@@ -2570,7 +2571,7 @@ public class SkylineDocImporter
         run.setFileName(_expData.getName());
         run.setDataId(_expData.getRowId());
         run.setStatus(IMPORT_STARTED);
-        run.setRepresentativeDataState(_representative == null ? TargetedMSRun.RepresentativeDataState.NotRepresentative : _representative);
+        run.setRepresentativeDataState(_representative == null ? RunRepresentativeDataState.NotRepresentative : _representative);
 
         run = Table.insert(_user, TargetedMSManager.getTableInfoRuns(), run);
         return run.getId();

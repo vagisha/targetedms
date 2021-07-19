@@ -29,7 +29,7 @@ import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.MoleculePrecursor;
-import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.api.targetedms.RepresentativeDataState;
 
 import java.util.HashSet;
 import java.util.List;

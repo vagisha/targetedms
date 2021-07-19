@@ -70,6 +70,8 @@ import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.DeletePermission;
+import org.labkey.api.targetedms.RunRepresentativeDataState;
+import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.util.FileUtil;
@@ -88,7 +90,6 @@ import org.labkey.targetedms.outliers.OutlierGenerator;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.Replicate;
-import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.SampleFileChromInfo;
 import org.labkey.targetedms.parser.TransitionSettings;
@@ -621,11 +622,11 @@ public class TargetedMSManager
 
         TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(container);
         // Default folder type or Experiment is not representative
-        TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
+        var representative = RunRepresentativeDataState.NotRepresentative;
         if (folderType == TargetedMSService.FolderType.Library)
-            representative = TargetedMSRun.RepresentativeDataState.Representative_Peptide;
+            representative = RunRepresentativeDataState.Representative_Peptide;
         else if (folderType == TargetedMSService.FolderType.LibraryProtein)
-            representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
+            representative = RunRepresentativeDataState.Representative_Protein;
 
         SkylineDocImporter importer = new SkylineDocImporter(user, container, FileUtil.getFileName(path), expData, null, xarContext, representative, null, null);
         SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
@@ -898,15 +899,15 @@ public class TargetedMSManager
         return null;
     }
 
-    public static void markRunsNotRepresentative(Container container, TargetedMSRun.RepresentativeDataState representativeState)
+    public static void markRunsNotRepresentative(Container container, RunRepresentativeDataState representativeState)
     {
         Collection<Long> representativeRunIds = null;
 
-        if(representativeState == TargetedMSRun.RepresentativeDataState.Representative_Protein)
+        if(representativeState == RunRepresentativeDataState.Representative_Protein)
         {
             representativeRunIds = getProteinRepresentativeRunIds(container);
         }
-        else if(representativeState == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
+        else if(representativeState == RunRepresentativeDataState.Representative_Peptide)
         {
             representativeRunIds = getPeptideRepresentativeRunIds(container);
         }
@@ -919,7 +920,7 @@ public class TargetedMSManager
         SQLFragment updateSql = new SQLFragment();
         updateSql.append("UPDATE "+TargetedMSManager.getTableInfoRuns());
         updateSql.append(" SET RepresentativeDataState = ?");
-        updateSql.add(TargetedMSRun.RepresentativeDataState.NotRepresentative.ordinal());
+        updateSql.add(RunRepresentativeDataState.NotRepresentative.ordinal());
         updateSql.append(" WHERE Container = ?");
         updateSql.add(container);
         updateSql.append(" AND RepresentativeDataState = ? ");
@@ -1097,7 +1098,7 @@ public class TargetedMSManager
                     LocalDirectory localDirectory = LocalDirectory.create(root, MODULE_NAME);
                     try
                     {
-                        RepresentativeStateManager.setRepresentativeState(user, run.getContainer(), localDirectory, run, TargetedMSRun.RepresentativeDataState.NotRepresentative);
+                        RepresentativeStateManager.setRepresentativeState(user, run.getContainer(), localDirectory, run, RunRepresentativeDataState.NotRepresentative);
                     }
                     finally
                     {

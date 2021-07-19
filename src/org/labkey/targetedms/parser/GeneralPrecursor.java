@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.labkey.api.targetedms.RepresentativeDataState;
+
 import java.util.List;
 
 public class GeneralPrecursor<TransitionType extends GeneralTransition> extends AnnotatedEntity<PrecursorAnnotation>

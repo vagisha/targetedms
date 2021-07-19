@@ -24,9 +24,9 @@ import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.PeptideGroup;
-import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,8 +34,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * User: vsharma

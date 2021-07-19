@@ -25,12 +25,12 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
+import org.labkey.api.targetedms.RunRepresentativeDataState;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSController;
-import org.labkey.targetedms.TargetedMSRun;
 
 import java.util.List;
 
@@ -45,18 +45,18 @@ public class TargetedMSImportPipelineJob extends PipelineJob
 {
     private final ExpData _expData;
     private SkylineDocImporter.RunInfo _runInfo;
-    private final TargetedMSRun.RepresentativeDataState _representative;
+    private final RunRepresentativeDataState _representative;
 
     @JsonCreator
     protected TargetedMSImportPipelineJob(@JsonProperty("_expData") ExpData expData,
-                                          @JsonProperty("_representative") TargetedMSRun.RepresentativeDataState representative)
+                                          @JsonProperty("_representative") RunRepresentativeDataState representative)
     {
         super();
         _expData = expData;
         _representative = representative;
     }
 
-    public TargetedMSImportPipelineJob(ViewBackgroundInfo info, ExpData expData, SkylineDocImporter.RunInfo runInfo, PipeRoot root, TargetedMSRun.RepresentativeDataState representative)
+    public TargetedMSImportPipelineJob(ViewBackgroundInfo info, ExpData expData, SkylineDocImporter.RunInfo runInfo, PipeRoot root, RunRepresentativeDataState representative)
     {
         super(TargetedMSPipelineProvider.name, info, root);
         _expData = expData;
@@ -107,7 +107,7 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         return _expData;
     }
 
-    public TargetedMSRun.RepresentativeDataState getRepresentative()
+    public RunRepresentativeDataState getRepresentative()
     {
         return _representative;
     }

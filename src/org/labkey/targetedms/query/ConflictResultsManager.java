@@ -37,7 +37,7 @@ import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
-import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
 import java.util.ArrayList;

@@ -22,7 +22,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.api.targetedms.RepresentativeDataState;
 import org.springframework.web.servlet.mvc.Controller;
 
 import java.util.ArrayList;

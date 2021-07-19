@@ -18,7 +18,7 @@ package org.labkey.targetedms.query;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
-import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.api.targetedms.RepresentativeDataState;
 
 import java.io.IOException;
 import java.io.Writer;

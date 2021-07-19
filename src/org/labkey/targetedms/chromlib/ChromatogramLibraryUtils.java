@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.chromlib;
 
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
@@ -44,6 +46,14 @@ import java.sql.Statement;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.labkey.api.targetedms.TargetedMSService.CHROM_LIB_FILE_BASE_NAME;
+import static org.labkey.api.targetedms.TargetedMSService.CHROM_LIB_FILE_DIR;
+import static org.labkey.api.targetedms.TargetedMSService.CHROM_LIB_FILE_EXT;
+import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
+import static org.labkey.api.targetedms.TargetedMSService.PROP_CHROM_LIB_REVISION;
 
 /**
  * User: vsharma
@@ -52,7 +62,6 @@ import java.util.Map;
  */
 public class ChromatogramLibraryUtils
 {
-    private static final String propMapKey = "chromLibRevision";
     public static final int NO_LIB_REVISION = -1;
 
     public static boolean isRevisionCurrent(Container container, User user, String schemaVersion, int revisionNumber)
@@ -62,14 +71,14 @@ public class ChromatogramLibraryUtils
 
     public static int getCurrentRevision(Container container, User user)
     {
-        Map<String, String> propMap = PropertyManager.getProperties(container, "TargetedMS");
-        if(!propMap.containsKey(propMapKey))
+        Map<String, String> propMap = PropertyManager.getProperties(container, MODULE_NAME);
+        if(!propMap.containsKey(PROP_CHROM_LIB_REVISION))
         {
             return NO_LIB_REVISION;
         }
         else
         {
-            return Integer.parseInt(propMap.get(propMapKey));
+            return Integer.parseInt(propMap.get(PROP_CHROM_LIB_REVISION));
         }
     }
 
@@ -111,7 +120,7 @@ public class ChromatogramLibraryUtils
     public static int incrementLibraryRevision(Container container, User user, LocalDirectory localDirectory)
     {
         PropertyManager.PropertyMap propMap = PropertyManager.getWritableProperties(container, "TargetedMS", true);
-        String revisionVal = propMap.get(propMapKey);
+        String revisionVal = propMap.get(PROP_CHROM_LIB_REVISION);
         int newRevision;
         if(revisionVal == null)
         {
@@ -122,7 +131,7 @@ public class ChromatogramLibraryUtils
             newRevision = Integer.parseInt(revisionVal) + 1;
         }
 
-        propMap.put(propMapKey, Integer.toString(newRevision));
+        propMap.put(PROP_CHROM_LIB_REVISION, Integer.toString(newRevision));
         propMap.save();
 
         // write the library to a file every time there is an increment
@@ -147,19 +156,41 @@ public class ChromatogramLibraryUtils
     public static Path getChromLibFile(Container container, int revision, boolean createLibdir) throws IOException
     {
         Path chromLibDir = getChromLibDir(container, createLibdir);
-        return chromLibDir.resolve(Constants.CHROM_LIB_FILE_NAME+"_"+container.getRowId()+"_rev"+revision+"."+Constants.CHROM_LIB_FILE_EXT);
+        return chromLibDir.resolve(getChromLibFileName(container, revision));
+    }
+
+    @NotNull
+    public static String getChromLibFileName(@NotNull Container container, int revision)
+    {
+        return CHROM_LIB_FILE_BASE_NAME + "_" + container.getRowId() + "_rev" + revision + "." + CHROM_LIB_FILE_EXT;
+    }
+
+    // Example: chromlib_314_rev5.clib
+    private static final Pattern chromlibPattern = Pattern.compile(CHROM_LIB_FILE_BASE_NAME + "_\\d+_rev(\\d+)\\." + CHROM_LIB_FILE_EXT);
+    @Nullable
+    public static Integer parseChromLibRevision(@NotNull String chromLibFileName)
+    {
+        if (!StringUtils.isBlank(chromLibFileName))
+        {
+            Matcher match = chromlibPattern.matcher(chromLibFileName);
+            if(match.matches())
+            {
+                return Integer.valueOf(match.group(1));
+            }
+        }
+        return null;
     }
 
     public static Path getChromLibTempFile(Container container, LocalDirectory localDirectory, int revision) throws IOException
     {
         // Temp file in LocalDirectory (guaranteed to be local File dir)
         File localDir = localDirectory.getLocalDirectoryFile();
-        Path chromLibDir = localDir.toPath().resolve(Constants.LIB_FILE_DIR);
+        Path chromLibDir = localDir.toPath().resolve(CHROM_LIB_FILE_DIR);
         if(!Files.exists(chromLibDir))
             Files.createDirectory(chromLibDir);
         return chromLibDir.resolve(
-                        FileUtil.makeFileNameWithTimestamp(Constants.CHROM_LIB_FILE_NAME+"_"+container.getRowId()+"_rev"+revision,
-                                                           Constants.CHROM_LIB_FILE_EXT));
+                        FileUtil.makeFileNameWithTimestamp(CHROM_LIB_FILE_BASE_NAME+"_"+container.getRowId()+"_rev"+revision,
+                                                           CHROM_LIB_FILE_EXT));
     }
 
     private static Path getChromLibDir(Container container, boolean createLibDir) throws IOException
@@ -169,7 +200,7 @@ public class ChromatogramLibraryUtils
         {
             throw new ConfigurationException("Unable to resolve a pipeline root for " + container.getPath());
         }
-        Path chromLibDir = root.getRootNioPath().resolve(Constants.LIB_FILE_DIR);
+        Path chromLibDir = root.getRootNioPath().resolve(CHROM_LIB_FILE_DIR);
         if(!Files.exists(chromLibDir) && createLibDir)
         {
             Files.createDirectory(chromLibDir);

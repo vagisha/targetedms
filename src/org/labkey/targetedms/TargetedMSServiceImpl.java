@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
@@ -33,6 +35,7 @@ import org.labkey.api.targetedms.TargetedMSFolderTypeListener;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.datasource.MsDataSourceUtil;
 import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.speclib.BlibSpectrumReader;
@@ -131,6 +134,30 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public TableInfo getTableInfoGeneralMolecule()
     {
         return TargetedMSManager.getTableInfoGeneralMolecule();
+    }
+
+    @Override
+    public TableInfo getTableInfoMolecule()
+    {
+        return TargetedMSManager.getTableInfoMolecule();
+    }
+
+    @Override
+    public TableInfo getTableInfoGeneralPrecursor()
+    {
+        return TargetedMSManager.getTableInfoGeneralPrecursor();
+    }
+
+    @Override
+    public TableInfo getTableInfoPrecursor()
+    {
+        return TargetedMSManager.getTableInfoPrecursor();
+    }
+
+    @Override
+    public TableInfo getTableInfoMoleculePrecursor()
+    {
+        return TargetedMSManager.getTableInfoMoleculePrecursor();
     }
 
     @Override
@@ -242,5 +269,17 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public List<? extends ISampleFile> getSampleFilesWithData(List<? extends ISampleFile> sampleFiles, Container container)
     {
         return MsDataSourceUtil.getInstance().getSampleFilesWithData(sampleFiles, container);
+    }
+
+    @Override
+    public String getChromLibFileName(@NotNull Container container, int revision)
+    {
+        return ChromatogramLibraryUtils.getChromLibFileName(container, revision);
+    }
+
+    @Override
+    public @Nullable Integer parseChromLibRevision(@NotNull String chromLibFileName)
+    {
+        return ChromatogramLibraryUtils.parseChromLibRevision(chromLibFileName);
     }
 }

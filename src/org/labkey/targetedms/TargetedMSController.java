@@ -123,6 +123,8 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.targetedms.RepresentativeDataState;
+import org.labkey.api.targetedms.RunRepresentativeDataState;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.TargetedMSUrls;
 import org.labkey.api.targetedms.model.SampleFileInfo;
@@ -183,10 +185,8 @@ import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
-import org.labkey.targetedms.parser.QuantificationSettings;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
-import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.SampleFileChromInfo;
 import org.labkey.targetedms.parser.SkylineBinaryParser;
@@ -5316,7 +5316,7 @@ public class TargetedMSController extends SpringActionController
 
                     // If there are runs in the container that no longer have any representative data mark
                     // them as being not representative.
-                    TargetedMSManager.markRunsNotRepresentative(getContainer(), TargetedMSRun.RepresentativeDataState.Representative_Protein);
+                    TargetedMSManager.markRunsNotRepresentative(getContainer(), RunRepresentativeDataState.Representative_Protein);
                 }
                 else
                 {
@@ -5330,7 +5330,7 @@ public class TargetedMSController extends SpringActionController
 
                     // If there are runs in the container that no longer have any representative data mark
                     // them as being not representative.
-                    TargetedMSManager.markRunsNotRepresentative(getContainer(), TargetedMSRun.RepresentativeDataState.Representative_Peptide);
+                    TargetedMSManager.markRunsNotRepresentative(getContainer(), RunRepresentativeDataState.Representative_Peptide);
                 }
 
                 // Increment the chromatogram library revision number for this container.

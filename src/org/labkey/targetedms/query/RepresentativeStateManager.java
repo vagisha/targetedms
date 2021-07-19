@@ -25,6 +25,8 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.RunRepresentativeDataState;
+import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMsRepresentativeStateAuditProvider;
@@ -32,12 +34,10 @@ import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.Precursor;
-import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * User: vsharma
@@ -49,16 +49,16 @@ public class RepresentativeStateManager
     private RepresentativeStateManager() {}
 
     public static void setRepresentativeState(User user, Container container, LocalDirectory localDirectory,
-                                              TargetedMSRun run, TargetedMSRun.RepresentativeDataState state)
+                                              TargetedMSRun run, RunRepresentativeDataState state)
     {
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
         {
             int conflictCount = 0;
-            if(state == TargetedMSRun.RepresentativeDataState.Representative_Protein)
+            if(state == RunRepresentativeDataState.Representative_Protein)
             {
                 conflictCount = resolveRepresentativeProteinState(container, run);
             }
-            else if(state == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
+            else if(state == RunRepresentativeDataState.Representative_Peptide)
             {
                 conflictCount = resolveRepresentativeState(container, run, TargetedMSManager.getTableInfoPeptide(),
                         TargetedMSManager.getTableInfoPrecursor(),
@@ -71,16 +71,16 @@ public class RepresentativeStateManager
                                         "' '",
                                         "COALESCE(" + p + ".CustomIonName, '')",
                                         "' - '",
-                                        "CAST(" + gp + ".mz AS VARCHAR)"));;
+                                        "CAST(" + gp + ".mz AS VARCHAR)"));
             }
-            else if(state == TargetedMSRun.RepresentativeDataState.NotRepresentative)
+            else if(state == RunRepresentativeDataState.NotRepresentative)
             {
-                TargetedMSRun.RepresentativeDataState currentState = run.getRepresentativeDataState();
-                if(currentState == TargetedMSRun.RepresentativeDataState.Representative_Protein)
+                RunRepresentativeDataState currentState = run.getRepresentativeDataState();
+                if(currentState == RunRepresentativeDataState.Representative_Protein)
                 {
                     revertProteinRepresentativeState(user, container, run);
                 }
-                else if(currentState == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
+                else if(currentState == RunRepresentativeDataState.Representative_Peptide)
                 {
                     revertPeptideRepresentativeState(user, container, run);
                     revertMoleculeRepresentativeState(user, container, run);
@@ -97,7 +97,7 @@ public class RepresentativeStateManager
 
             // If there are runs in the container that no longer have any representative data mark
             // them as being not representative.
-            TargetedMSManager.markRunsNotRepresentative(container, TargetedMSRun.RepresentativeDataState.Representative_Protein);
+            TargetedMSManager.markRunsNotRepresentative(container, RunRepresentativeDataState.Representative_Protein);
 
             // Increment the chromatogram library revision number for this container.
             ChromatogramLibraryUtils.incrementLibraryRevision(container, user, localDirectory);

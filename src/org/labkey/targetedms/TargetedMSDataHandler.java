@@ -32,6 +32,7 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.RunRepresentativeDataState;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
@@ -77,7 +78,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     {
         String description = data.getFile().getName();
         SkylineDocImporter importer = new SkylineDocImporter(info.getUser(), context.getContainer(), description,
-                                                             data, log, context, TargetedMSRun.RepresentativeDataState.NotRepresentative, null,
+                                                             data, log, context, RunRepresentativeDataState.NotRepresentative, null,
                                                              PipelineService.get().findPipelineRoot(context.getContainer()));
 
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())

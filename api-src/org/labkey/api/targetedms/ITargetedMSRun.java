@@ -26,13 +26,15 @@ import java.util.Date;
  */
 public interface ITargetedMSRun
 {
-    public Container getContainer();
-    public String getBaseName();
-    public String getFileName();
-    public String getDescription();
-    public Date getCreated();
-    public long getId();
-    public Integer getDataId();
-    public Integer getSkydDataId();
-    public String getSoftwareVersion();
+
+    Container getContainer();
+    String getBaseName();
+    String getFileName();
+    String getDescription();
+    Date getCreated();
+    long getId();
+    Integer getDataId();
+    Integer getSkydDataId();
+    String getSoftwareVersion();
+    RunRepresentativeDataState getRepresentativeDataState();
 }

@@ -18,12 +18,15 @@ package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.targetedms.ITargetedMSRun;
+import org.labkey.api.targetedms.RunRepresentativeDataState;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.MemTracker;
 import org.labkey.targetedms.parser.TransitionSettings;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import static org.labkey.api.targetedms.RunRepresentativeDataState.*;
 
 /**
  * User: vsharma
@@ -32,26 +35,6 @@ import java.util.Date;
  */
 public class TargetedMSRun implements Serializable, ITargetedMSRun
 {
-    /** Don't change the ordering of these enum values without updating the values in targetedms.runs.representativedatastate */
-    public enum RepresentativeDataState
-    {
-        NotRepresentative(""),
-        Representative_Protein("R - Protein"),
-        Representative_Peptide("R - Peptide");
-
-        private String _label;
-
-        private RepresentativeDataState(String label)
-        {
-            _label = label;
-        }
-
-        public String getLabel()
-        {
-            return _label;
-        }
-    }
-
     protected long _runId;
     protected Container _container;
     protected String _description;
@@ -65,7 +48,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     protected boolean _deleted;
     protected String _experimentRunLSID;
 
-    protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
+    protected RunRepresentativeDataState _representativeDataState = NotRepresentative;
 
     protected int _peptideGroupCount;
     protected int _peptideCount;
@@ -330,20 +313,20 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
 
     public void setAuditLogEntriesCount(int auditLogEntriesCount){this._auditLogEntriesCount = auditLogEntriesCount;}
 
-    public RepresentativeDataState getRepresentativeDataState()
+    public RunRepresentativeDataState getRepresentativeDataState()
     {
         return _representativeDataState;
     }
 
-    public void setRepresentativeDataState(RepresentativeDataState representativeDataState)
+    public void setRepresentativeDataState(RunRepresentativeDataState representativeDataState)
     {
         _representativeDataState = representativeDataState;
     }
 
     public boolean isRepresentative()
     {
-        return _representativeDataState == RepresentativeDataState.Representative_Protein ||
-               _representativeDataState == RepresentativeDataState.Representative_Peptide;
+        return _representativeDataState == Representative_Protein ||
+               _representativeDataState == Representative_Peptide;
     }
 
     @Override

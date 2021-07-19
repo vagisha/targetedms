@@ -15,6 +15,8 @@
  */
 package org.labkey.api.targetedms;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
@@ -58,6 +60,10 @@ public interface TargetedMSService
     String FOLDER_TYPE_PROP_NAME = "TargetedMS Folder Type"; // module property name
     String RAW_FILES_DIR = "RawFiles";
     String RAW_FILES_TAB = "Raw Data";
+    String CHROM_LIB_FILE_DIR = "targetedMSLib";
+    String CHROM_LIB_FILE_BASE_NAME = "chromlib";
+    String CHROM_LIB_FILE_EXT = "clib";
+    String PROP_CHROM_LIB_REVISION = "chromLibRevision";
 
     ITargetedMSRun getRun(long runId, Container container);
     ITargetedMSRun getRunByFileName(String fileName, Container container);
@@ -76,6 +82,11 @@ public interface TargetedMSService
     TableInfo getTableInfoRuns();
     TableInfo getTableInfoPeptideGroup();
     TableInfo getTableInfoGeneralMolecule();
+    TableInfo getTableInfoMolecule();
+    TableInfo getTableInfoGeneralPrecursor();
+    TableInfo getTableInfoPrecursor();
+    TableInfo getTableInfoMoleculePrecursor();
+
     List<String> getSampleFilePaths(long runId);
     List<? extends ISampleFile> getSampleFiles(long runId);
     List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId);
@@ -99,4 +110,23 @@ public interface TargetedMSService
      * @return list of sample files for which data was found
      */
     List<? extends ISampleFile> getSampleFilesWithData(List<? extends ISampleFile> sampleFiles, Container container);
+
+    /**
+     * Returns the name of a chromatogram library file according to the naming pattern used for creating
+     * .clib files for a specific revision number in a given container.
+     * @param container
+     * @param revision
+     * @return
+     */
+    String getChromLibFileName(@NotNull Container container, int revision);
+
+    /**
+     * Returns the revision number from the file name if the given file name matches the chromatogram library
+     * naming pattern.  Example: chromlib_314_rev5.clib; revision number is 5.
+     * Returns null if the given file name does not match the expected pattern.
+     * @param chromLibFileName
+     * @return
+     */
+    @Nullable
+    Integer parseChromLibRevision(@NotNull String chromLibFileName);
 }
