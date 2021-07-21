@@ -210,7 +210,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         // Issue 31678: get the full set of dates values from the precursor data and from the annotations
         for (var j = 0; j < this.annotationData.length; j++) {
-            allPlotDateValues.push(this.formatDate(Ext4.Date.parse(this.annotationData[j].Date, LABKEY.Utils.getDateTimeFormatWithMS()), true));
+            allPlotDateValues.push(this.formatDate(new Date(this.annotationData[j].Date), true));
         }
         allPlotDateValues = Ext4.Array.unique(allPlotDateValues).sort();
 

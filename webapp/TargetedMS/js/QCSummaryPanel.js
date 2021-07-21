@@ -185,7 +185,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }
         else
         {
-            var modifiedFormatted = Ext4.util.Format.date(Ext4.Date.parse(autoQC.modified, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s');
+            var modifiedFormatted = Ext4.util.Format.date(new Date(autoQC.modified), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s');
             content = autoQC.isRecent ? 'Was pinged recently on ' + modifiedFormatted : 'Was pinged on ' + modifiedFormatted;
             width = autoQC.isRecent ? 160 : 140;
         }
@@ -270,7 +270,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
                 var iconCls = !sampleFile.IgnoreForAllMetric ? (totalOutliers === 0 ? 'fa-file-o qc-correct' : 'fa-file qc-error') : 'fa-file-o qc-none';
                 html += '<tr id="' + sampleFile.calloutId + '"><td><div class="sample-file-item">'
-                        + '<span class="fa ' + iconCls + '"></span> ' + Ext4.util.Format.htmlEncode(sampleFile.SampleFile) + '</div></td><td><div class="sample-file-item-acquired">' + Ext4.util.Format.date(Ext4.Date.parse(sampleFile.AcquiredTime, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s') + '</div></td>';
+                        + '<span class="fa ' + iconCls + '"></span> ' + Ext4.util.Format.htmlEncode(sampleFile.SampleFile) + '</div></td><td><div class="sample-file-item-acquired">' + Ext4.util.Format.date(sampleFile.AcquiredTime ? new Date(sampleFile.AcquiredTime) : null, LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s') + '</div></td>';
 
                 html += '<td style="text-align: right"><div class="sample-file-item-outliers">';
                 if (sampleFile.IgnoreForAllMetric) {
@@ -309,7 +309,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
         // generate the HTML content for the sample file display details
         content += '<span class="sample-file-field-label">Name:</span> <a href="' + sampleHREF + '">' + Ext4.util.Format.htmlEncode(sampleFile.SampleFile) + '</a>'
-                + '<br/><span class="sample-file-field-label">Acquired Date/Time:</span> ' + Ext4.util.Format.date(Ext4.Date.parse(sampleFile.AcquiredTime, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s')
+                + '<br/><span class="sample-file-field-label">Acquired Date/Time:</span> ' + Ext4.util.Format.date(sampleFile.AcquiredTime ? new Date(sampleFile.AcquiredTime) : null, LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s')
         if (sampleFile.IgnoreForAllMetric) {
             content += '<div>Not included in QC</div>';
         }
