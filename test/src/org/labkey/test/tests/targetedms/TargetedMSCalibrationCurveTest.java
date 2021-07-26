@@ -31,7 +31,7 @@ import org.labkey.test.Locator;
 import org.labkey.test.Locators;
 import org.labkey.test.SortDirection;
 import org.labkey.test.TestFileUtils;
-import org.labkey.test.categories.DailyB;
+import org.labkey.test.categories.Daily;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.CalibrationCurveWebpart;
 import org.labkey.test.pages.targetedms.PKReportPage;
@@ -61,7 +61,7 @@ import static org.junit.Assert.assertTrue;
  * match the values that are in the CSV files in /SampleData/TargetedMS/Quantification/CalibrationScenariosTest.
  * Those data were generated from the Skyline unit test "CalibrationScenariosTest".
  */
-@Category({DailyB.class, MS2.class})
+@Category({Daily.class, MS2.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 25)
 public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 {

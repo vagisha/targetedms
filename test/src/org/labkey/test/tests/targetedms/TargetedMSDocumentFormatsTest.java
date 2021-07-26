@@ -25,14 +25,14 @@ import org.labkey.remoteapi.query.Row;
 import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.remoteapi.query.Sort;
-import org.labkey.test.categories.DailyB;
+import org.labkey.test.categories.Daily;
 import org.labkey.test.categories.MS2;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
-@Category({DailyB.class, MS2.class})
+@Category({Daily.class, MS2.class})
 public class TargetedMSDocumentFormatsTest extends TargetedMSTest
 {
     private static final String SAMPLEDATA_FOLDER = "DocumentFormats/";

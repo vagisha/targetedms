@@ -28,7 +28,7 @@ import org.labkey.remoteapi.PostCommand;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.ModulePropertyValue;
-import org.labkey.test.categories.DailyB;
+import org.labkey.test.categories.Daily;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.QCPlotsWebPart;
@@ -55,7 +55,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({DailyB.class, MS2.class})
+@Category({Daily.class, MS2.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 12)
 public class TargetedMSQCSummaryTest extends TargetedMSTest
 {

@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
-import org.labkey.test.categories.DailyB;
+import org.labkey.test.categories.Daily;
 import org.labkey.test.categories.MS2;
 import org.openqa.selenium.WebElement;
 
@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Category({DailyB.class, MS2.class})
+@Category({Daily.class, MS2.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 6)
 public class TargetedMSSkydTextIdTest extends TargetedMSTest
 {

@@ -20,7 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
-import org.labkey.test.categories.DailyB;
+import org.labkey.test.categories.Daily;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.PortalHelper;
@@ -29,7 +29,7 @@ import org.labkey.test.util.WikiHelper;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
-@Category({DailyB.class, MS2.class})
+@Category({Daily.class, MS2.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 5)
 public class GetDataAPITest extends TargetedMSTest
 {

@@ -25,7 +25,7 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
 import org.labkey.test.TestFileUtils;
-import org.labkey.test.categories.DailyB;
+import org.labkey.test.categories.Daily;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.ext4.RadioButton;
 import org.labkey.test.components.html.SiteNavBar;
@@ -60,7 +60,7 @@ import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.CU
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.LeveyJennings;
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.MovingRange;
 
-@Category({DailyB.class, MS2.class})
+@Category({Daily.class, MS2.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 28)
 public class TargetedMSQCTest extends TargetedMSTest
 {

@@ -9,7 +9,7 @@ import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
-import org.labkey.test.categories.DailyB;
+import org.labkey.test.categories.Daily;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.targetedms.ConnectionSource;
@@ -23,7 +23,7 @@ import java.sql.SQLException;
 
 import static org.labkey.test.Locator.tag;
 
-@Category({DailyB.class, MS2.class})
+@Category({Daily.class, MS2.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 6)
 public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
 {
