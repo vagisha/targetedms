@@ -950,8 +950,14 @@ public class SkylineDocImporter
             for(File file: files)
             {
                 ext = FileUtil.getExtension(file.getName());
-                if(SkylineFileUtils.EXT_SKY.equalsIgnoreCase(ext) && null == skyFile)
+                if(SkylineFileUtils.EXT_SKY.equalsIgnoreCase(ext))
                 {
+                    if (null != skyFile)
+                    {
+                        throw new IOException("zip file " + f + " contains more than one .sky file and is not a valid Skyline document archive. " +
+                                "To upload a valid zip file use the 'Upload to Panorama' button / menu in Skyline, or create a shareable zip " +
+                                "via the File > Share menu in Skyline.");
+                    }
                     skyFile = file;
                 }
                 else if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(ext))
