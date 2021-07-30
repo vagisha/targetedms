@@ -105,13 +105,16 @@ public interface ComparisonCategory
             while (true)
             {
                 int modificationIndex = modifiedSequence.indexOf('[', index);
-                if (modificationIndex < 0)
+                if (modificationIndex <= 0)
                 {
                     sb.append(modifiedSequence.substring(index));
                     return sb.toString();
                 }
-                sb.append(modifiedSequence, index, modificationIndex - 1);
-                sb.append(Character.toLowerCase(modifiedSequence.charAt(modificationIndex - 1)));
+                if (index != modificationIndex)
+                {
+                    sb.append(modifiedSequence, index, modificationIndex - 1);
+                    sb.append(Character.toLowerCase(modifiedSequence.charAt(modificationIndex - 1)));
+                }
                 index = modifiedSequence.indexOf(']', modificationIndex + 1) + 1;
                 if (index == 0)
                     return sb.toString();
@@ -444,6 +447,21 @@ public interface ComparisonCategory
     class TestCase extends Assert
     {
         @Test
+        public void testBadPeptideSequenceParse()
+        {
+            // Ensure that we pass through bogus peptide strings without exceptions
+            ComparisonCategory.PeptideCategory badCategory1 = new ComparisonCategory.PeptideCategory("S[+122.0", 2, "light", null);
+            ComparisonCategory.PeptideCategory badCategory2 = new ComparisonCategory.PeptideCategory("[+122.0]S", 2, "light", null);
+            ComparisonCategory.PeptideCategory multiMod = new ComparisonCategory.PeptideCategory("S[+122.0][+16.0]", 2, "light", null);
+            ComparisonCategory.PeptideCategory multiMod2 = new ComparisonCategory.PeptideCategory("SS[+122.0][+16.0]A[+4.0]B", 2, "light", null);
+
+            assertEquals("s", badCategory1._sequence);
+            assertEquals(badCategory2._modifiedSequence, badCategory2._sequence);
+            assertEquals("s", multiMod._sequence);
+            assertEquals("SsaB", multiMod2._sequence);
+        }
+
+        @Test
         public void testTrimPeptideCategoryLabels()
         {
             ComparisonCategory.PeptideCategory category1 = new ComparisonCategory.PeptideCategory("A", 2, "light", null);
@@ -458,7 +476,6 @@ public interface ComparisonCategory
             ComparisonCategory.PeptideCategory category10 = new ComparisonCategory.PeptideCategory("UVWXYZ", 2, "light", null);
             ComparisonCategory.PeptideCategory category11 = new ComparisonCategory.PeptideCategory("S[+122.0]DKPDM[+16.0]AEIEKFDK", 2, "light", null);
             ComparisonCategory.PeptideCategory category12 = new ComparisonCategory.PeptideCategory("S[+122.0]DKPDMAEIEKFDK", 2, "light", null);
-
 
             Set<PeptideCategory> peptideCategoryList = new HashSet<>(1);
             peptideCategoryList.add(category1);
