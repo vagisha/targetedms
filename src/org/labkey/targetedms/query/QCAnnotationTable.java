@@ -15,43 +15,30 @@
  */
 package org.labkey.targetedms.query;
 
-import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ContainerFilter;
-import org.labkey.api.query.DefaultQueryUpdateService;
-import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryForeignKey;
-import org.labkey.api.query.QueryUpdateService;
-import org.labkey.api.security.UserPrincipal;
-import org.labkey.api.security.permissions.Permission;
+import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+
+import static org.labkey.targetedms.query.GuideSetTable.appendFormatLabel;
 
 /**
 * Created by: jeckels
 * Date: 12/7/14
 */
-public class QCAnnotationTable extends FilteredTable<TargetedMSSchema>
+public class QCAnnotationTable extends SimpleUserSchema.SimpleTable<TargetedMSSchema>
 {
     public QCAnnotationTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoQCAnnotation(), schema, cf);
+        super(schema, TargetedMSManager.getTableInfoQCAnnotation(), cf);
 
         wrapAllColumns(true);
         TargetedMSTable.fixupLookups(this);
         getMutableColumn("QCAnnotationTypeId").setFk(QueryForeignKey
                 .from(schema, ContainerFilter.Type.CurrentPlusProjectAndShared.create(schema))
                 .to(TargetedMSSchema.TABLE_QC_ANNOTATION_TYPE, "Id", "Name"));
-    }
 
-    @Override
-    public boolean hasPermission(@NotNull UserPrincipal user, @NotNull Class<? extends Permission> perm)
-    {
-        return getContainer().hasPermission(user, perm);
-    }
-
-    @Override
-    public QueryUpdateService getUpdateService()
-    {
-        return new DefaultQueryUpdateService(this, getRealTable());
+        appendFormatLabel(getMutableColumn("Date"));
     }
 }

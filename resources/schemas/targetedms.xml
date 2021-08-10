@@ -1262,7 +1262,7 @@
             <column columnName="Date">
                 <columnTitle>Date and Time</columnTitle>
                 <description>The date and time at which the event happened</description>
-                <formatString>yyyy-MM-dd HH:mm</formatString>
+                <formatString>DateTime</formatString>
             </column>
             <column columnName="QCAnnotationTypeId">
                 <columnTitle>Annotation Type</columnTitle>
@@ -1402,11 +1402,11 @@
             </column>
             <column columnName="TrainingStart">
                 <description>The start date and time for the runs to include in the training set for this guide set.</description>
-                <formatString>yyyy-MM-dd HH:mm</formatString>
+                <formatString>DateTime</formatString>
             </column>
             <column columnName="TrainingEnd">
                 <description>The end date and time for the runs to include in the training set for this guide set.</description>
-                <formatString>yyyy-MM-dd HH:mm</formatString>
+                <formatString>DateTime</formatString>
             </column>
             <column columnName="Comment"/>
         </columns>
@@ -1420,7 +1420,7 @@
                 <columnTitle>Folder</columnTitle>
             </column>
             <column columnName="Created">
-                <formatString>yyyy-MM-dd HH:mm</formatString>
+                <formatString>DateTime</formatString>
             </column>
             <column columnName="CreatedBy">
                 <fk>
@@ -1430,7 +1430,7 @@
                 </fk>
             </column>
             <column columnName="Modified">
-                <formatString>yyyy-MM-dd HH:mm</formatString>
+                <formatString>DateTime</formatString>
             </column>
             <column columnName="ModifiedBy">
                 <fk>

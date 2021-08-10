@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.MutableColumnInfo;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
@@ -28,10 +29,12 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.RowIdQueryUpdateService;
+import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.Permission;
+import org.labkey.api.util.DateUtil;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.GuideSet;
@@ -39,11 +42,11 @@ import org.labkey.targetedms.model.GuideSet;
 /**
  * Created by cnathe on 4/9/2015.
  */
-public class GuideSetTable extends FilteredTable<TargetedMSSchema>
+public class GuideSetTable extends SimpleUserSchema.SimpleTable<TargetedMSSchema>
 {
     public GuideSetTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoGuideSet(), schema, cf);
+        super(schema, TargetedMSManager.getTableInfoGuideSet(), cf);
 
         wrapAllColumns(true);
         TargetedMSTable.fixupLookups(this);
@@ -52,10 +55,16 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
         ExprColumn referenceEndCol = new ExprColumn(this, FieldKey.fromParts("ReferenceEnd"), getReferenceEndSql(ExprColumn.STR_TABLE_ALIAS), JdbcType.TIMESTAMP);
         referenceEndCol.setDescription("The end date and time for runs that reference this guide set. A null value in "
                 + "this field indicates that the guide is open-ended and still in use.");
-        referenceEndCol.setFormat("yyyy-MM-dd HH:mm");
+        referenceEndCol.setFormat("DateTime");
         addColumn(referenceEndCol);
 
-        setImportURL(LINK_DISABLER);
+        appendFormatLabel(getMutableColumn("TrainingStart"));
+        appendFormatLabel(getMutableColumn("TrainingEnd"));
+    }
+
+    public static void appendFormatLabel(MutableColumnInfo col)
+    {
+        col.setDescription(col.getDescription() + ". Preferred date format is " + DateUtil.getDateTimeFormatString(col.getParentTable().getUserSchema().getContainer()));
     }
 
     public static SQLFragment getReferenceEndSql(String alias)
