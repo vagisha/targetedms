@@ -1515,8 +1515,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 // TODO: look into setting background color of title tooltip
                 expRange.append("title").text(function (d) {
                     return "Skyline File: " + Ext4.String.htmlEncode(me.expRunDetails.fileName)
-                            + ", \nSerial No: " + Ext4.String.htmlEncode(me.expRunDetails.serialNumber)
-                            + ", \nInstrument Name: " + Ext4.String.htmlEncode(me.expRunDetails.instrumentName)
+                            + (me.expRunDetails.serialNumber ? (", \nSerial No: " + Ext4.String.htmlEncode(me.expRunDetails.serialNumber)) : "")
+                            + (me.expRunDetails.instrumentName ? (", \nInstrument Name: " + Ext4.String.htmlEncode(me.expRunDetails.instrumentName)) : "")
                             + ", \nStart: " + Ext4.String.htmlEncode(me.formatDate(new Date(me.expRunDetails.startDate), true))
                             + ", \nEnd: " + Ext4.String.htmlEncode(me.formatDate(new Date(me.expRunDetails.endDate), true))
                             + ", \nMean: " + Ext4.String.htmlEncode(expMean)
