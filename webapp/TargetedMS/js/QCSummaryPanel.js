@@ -53,11 +53,11 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 if (this.qcPlotPanel.qcIntrumentsArr) {
                     if (this.qcPlotPanel.qcIntrumentsArr.length > 1) {
                         var msg = 'We recommend that each instrument use its own QC folder.'
-                        container.instrument = 'multiple instruments - ' + this.qcPlotPanel.qcIntrumentsArr.join(', ') + '. ' + msg;
+                        container.instrument = ' for multiple instruments - ' + this.qcPlotPanel.qcIntrumentsArr.join(', ') + '. ' + msg;
 
                     }
                     else if (this.qcPlotPanel.qcIntrumentsArr.length === 1) {
-                        container.instrument = this.qcPlotPanel.qcIntrumentsArr[0];
+                        container.instrument = ' for ' + this.qcPlotPanel.qcIntrumentsArr[0];
                     }
                 }
                 this.add(this.getContainerSummaryView(container, hasChildren, width));

@@ -2364,28 +2364,30 @@ public class TargetedMSManager
                 .append(" WHERE r.Container = ? AND r.ReplacedByRunId IS NOT NULL")).exists();
     }
 
-    public static void updateModifiedAreaProportions(Logger log, @NotNull TargetedMSRun run)
+    public static void updateModifiedAreaProportions(@Nullable Logger log, @NotNull TargetedMSRun run)
     {
         final String suffix = StringUtilsLabKey.getPaddedUniquifier(9);
         final String precursorGroupingsTableName = getSqlDialect().getTempTablePrefix() + "PrecursorGroupings" + suffix;
         final String moleculeGroupingsTableName = getSqlDialect().getTempTablePrefix() + "MoleculeGroupings" + suffix;
         final String areasTableName = getSqlDialect().getTempTablePrefix() +  "Areas" + suffix;
 
-        log.info("Creating and populating temp tables for Proportion values");
+        if (log != null)
+        {
+            log.info("Creating and populating temp tables for Proportion values");
+        }
 
         // Create temp tables to help make the rollups efficient
         SqlExecutor executor = new SqlExecutor(getSchema());
         executor.execute("CREATE " + getSqlDialect().getTempTableKeyword() + " TABLE " +
-                precursorGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), PrecursorId BIGINT)");
+                precursorGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), PrecursorId BIGINT, PeptideGroupId BIGINT)");
         executor.execute("CREATE " + getSqlDialect().getTempTableKeyword() + " TABLE " +
-                moleculeGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), GeneralMoleculeId BIGINT)");
+                moleculeGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), GeneralMoleculeId BIGINT, PeptideGroupId BIGINT)");
         executor.execute("CREATE " + getSqlDialect().getTempTableKeyword() + " TABLE " +
-                areasTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), SampleFileId BIGINT, Area REAL);");
+                areasTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), PeptideGroupId BIGINT, SampleFileId BIGINT, Area REAL);");
 
         // Populate the temp tables
-        // TODO - filter based on run
-        SQLFragment precursorGroupingsSQL = new SQLFragment("INSERT INTO ").append(precursorGroupingsTableName).append("(Grouping, PrecursorId)\n")
-                .append("SELECT DISTINCT COALESCE(gm.AttributeGroupId, p.Sequence, m.CustomIonName, m.IonFormula) AS Grouping, pci.PrecursorId \n")
+        SQLFragment precursorGroupingsSQL = new SQLFragment("INSERT INTO ").append(precursorGroupingsTableName).append("(Grouping, PrecursorId, PeptideGroupId)\n")
+                .append("SELECT DISTINCT COALESCE(gm.AttributeGroupId, p.Sequence, m.CustomIonName, m.IonFormula) AS Grouping, pci.PrecursorId, gm.PeptideGroupId \n")
                 .append(" FROM ").append(getTableInfoPrecursorChromInfo(), "pci").append(" INNER JOIN \n")
                 .append(getTableInfoGeneralPrecursor(), "gp").append(" ON gp.Id = pci.PrecursorId INNER JOIN \n")
                 .append(getTableInfoGeneralMolecule(), "gm").append(" ON gp.GeneralMoleculeId = gm.Id LEFT OUTER JOIN \n")
@@ -2397,33 +2399,36 @@ public class TargetedMSManager
         precursorGroupingsSQL.add(run.getId());
         executor.execute(precursorGroupingsSQL);
 
-        executor.execute(new SQLFragment("INSERT INTO ").append(moleculeGroupingsTableName).append("(Grouping, GeneralMoleculeId)\n")
-                .append("SELECT DISTINCT g.grouping, gp.GeneralMoleculeId FROM \n")
+        executor.execute(new SQLFragment("INSERT INTO ").append(moleculeGroupingsTableName).append("(Grouping, GeneralMoleculeId, PeptideGroupId)\n")
+                .append("SELECT DISTINCT g.grouping, gp.GeneralMoleculeId, g.PeptideGroupId FROM \n")
                 .append(precursorGroupingsTableName).append(" g INNER JOIN \n")
                 .append(getTableInfoGeneralPrecursor(), "gp").append(" ON gp.Id = g.PrecursorId"));
 
-        executor.execute(new SQLFragment("INSERT INTO ").append(areasTableName).append("(Grouping, SampleFileId, Area)\n")
-                .append("SELECT g.Grouping, pci.SampleFileId, SUM(pci.TotalArea) AS Area FROM \n")
+        executor.execute(new SQLFragment("INSERT INTO ").append(areasTableName).append("(Grouping, SampleFileId, PeptideGroupId, Area)\n")
+                .append("SELECT g.Grouping, pci.SampleFileId, g.PeptideGroupId, SUM(pci.TotalArea) AS Area FROM \n")
                 .append(getTableInfoPrecursorChromInfo(), "pci").append(" INNER JOIN \n")
                 .append(precursorGroupingsTableName).append(" g ON pci.PrecursorId = g.PrecursorId \n")
-                .append("GROUP BY g.grouping, pci.SampleFileId"));
+                .append("GROUP BY g.grouping, g.PeptideGroupId, pci.SampleFileId"));
 
         // Add indices to temp tables to make them faster to use
-        executor.execute("CREATE INDEX IDX_PrecursorGroupings  ON " + precursorGroupingsTableName + "(PrecursorId, Grouping)");
-        executor.execute("CREATE INDEX IDX_MoleculeGroupings ON " + moleculeGroupingsTableName + "(GeneralMoleculeId, Grouping)");
-        executor.execute("CREATE INDEX IDX_Areas ON " + areasTableName + "(Grouping, SampleFileId)");
+        executor.execute("CREATE INDEX IDX_PrecursorGroupings  ON " + precursorGroupingsTableName + "(PrecursorId, PeptideGroupId, Grouping)");
+        executor.execute("CREATE INDEX IDX_MoleculeGroupings ON " + moleculeGroupingsTableName + "(GeneralMoleculeId, PeptideGroupId, Grouping)");
+        executor.execute("CREATE INDEX IDX_Areas ON " + areasTableName + "(Grouping, PeptideGroupId, SampleFileId)");
 
         // Populate the permanent tables
         SQLFragment updatePrecursorSQL = new SQLFragment("UPDATE targetedms.precursorchrominfo SET PrecursorModifiedAreaProportion = \n")
                 .append("(SELECT CASE WHEN X.PrecursorAreaInReplicate = 0 THEN NULL ELSE TotalArea / X.PrecursorAreaInReplicate END \n")
                 .append("FROM (SELECT Area AS PrecursorAreaInReplicate FROM ").append(areasTableName).append(" a INNER JOIN \n")
-                .append(precursorGroupingsTableName).append(" g ON a.grouping = g.grouping \n")
+                .append(precursorGroupingsTableName).append(" g ON a.grouping = g.grouping AND a.PeptideGroupId = g.PeptideGroupId \n")
                 .append("WHERE g.PrecursorId = targetedms.precursorchrominfo.PrecursorId AND \n")
                 .append("a.SampleFileId = targetedms.precursorchrominfo.SampleFileId) X) ");
         updatePrecursorSQL.append(" WHERE PrecursorId IN \n")
             .append("(SELECT PrecursorId FROM ").append(precursorGroupingsTableName).append(")");
 
-        log.info("Setting PrecursorModifiedAreaProportion values on precursorchrominfo");
+        if (log != null)
+        {
+            log.info("Setting PrecursorModifiedAreaProportion values on precursorchrominfo");
+        }
         executor.execute(updatePrecursorSQL);
 
         SQLFragment updateMoleculeSQL = new SQLFragment("UPDATE targetedms.generalmoleculechrominfo SET ModifiedAreaProportion = \n")
@@ -2431,27 +2436,31 @@ public class TargetedMSManager
                 .append("(SELECT SUM(TotalArea) FROM ").append(getTableInfoPrecursorChromInfo(), "pci")
                 .append(" WHERE pci.generalmoleculechrominfoid = targetedms.generalmoleculechrominfo.Id) / X.MoleculeAreaInReplicate END \n")
                 .append(" FROM (SELECT SUM(a.Area) AS MoleculeAreaInReplicate FROM ").append(areasTableName)
-                .append("\n a INNER JOIN ").append(moleculeGroupingsTableName).append(" g ON a.grouping = g.grouping \n")
+                .append("\n a INNER JOIN ").append(moleculeGroupingsTableName).append(" g ON a.grouping = g.grouping AND a.PeptideGroupId = g.PeptideGroupId \n")
                 .append("WHERE g.GeneralMoleculeId = targetedms.generalmoleculechrominfo.GeneralMoleculeId AND \n")
                 .append("a.SampleFileId = targetedms.generalmoleculechrominfo.SampleFileId) X)");
         updateMoleculeSQL.append(" WHERE GeneralMoleculeId IN \n")
             .append("(SELECT GeneralMoleculeId FROM ").append(moleculeGroupingsTableName).append(")");
 
-        log.info("Setting ModifiedAreaProportion values on generalmoleculechrominfo");
+        if (log != null)
+        {
+            log.info("Setting ModifiedAreaProportion values on generalmoleculechrominfo");
+        }
         executor.execute(updateMoleculeSQL);
 
         // Drop the temp tables
-        log.info("Cleaning up temp tables");
+        if (log != null)
+        {
+            log.info("Cleaning up temp tables");
+        }
         executor.execute("DROP TABLE " + precursorGroupingsTableName);
         executor.execute("DROP TABLE " + moleculeGroupingsTableName);
         executor.execute("DROP TABLE " + areasTableName);
     }
 
     /**
-     * Returns the Transition Full Scan setttings for the given run.  This may be null if the settings were not included
+     * Returns the Transition Full Scan settings for the given run.  This may be null if the settings were not included
      * in the Skyline document.
-     * @param runId
-     * @return
      */
     @Nullable
     public static TransitionSettings.FullScanSettings getTransitionFullScanSettings(long runId)

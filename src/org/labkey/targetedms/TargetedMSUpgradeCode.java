@@ -32,8 +32,13 @@ import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.pipeline.AreaProportionRecalcJob;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -83,5 +88,16 @@ public class TargetedMSUpgradeCode implements UpgradeCode
         sql.add(name);
         sql.add(color);
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
+    }
+
+    @DeferredUpgrade
+    public void recalculateAreaProportions(final ModuleContext moduleContext) throws PipelineValidationException
+    {
+        if (!moduleContext.isNewInstall())
+        {
+            ViewBackgroundInfo info = new ViewBackgroundInfo(ContainerManager.getRoot(), moduleContext.getUpgradeUser(), null);
+            PipeRoot root = PipelineService.get().findPipelineRoot(ContainerManager.getRoot());
+            PipelineService.get().queueJob(new AreaProportionRecalcJob(info, root));
+        }
     }
 }
