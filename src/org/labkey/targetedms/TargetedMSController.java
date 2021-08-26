@@ -79,6 +79,7 @@ import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpMaterial;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
@@ -281,7 +282,9 @@ import static org.labkey.api.targetedms.TargetedMSService.FolderType;
 import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
 import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_DIR;
 import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_TAB;
+import static org.labkey.api.util.DOM.A;
 import static org.labkey.api.util.DOM.Attribute.height;
+import static org.labkey.api.util.DOM.Attribute.href;
 import static org.labkey.api.util.DOM.Attribute.method;
 import static org.labkey.api.util.DOM.Attribute.src;
 import static org.labkey.api.util.DOM.Attribute.width;
@@ -4367,12 +4370,20 @@ public class TargetedMSController extends SpringActionController
             }
             _run = TargetedMSManager.getRun(replicate.getRunId());
 
+            ActionURL materialURL = null;
+            String sampleName = _sampleFile.getSampleName();
+            List<? extends ExpMaterial> materials = ExperimentService.get().getExpMaterialsByName(sampleName, null, getUser());
+            if (materials.size() == 1)
+            {
+                materialURL = materials.get(0).detailsURL();
+            }
+
             VBox result = new VBox();
 
             // Summary for this sample file
             DOM.Renderable renderable = DOM.TABLE(cl("lk-fields-table"),
                     TR(TD(cl("labkey-form-label"), "Sample File Name"),
-                            TD(_sampleFile.getSampleName())),
+                            TD(materialURL == null ? _sampleFile.getSampleName() : A(at(href, materialURL), _sampleFile.getSampleName()))),
                     TR(TD(cl("labkey-form-label"), "File Path"),
                             TD(_sampleFile.getFilePath())),
                     TR(TD(cl("labkey-form-label"), "Acquired Time"),

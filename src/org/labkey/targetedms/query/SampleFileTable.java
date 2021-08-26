@@ -22,18 +22,28 @@ import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.LazyForeignKey;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpSampleType;
+import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.exp.api.SampleTypeService;
+import org.labkey.api.exp.query.SamplesSchema;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.InvalidKeyException;
+import org.labkey.api.query.QueryForeignKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.security.User;
@@ -44,11 +54,11 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
-import org.labkey.targetedms.datasource.MsDataSourceUtil;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.datasource.MsDataSourceUtil;
 import org.labkey.targetedms.parser.SampleFile;
 
 import java.io.IOException;
@@ -56,8 +66,10 @@ import java.io.Writer;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,6 +108,47 @@ public class SampleFileTable extends TargetedMSTable
         excludedSQL.add(false);
         ExprColumn excludedColumn = new ExprColumn(this, "Excluded", excludedSQL, JdbcType.BOOLEAN);
         addColumn(excludedColumn);
+
+        getMutableColumn("SampleName").setFk(new LazyForeignKey(() ->
+        {
+            // Do a query to look across the entire server for samples where the name matches with names from the
+            // targetedms.SampleFiles table, as currently filtered by the SampleFileTable (container and/or run)
+            SQLFragment sql = new SQLFragment("SELECT DISTINCT Container, CpasType FROM ");
+            sql.append(ExperimentService.get().getTinfoMaterial(), "m");
+            sql.append(" WHERE CpasType IS NOT NULL AND Name IN (SELECT SampleName FROM (");
+            Set<ColumnInfo> selectCols = Set.of(getColumn("SampleName"));
+            sql.append(QueryService.get().getSelectSQL(SampleFileTable.this, selectCols, null, null, Table.ALL_ROWS, 0, false));
+            sql.append(") X)");
+
+            Set<Container> matchingContainers = new HashSet<>();
+            Set<String> matchingSampleTypeLSIDs = new HashSet<>();
+
+            // Iterate and make sure the user has permission to the target container
+            Collection<Map<String, Object>> matches = new SqlSelector(getSchema().getScope(), sql).getMapCollection();
+            for (Map<String, Object> match : matches)
+            {
+                Container c = ContainerManager.getForId((String)match.get("Container"));
+                if (c != null && c.hasPermission(getUserSchema().getUser(), ReadPermission.class))
+                {
+                    matchingContainers.add(c);
+                    String sampleTypeLSID = (String)match.get("CpasType");
+                    matchingSampleTypeLSIDs.add(sampleTypeLSID);
+                }
+            }
+
+            if (matchingContainers.size() == 1 && matchingSampleTypeLSIDs.size() == 1)
+            {
+                ExpSampleType sampleType = SampleTypeService.get().getSampleType(matchingSampleTypeLSIDs.iterator().next());
+                if (sampleType != null)
+                {
+                    return new QueryForeignKey.Builder(new SamplesSchema(getUserSchema().getUser(), matchingContainers.iterator().next()), null).
+                            table(sampleType.getName()).key("Name").
+                            raw(true).
+                            build();
+                }
+            }
+            return null;
+        }));
 
         ActionURL url = new ActionURL(TargetedMSController.ShowSampleFileAction.class, getContainer());
         Map<String, String> urlParams = new HashMap<>();
