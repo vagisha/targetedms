@@ -224,7 +224,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         clickTab("Raw Data");
 
         log("Drops the dataTransferItems object");
-        dragAndDropFileInDropZone(single);
+        _fileBrowserHelper.dragDropUpload(single, "TestZipMeDir.zip");
 
         log("Verifying if the file is uploaded and zipped");
         waitForElement(Locator.tagWithText("span", "TestZipMeDir.zip"),WAIT_FOR_PAGE);
