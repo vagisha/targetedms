@@ -17,17 +17,10 @@ package org.labkey.targetedms;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.labkey.api.data.CompareType;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbScope;
 import org.labkey.api.data.DeferredUpgrade;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.Selector;
-import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
-import org.labkey.api.data.Table;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
@@ -35,20 +28,16 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
-import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.util.ContextListener;
+import org.labkey.api.util.StartupListener;
+import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.pipeline.AreaProportionRecalcJob;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
+import javax.servlet.ServletContext;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -91,13 +80,36 @@ public class TargetedMSUpgradeCode implements UpgradeCode
     }
 
     @DeferredUpgrade
-    public void recalculateAreaProportions(final ModuleContext moduleContext) throws PipelineValidationException
+    public void recalculateAreaProportions(final ModuleContext moduleContext)
     {
         if (!moduleContext.isNewInstall())
         {
-            ViewBackgroundInfo info = new ViewBackgroundInfo(ContainerManager.getRoot(), moduleContext.getUpgradeUser(), null);
-            PipeRoot root = PipelineService.get().findPipelineRoot(ContainerManager.getRoot());
-            PipelineService.get().queueJob(new AreaProportionRecalcJob(info, root));
+            // Wait until post-startup because the Enterprise pipeline won't be initialized until it's done on servers
+            // that are using the JMS queue
+            ContextListener.addStartupListener(new StartupListener()
+            {
+                @Override
+                public String getName()
+                {
+                    return "AreaProportionRecalcJob submitter";
+                }
+
+                @Override
+                public void moduleStartupComplete(ServletContext servletContext)
+                {
+                    try
+                    {
+                        LOG.info("Module startup complete, queuing AreaProportionRecalcJob");
+                        ViewBackgroundInfo info = new ViewBackgroundInfo(ContainerManager.getRoot(), moduleContext.getUpgradeUser(), null);
+                        PipeRoot root = PipelineService.get().findPipelineRoot(ContainerManager.getRoot());
+                        PipelineService.get().queueJob(new AreaProportionRecalcJob(info, root));
+                    }
+                    catch (PipelineValidationException e)
+                    {
+                        throw UnexpectedException.wrap(e);
+                    }
+                }
+            });
         }
     }
 }
