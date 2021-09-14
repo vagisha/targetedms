@@ -98,6 +98,15 @@
             </column>
             <column columnName="ExplicitGlobalStandardArea"/>
             <column columnName="IonMobilityType"/>
+            <column columnName="IRTSlope">
+                <columnTitle>iRT Slope</columnTitle>
+            </column>
+            <column columnName="IRTIntercept">
+                <columnTitle>iRT Intercept</columnTitle>
+            </column>
+            <column columnName="IRTCorrelation">
+                <columnTitle>iRT Correlation</columnTitle>
+            </column>
         </columns>
     </table>
     <table tableName="Runs" tableDbType="TABLE">

@@ -15,9 +15,10 @@
  */
 package org.labkey.targetedms.model;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
-public class QCMetricConfiguration
+public class QCMetricConfiguration implements Comparable<QCMetricConfiguration>
 {
     private int _id;
     private String _name;
@@ -246,5 +247,11 @@ public class QCMetricConfiguration
         }
 
         return jsonObject;
+    }
+
+    @Override
+    public int compareTo(@NotNull QCMetricConfiguration o)
+    {
+        return getName().compareToIgnoreCase(o.getName());
     }
 }

@@ -153,18 +153,12 @@ public class Molecule extends GeneralMolecule
             String formula = getIonFormula();
             if (!StringUtils.isEmpty(formula))
             {
-                if (!formula.equals(parts[1]))
-                {
-                    return false;
-                }
+                return formula.equals(parts[1]);
             }
             else
             {
                 String expectedText = String.format("%.9f/%.9f", getMassMonoisotopic(), getMassAverage());
-                if (!expectedText.equals(parts[1]))
-                {
-                    return false;
-                }
+                return expectedText.equals(parts[1]);
             }
         }
         return true;

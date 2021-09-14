@@ -39,10 +39,20 @@ package org.labkey.targetedms.SkylinePort.Irt;
 */
 public final class RegressionLine implements IRegressionFunction
 {
+    private Double _invertedIntercept;
+    private Double _correlation;
+
     public RegressionLine(double slope, double intercept)
+    {
+        this(slope, intercept, null, null);
+    }
+
+    public RegressionLine(double slope, double intercept, Double invertedIntercept, Double correlation)
     {
         setSlope(slope);
         setIntercept(intercept);
+        setCorrelation(correlation);
+        setInvertedIntercept(invertedIntercept);
     }
 
     private double privateSlope;
@@ -88,6 +98,31 @@ public final class RegressionLine implements IRegressionFunction
     public double GetX(double y)
     {
         return (y - getIntercept()) / getSlope();
+    }
+
+    private void setCorrelation(Double correlation)
+    {
+        _correlation = correlation;
+    }
+
+    public Double getCorrelation()
+    {
+        return _correlation;
+    }
+
+    private void setInvertedIntercept(Double invertedIntercept)
+    {
+        _invertedIntercept = invertedIntercept;
+    }
+
+    public Double getInvertedIntercept()
+    {
+        return _invertedIntercept;
+    }
+
+    public Double getInvertedSlope()
+    {
+        return privateSlope == 0.0 ? null : 1 / privateSlope;
     }
 
     private enum ATTR

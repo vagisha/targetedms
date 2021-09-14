@@ -33,6 +33,8 @@ public class IrtPeptide extends SkylineEntity implements Comparable<IrtPeptide>
     private int importCount;
     private int timeSource;
 
+    private Long _generalMoleculeId;
+
     public String getModifiedSequence()
     {
         return modifiedSequence;
@@ -97,6 +99,16 @@ public class IrtPeptide extends SkylineEntity implements Comparable<IrtPeptide>
     public int compareTo(IrtPeptide pep)
     {
         return modifiedSequence.compareTo(pep.getModifiedSequence());
+    }
+
+    public Long getGeneralMoleculeId()
+    {
+        return _generalMoleculeId;
+    }
+
+    public void setGeneralMoleculeId(Long generalMoleculeId)
+    {
+        _generalMoleculeId = generalMoleculeId;
     }
 
     /**

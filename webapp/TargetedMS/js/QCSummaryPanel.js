@@ -140,7 +140,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 '<tpl elseif="docCount &gt; 0">',
                     '<div class="qc-summary-text">',
                         '<a href="{path:this.getSampleFileLink}">{fileCount} sample file{fileCount:this.pluralize}</a> ' +
-                            'tracking {precursorCount} precursor{precursorCount:this.pluralize} with {metricCount} metric{metricCount:this.pluralize} for {instrument}',
+                            'tracking {precursorCount} precursor{precursorCount:this.pluralize} with {metricCount} metric{metricCount:this.pluralize} {instrument}',
                     '</div>',
                     '<div class="item-text sample-file-details sample-file-details-loading" id="qc-summary-samplefiles-{id}">Loading...</div>',
                     '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
@@ -149,7 +149,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             {
                 pluralize: function (val)
                 {
-                    return val == 1 ? '' : 's';
+                    return val === 1 ? '' : 's';
                 },
                 getContainerLink: function (path)
                 {

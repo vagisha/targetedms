@@ -848,7 +848,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 mode: 'local',
                 store: Ext4.create('Ext.data.Store', {
                     fields: ['id', 'name'],
-                    sorters: [{property: 'name'}],
+                    sorters: [{property: 'name', transform: function(arg) { return arg.toLowerCase(); }}],
                     data: this.metricPropArr
                 }),
                 valueField: 'id',

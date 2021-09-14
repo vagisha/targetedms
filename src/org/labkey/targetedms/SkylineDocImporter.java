@@ -56,6 +56,7 @@ import org.labkey.api.view.Portal;
 import org.labkey.api.writer.ZipUtil;
 import org.labkey.targetedms.SkylinePort.Irt.IRegressionFunction;
 import org.labkey.targetedms.SkylinePort.Irt.IrtRegressionCalculator;
+import org.labkey.targetedms.SkylinePort.Irt.RegressionLine;
 import org.labkey.targetedms.SkylinePort.Irt.RetentionTimeProviderImpl;
 import org.labkey.targetedms.calculations.RunQuantifier;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
@@ -98,6 +99,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import static org.labkey.targetedms.TargetedMSManager.getTableInfoPrecursorChromInfo;
 import static org.labkey.targetedms.TargetedMSManager.getTableInfoTransitionChromInfo;
@@ -445,6 +447,8 @@ public class SkylineDocImporter
                 }
             }
 
+            calculateSampleFileIRTStats(run, replicateInfo, parser);
+
             if (run.isRepresentative())
             {
                 // Persist the run so that the skydDataId is available when writing the updated chromatogram library.
@@ -547,6 +551,67 @@ public class SkylineDocImporter
             if (_generalMoleculeAnnotationStmt != null) { try { _generalMoleculeAnnotationStmt.close(); } catch (SQLException ignored) {} }
             _generalMoleculeAnnotationStmt = null;
         }
+    }
+
+    private void calculateSampleFileIRTStats(TargetedMSRun run, ReplicateInfo replicateInfo, SkylineDocumentParser parser)
+    {
+        if (run.getiRTscaleId() == null)
+        {
+            return;
+        }
+
+        _log.info("Calculating iRT correlations for " + replicateInfo.skylineIdSampleFileIdMap.size() + " sample(s)");
+
+        // Get the iRT scale to which we are comparing each sample
+        SimpleFilter iRTFilter = new SimpleFilter(FieldKey.fromParts("iRTScaleId"), run.getiRTscaleId());
+        List<IrtPeptide> existingScale = new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(), iRTFilter, null).getArrayList(IrtPeptide.class);
+
+        Map<String, IrtPeptide> existingStandards = new LinkedHashMap<>();
+        Map<String, IrtPeptide> existingLibrary = new LinkedHashMap<>(existingScale.size());
+        separateIrtScale(existingScale, existingStandards, existingLibrary);
+
+        // See which entries matched up with data in the Skyline document
+        List<IrtPeptide> matchedIrts = parser.getiRTScaleSettings().stream().filter(irt -> irt.getGeneralMoleculeId() != null).collect(Collectors.toList());
+
+        // Find the retention times for each tracked iRT entry in each sample file
+        for (SampleFile sampleFile : replicateInfo.skylineIdSampleFileIdMap.values())
+        {
+            List<IrtPeptide> observed = new ArrayList<>();
+            for (IrtPeptide irtPeptide : matchedIrts)
+            {
+                SQLFragment sql = new SQLFragment("SELECT RetentionTime FROM ");
+                sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
+                sql.append(" WHERE gmci.SampleFileId = ? AND gmci.GeneralMoleculeId = ? AND RetentionTime IS NOT NULL");
+                sql.add(sampleFile.getId());
+                sql.add(irtPeptide.getGeneralMoleculeId());
+
+                List<Double> retentionTimes = new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Double.class);
+                if (retentionTimes.size() > 0)
+                {
+                    IrtPeptide p = new IrtPeptide();
+                    p.setModifiedSequence(irtPeptide.getModifiedSequence());
+                    p.setiRTStandard(irtPeptide.isiRTStandard());
+                    p.setiRTValue(retentionTimes.get(0));
+                    observed.add(p);
+                }
+            }
+
+            // Calculate the regression and its correlation to the standard
+            RegressionLine regressionLine = IrtRegressionCalculator.calcRegressionLine(new RetentionTimeProviderImpl(observed), new ArrayList<>(existingStandards.values()), new ArrayList<>(existingLibrary.values()), _log);
+
+            if (regressionLine != null)
+            {
+                applyIrtRegressionLine(regressionLine, observed);
+
+                sampleFile.setIrtSlope(regressionLine.getInvertedSlope());
+                sampleFile.setIrtIntercept(regressionLine.getInvertedIntercept());
+                sampleFile.setIrtCorrelation(regressionLine.getCorrelation());
+
+                Table.update(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile, sampleFile.getId());
+            }
+        }
+        _log.info("Finished calculating iRT correlations for all samples");
+
     }
 
     private ReplicateInfo insertReplicates(TargetedMSRun run, SkylineDocumentParser parser, OptimizationInfo optimizationInfo, TargetedMSService.FolderType folderType)
@@ -1015,7 +1080,7 @@ public class SkylineDocImporter
             {
                 iRTScaleId = scaleIds.get(0);
                 SimpleFilter iRTFilter = new SimpleFilter(FieldKey.fromParts("iRTScaleId"), iRTScaleId);
-                ArrayList<IrtPeptide> existingScale = new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(), iRTFilter, null).getArrayList(IrtPeptide.class);
+                List<IrtPeptide> existingScale = new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(), iRTFilter, null).getArrayList(IrtPeptide.class);
 
                 List<IrtPeptide> updatedPeptides = normalizeIrtImportAndReweighValues(existingScale, importScale);
 
@@ -1052,7 +1117,7 @@ public class SkylineDocImporter
      * to be inserted vs. updates to existing values.
      * @return The list of existing peptides which have recalculated weighted average values.
      */
-    private ArrayList<IrtPeptide> normalizeIrtImportAndReweighValues(ArrayList<IrtPeptide> existingScale, List<IrtPeptide> importScale) throws PipelineJobException
+    private ArrayList<IrtPeptide> normalizeIrtImportAndReweighValues(List<IrtPeptide> existingScale, List<IrtPeptide> importScale) throws PipelineJobException
     {
         Map<String, IrtPeptide> existingStandards = new LinkedHashMap<>();
         Map<String, IrtPeptide> existingLibrary = new LinkedHashMap<>(existingScale.size());
@@ -1367,6 +1432,8 @@ public class SkylineDocImporter
         generalMolecule.setPeptideGroupId(pepGroup.getId());
 
         Table.insert(_user, TargetedMSManager.getTableInfoGeneralMolecule(), generalMolecule);
+
+        parser.matchIrt(generalMolecule);
 
         // If the peptide modified sequence has not been set, use the light precursor sequence
         if (generalMolecule instanceof Peptide)

@@ -204,7 +204,7 @@ public class SkylineDocumentParser implements AutoCloseable
     // that do not have the "file" attribute.  The "file" attribute is missing only if the replicate has a single
     // sample file.
     private Map<String, String> _replicateSampleFileIdMap;
-    private final List<IrtPeptide> _iRTScaleSettings;
+    private final List<IrtPeptide> _iRTScaleSettings = new ArrayList<>();
 
     private final List<OptimizationDBRow> _optimizationDBRows = new LinkedList<>();
 
@@ -235,7 +235,6 @@ public class SkylineDocumentParser implements AutoCloseable
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         _reader = inputFactory.createXMLStreamReader(_inputStream);
         _log = log;
-        _iRTScaleSettings = new ArrayList<>();
         readDocumentVersion(_reader);
     }
 
@@ -1340,6 +1339,17 @@ public class SkylineDocumentParser implements AutoCloseable
         return _optimizationDBRows;
     }
 
+    public void matchIrt(GeneralMolecule generalMolecule)
+    {
+        for (IrtPeptide irt : _iRTScaleSettings)
+        {
+            if (irt.getGeneralMoleculeId() == null && generalMolecule.textIdMatches(irt.getModifiedSequence()))
+            {
+                irt.setGeneralMoleculeId(generalMolecule.getId());
+            }
+        }
+    }
+
     public enum MoleculeType
     {
         PEPTIDE,
@@ -2108,7 +2118,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 }
                 catch (DataFormatException ignored)
                 {
-                    _log.warn("Failed to extract chromatogram for " + precursor.toString() + " in replicate " + chromInfo.getReplicateName());
+                    _log.warn("Failed to extract chromatogram for " + precursor + " in replicate " + chromInfo.getReplicateName());
                 }
                 chromInfo.setNumPoints(chromatogram.getNumPoints());
                 chromInfo.setNumTransitions(chromatogram.getNumTransitions());
@@ -2153,7 +2163,7 @@ public class SkylineDocumentParser implements AutoCloseable
                     }
                     if (matchIndex == -1)
                     {
-                        _log.warn("Unable to find a matching chromatogram for file path " + filePath + ". SKYD file may be out of sync with primary Skyline document. Transition " + transition.toString() + ", " + precursor.toString() + ", " +precursor.getCharge());
+                        _log.warn("Unable to find a matching chromatogram for file path " + filePath + ". SKYD file may be out of sync with primary Skyline document. Transition " + transition.toString() + ", " + precursor + ", " +precursor.getCharge());
                     }
                     else
                     {

@@ -1,0 +1,1 @@
+SELECT Id FROM targetedms.SampleFile WHERE IRTSlope IS NOT NULL

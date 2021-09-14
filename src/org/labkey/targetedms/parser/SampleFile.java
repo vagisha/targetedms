@@ -45,6 +45,10 @@ public class SampleFile extends SkylineEntity implements ISampleFile
     private Double _explicitGlobalStandardArea;
     private String _ionMobilityType;
 
+    private Double _irtSlope;
+    private Double _irtIntercept;
+    private Double _irtCorrelation;
+
     // Calculated values loaded via TargetedMSManager.getSampleFiles()
     private Integer _guideSetId;
     private boolean _ignoreForAllMetric;
@@ -243,6 +247,36 @@ public class SampleFile extends SkylineEntity implements ISampleFile
             return FilenameUtils.getName(path);
         }
         return null;
+    }
+
+    public Double getIrtSlope()
+    {
+        return _irtSlope;
+    }
+
+    public void setIrtSlope(Double irtSlope)
+    {
+        _irtSlope = irtSlope;
+    }
+
+    public Double getIrtIntercept()
+    {
+        return _irtIntercept;
+    }
+
+    public void setIrtIntercept(Double irtIntercept)
+    {
+        _irtIntercept = irtIntercept;
+    }
+
+    public Double getIrtCorrelation()
+    {
+        return _irtCorrelation;
+    }
+
+    public void setIrtCorrelation(Double irtCorrelation)
+    {
+        _irtCorrelation = irtCorrelation;
     }
 
     public static class TestCase extends Assert

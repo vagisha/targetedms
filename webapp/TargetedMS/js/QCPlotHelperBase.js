@@ -307,7 +307,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         this.setPlotWidth(this.plotDivId);
 
         var addedPlot = false;
-        if (this.singlePlot) {
+        if (this.singlePlot && this.getMetricPropsById(this.metric).precursorScoped) {
             addedPlot = this.addCombinedPeptideSinglePlot();
         }
         else {

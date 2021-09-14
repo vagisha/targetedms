@@ -1,0 +1,1 @@
+SELECT Id FROM targetedms.PrecursorChromInfo WHERE AverageMassErrorPPM IS NOT NULL

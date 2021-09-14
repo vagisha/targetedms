@@ -2164,6 +2164,8 @@ public class TargetedMSManager
                 result.add(metric);
             }
         }
+        // Ensure we get a case-insensitive sort regardless of DB collation
+        Collections.sort(result);
         return result;
     }
 

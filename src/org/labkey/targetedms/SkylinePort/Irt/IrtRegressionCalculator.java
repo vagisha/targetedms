@@ -3,6 +3,7 @@ package org.labkey.targetedms.SkylinePort.Irt;
 import org.apache.logging.log4j.Logger;
 import org.labkey.targetedms.IrtPeptide;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -44,7 +45,8 @@ public class IrtRegressionCalculator
     private static final double MIN_IRT_TO_TIME_CORRELATION = 0.99;
     private static final int MIN_IRT_TO_TIME_POINT_COUNT = 20;
 
-    public static IRegressionFunction calcRegressionLine(IRetentionTimeProvider retentionTimes, ArrayList<IrtPeptide> standardPeptideList, ArrayList<IrtPeptide> existingPeptideList, Logger pipelineLog)
+    @Nullable
+    public static RegressionLine calcRegressionLine(IRetentionTimeProvider retentionTimes, ArrayList<IrtPeptide> standardPeptideList, ArrayList<IrtPeptide> existingPeptideList, Logger pipelineLog)
     {
         // TPG NOTE: standardPeptides to be sorted by irt times ?
 
@@ -68,8 +70,7 @@ public class IrtRegressionCalculator
             Statistics statTimes = new Statistics(listTimes);
             Statistics statIrts = new Statistics(listIrts);
             double correlation = statIrts.R(statTimes);
-            // If the correlation is not good enough, try removing one value to
-            // fix the problem.)
+            // If the correlation is not good enough, try removing one value to fix the problem
             if (correlation < MIN_IRT_TO_TIME_CORRELATION)
             {
                 Double time = null, irt = null;
@@ -93,7 +94,7 @@ public class IrtRegressionCalculator
                 pipelineLog.info("Calculated iRT regression line from full standard list.");
             if (correlation >= MIN_IRT_TO_TIME_CORRELATION)
             {
-                return new RegressionLine(statIrts.Slope(statTimes), statIrts.Intercept(statTimes));
+                return new RegressionLine(statIrts.Slope(statTimes), statIrts.Intercept(statTimes), statTimes.Intercept(statIrts), correlation);
             }
         }
 
@@ -157,12 +158,19 @@ public class IrtRegressionCalculator
                 _dictLibrary.put(pep.getModifiedSequence(), pep.getiRTValue());
             }
 
-            double minStandard = Collections.min(_dictStandards.values());
             double minLibrary = Collections.min(_dictLibrary.values());
+            if (!_dictStandards.isEmpty())
+            {
+                double minStandard = Collections.min(_dictStandards.values());
 
-            // Come up with a value lower than the lowest value, but still within the scale
-            // of the measurements.
-            _unknownScore = Math.min(minStandard, minLibrary) - Math.abs(minStandard - minLibrary);
+                // Come up with a value lower than the lowest value, but still within the scale
+                // of the measurements.
+                _unknownScore = Math.min(minStandard, minLibrary) - Math.abs(minStandard - minLibrary);
+            }
+            else
+            {
+                _unknownScore = minLibrary - 1.0d;
+            }
         }
 
         @Override
