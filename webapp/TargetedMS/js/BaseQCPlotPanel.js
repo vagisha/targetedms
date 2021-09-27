@@ -210,6 +210,9 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
                 if (response.rows && response.rows.length > 0) {
                     this.qcIntrumentsArr = response.rows.map(function (row) {
+                        if (row.instrumentSerialNumber && row.instrumentSerialNumber.length === 0) {
+                            row.instrumentSerialNumber = null;
+                        }
                         if (row.instrumentSerialNumber && row.model) {
                             return row.instrumentSerialNumber + ' - ' + row.model;
                         }

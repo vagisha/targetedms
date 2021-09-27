@@ -16,7 +16,6 @@
 package org.labkey.targetedms.outliers;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Sort;
@@ -38,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -112,7 +112,7 @@ public class OutlierGenerator
                     intersect = " INTERSECT ";
                 }
                 filterClause.append(") ");
-                sql.append(filterClause.toString());
+                sql.append(filterClause);
             }
             if (configuration.getTraceName() != null)
             {
@@ -125,6 +125,22 @@ public class OutlierGenerator
 
     private String queryContainerSampleFileRawData(List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups, boolean showExcluded)
     {
+        // Sort to make sure we have deterministic behavior in a given container
+        configurations.sort(Comparator.comparingInt(QCMetricConfiguration::getId));
+
+        Map<String, QCMetricConfiguration> preferredConfigs = new LinkedHashMap<>();
+        // Deduplicate for metrics that are shown both standalone and paired with another
+        for (QCMetricConfiguration configuration : configurations)
+        {
+            String label1 = configuration.getSeries1Label();
+            retainIfPreferred(preferredConfigs, configuration, label1);
+            String label2 = configuration.getSeries2Label();
+            if (label2 != null)
+            {
+                retainIfPreferred(preferredConfigs, configuration, label2);
+            }
+        }
+        
         StringBuilder sql = new StringBuilder();
 
         sql.append("SELECT X.MetricSeriesIndex, X.MetricId, X.SampleFileId, ");
@@ -153,7 +169,7 @@ public class OutlierGenerator
         sql.append("\nFROM (");
 
         String sep = "";
-        for (QCMetricConfiguration configuration : configurations)
+        for (QCMetricConfiguration configuration : preferredConfigs.values())
         {
             sql.append(sep).append(getEachSeriesTypePlotDataSql(1, configuration, annotationGroups));
             sep = "\nUNION\n";
@@ -201,6 +217,16 @@ public class OutlierGenerator
         }
 
         return sql.toString();
+    }
+
+    /** Prefer the standalone variant of a metric if it's also part of a paired config so that we avoid double-counting */
+    private void retainIfPreferred(Map<String, QCMetricConfiguration> preferredConfigs, QCMetricConfiguration configuration, String label)
+    {
+        QCMetricConfiguration existingConfig1 = preferredConfigs.get(label);
+        if (existingConfig1 == null || existingConfig1.getSeries2Label() == null)
+        {
+            preferredConfigs.put(label, configuration);
+        }
     }
 
     public List<RawMetricDataSet> getRawMetricDataSets(Container container, User user, List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups, boolean showExcluded)
@@ -254,7 +280,7 @@ public class OutlierGenerator
                 dataRow.increment(sampleFile, stats);
 
                 String metricLabel = getMetricLabel(metrics, dataRow);
-                dataRow.increment(sampleFile.getMetricCounts(metricLabel), stats);
+                dataRow.increment(sampleFile.getMetricCounts(metricLabel, dataRow.getMetricId()), stats);
             }
         }
 

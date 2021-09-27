@@ -299,7 +299,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // change all of the plot input fields and filter to a single date
         String testDateStr = "2013-08-20";
-        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.PEAK);
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.TOTAL_PEAK);
         qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.PERCENT_OF_MEAN);
         qcPlotsWebPart.setGroupXAxisValuesByDate(true);
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
@@ -311,7 +311,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         refresh();
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, true);
-        assertEquals("Metric Type not round tripped as expected", QCPlotsWebPart.MetricType.PEAK, qcPlotsWebPart.getCurrentMetricType());
+        assertEquals("Metric Type not round tripped as expected", QCPlotsWebPart.MetricType.TOTAL_PEAK, qcPlotsWebPart.getCurrentMetricType());
         assertEquals("Y-Axis Scale not round tripped as expected", QCPlotsWebPart.Scale.PERCENT_OF_MEAN, qcPlotsWebPart.getCurrentScale());
         assertTrue("Group X-Axis not round tripped as expected", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertTrue("Show All Peptides not round tripped as expected", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
@@ -379,7 +379,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, false);
         assertEquals("Y-axis Scale selection wasn't persisted", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());
-        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.PEAK);
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.TOTAL_PEAK);
         assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleInvalidCount());
         assertEquals("Unexpected number of plots with invalid log scale.", 1, qcPlotsWebPart.getLogScaleWarningCount());
         assertEquals("Unexpected number of plots with log scale 0 value replacement warning.", PRECURSORS.length, qcPlotsWebPart.getLogScaleEpsilonWarningCount());

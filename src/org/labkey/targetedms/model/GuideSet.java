@@ -117,7 +117,7 @@ public class GuideSet extends Entity
             {
                 String metricLabel = OutlierGenerator.get().getMetricLabel(metrics, dataRow);
 
-                OutlierCounts counts = allMetricOutliers.computeIfAbsent(new Pair<>(dataRow.getMetricId(), metricLabel), x -> new OutlierCounts());
+                OutlierCounts counts = allMetricOutliers.computeIfAbsent(new Pair<>(dataRow.getMetricId(), metricLabel), x -> new OutlierCounts(dataRow.getMetricId()));
                 GuideSetStats s = stats.get(dataRow.getGuideSetKey());
                 dataRow.increment(counts, s);
             }

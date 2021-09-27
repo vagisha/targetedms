@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 public class OutlierCounts
 {
+    private final Integer _metricId;
     private int _CUSUMmP;
     private int _CUSUMvP;
     private int _CUSUMmN;
@@ -14,6 +15,16 @@ public class OutlierCounts
 
     /** Total number of data points under consideration */
     private int _totalCount;
+
+    public OutlierCounts()
+    {
+        _metricId = null;
+    }
+
+    public OutlierCounts(int metricId)
+    {
+        _metricId = metricId;
+    }
 
     public int getCUSUMm()
     {
@@ -108,6 +119,10 @@ public class OutlierCounts
         jsonObject.put("CUSUMvP", getCUSUMvP());
         jsonObject.put("mR", getmR());
         jsonObject.put("LeveyJennings", getLeveyJennings());
+        if (_metricId != null)
+        {
+            jsonObject.put("MetricId", _metricId);
+        }
 
         return jsonObject;
     }

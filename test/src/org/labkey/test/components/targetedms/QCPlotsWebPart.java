@@ -741,11 +741,13 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
     public enum MetricType
     {
         RETENTION("Retention Time", true),
-        PEAK("Peak Area", true),
+        TOTAL_PEAK("Total Peak Area (Precursor + Transition)", true),
+        PRECURSOR_AREA("Precursor Area", true),
         FWHM("Full Width at Half Maximum (FWHM)", true),
         FWB("Full Width at Base (FWB)", true),
         LHRATIO("Light/Heavy Ratio", false),
         TPAREARATIO("Transition/Precursor Area Ratio", true),
+        TRANSITION_AREA("Transition Area", true),
         TPAREAS("Transition & Precursor Areas", true),
         MASSACCURACY("Mass Accuracy", true),
         TICAREA("TIC Area", true);
@@ -764,7 +766,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
             for (MetricType v : values())
                 if (v.toString().equalsIgnoreCase(value))
                     return v;
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(value);
         }
 
         public String toString()

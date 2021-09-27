@@ -83,9 +83,9 @@ public class SampleFileInfo extends OutlierCounts
         return result;
     }
 
-    public OutlierCounts getMetricCounts(String metricLabel)
+    public OutlierCounts getMetricCounts(String metricLabel, int metricId)
     {
-        return byMetric.computeIfAbsent(metricLabel, x -> new OutlierCounts());
+        return byMetric.computeIfAbsent(metricLabel, x -> new OutlierCounts(metricId));
     }
 
     @Override @NotNull

@@ -242,7 +242,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         assertEquals("Wrong number of non-conformers for FWHM", 13, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 6));
         assertEquals("Wrong number of non-conformers for FWB", 7, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 7));
         verifyTicksOnPlots(paretoPlotsWebPart, guideSetId, plotType);
-        verifyNavigationToPanoramaDashboard(guideSetId, 0, QCPlotsWebPart.MetricType.PEAK, true);
+        verifyNavigationToPanoramaDashboard(guideSetId, 0, QCPlotsWebPart.MetricType.TOTAL_PEAK, true);
 
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
         waitForElement(Locator.css("svg"));
@@ -257,7 +257,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         assertEquals("Wrong number of non-conformers for FWHM", 12, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 6));
         assertEquals("Wrong number of non-conformers for T/P Ratio", 4, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 7));
         verifyTicksOnPlots(paretoPlotsWebPart, guideSetId, plotType);
-        verifyNavigationToPanoramaDashboard(guideSetId, QCPlotsWebPart.QCPlotType.MovingRange, 0, QCPlotsWebPart.MetricType.PEAK, true);
+        verifyNavigationToPanoramaDashboard(guideSetId, QCPlotsWebPart.QCPlotType.MovingRange, 0, QCPlotsWebPart.MetricType.TOTAL_PEAK, true);
 
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
         waitForElement(Locator.css("svg"));
@@ -279,7 +279,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         assertEquals("Wrong number of non-conformers for T Area", "CUSUM-: 4 CUSUM+: 0 Total: 4", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 3));
         assertEquals("Wrong number of non-conformers for T/P Ratio", "CUSUM-: 3 CUSUM+: 1 Total: 4", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 4));
         verifyTicksOnPlots(paretoPlotsWebPart, guideSetId, plotType);
-        verifyNavigationToPanoramaDashboard(guideSetId, QCPlotsWebPart.QCPlotType.CUSUMm, 0, QCPlotsWebPart.MetricType.PEAK, true);
+        verifyNavigationToPanoramaDashboard(guideSetId, QCPlotsWebPart.QCPlotType.CUSUMm, 0, QCPlotsWebPart.MetricType.TOTAL_PEAK, true);
 
     }
 

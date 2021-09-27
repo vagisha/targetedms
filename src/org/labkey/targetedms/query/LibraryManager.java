@@ -15,12 +15,15 @@
 
 package org.labkey.targetedms.query;
 
+
+import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.SkylineFileUtils;
 import org.labkey.targetedms.TargetedMSManager;
@@ -44,6 +47,8 @@ import java.util.stream.Stream;
  */
 public class LibraryManager
 {
+    static final Logger LOG = LogHelper.getLogger(LibraryManager.class, "Fill in description");
+
     private LibraryManager() {}
 
     public static List<PeptideSettings.SpectrumLibrary> getLibraries(long runId)
@@ -131,7 +136,7 @@ public class LibraryManager
         }
         catch (IOException e)
         {
-            throw new RuntimeException(e);
+            LOG.info("Failed to determine library file names for " + skyFilesDir + ", continuing without them being available", e);
         }
 
         if(!skyFiles.isEmpty())
