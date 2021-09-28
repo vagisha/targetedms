@@ -234,6 +234,11 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testQCPlotInputs()
     {
+        List<QCPlotsWebPart.MetricType> metricTypeWithData =
+                Arrays.asList(QCPlotsWebPart.MetricType.TOTAL_PEAK, QCPlotsWebPart.MetricType.RETENTION, QCPlotsWebPart.MetricType.FWHM,
+                        QCPlotsWebPart.MetricType.FWB, QCPlotsWebPart.MetricType.TPAREARATIO, QCPlotsWebPart.MetricType.TPAREAS,
+                        QCPlotsWebPart.MetricType.MASSACCURACY, QCPlotsWebPart.MetricType.TICAREA);
+
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
@@ -275,17 +280,16 @@ public class TargetedMSQCTest extends TargetedMSTest
         // test that plot0 changes based on metric type
         for (QCPlotsWebPart.MetricType type : QCPlotsWebPart.MetricType.values())
         {
-            // Skip over metrics that auto-hide when they don't have data
-            if (type.hasData() && type != qcPlotsWebPart.getCurrentMetricType())
+            // Skip over metrics that dont have data.
+            if (metricTypeWithData.contains(type) &&  type != qcPlotsWebPart.getCurrentMetricType())
             {
                 log("Verify plot type: " + type);
                 initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
-                qcPlotsWebPart.setMetricType(type, type.hasData());
-                if (type.hasData())
-                    assertNotEquals(initialSVGText, qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0"));
+                qcPlotsWebPart.setMetricType(type);
+                assertNotEquals(initialSVGText, qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0"));
 
                 // back to default metric type for baseline comparison of svg plot change
-                qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.RETENTION, true, type.hasData());
+                qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.RETENTION);
             }
         }
     }

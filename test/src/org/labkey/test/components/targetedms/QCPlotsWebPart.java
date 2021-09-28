@@ -448,7 +448,6 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         {
             endPoint = elementCache().svgBackgrounds.findElements(this).get(0);
             xEndOffset = (Integer.parseInt(endPoint.getAttribute("width")) / 2) - 1;
-            ;
         }
 
         getWrapper().scrollIntoView(startPoint);
@@ -740,25 +739,26 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public enum MetricType
     {
-        RETENTION("Retention Time", true),
-        TOTAL_PEAK("Total Peak Area (Precursor + Transition)", true),
-        PRECURSOR_AREA("Precursor Area", true),
-        FWHM("Full Width at Half Maximum (FWHM)", true),
-        FWB("Full Width at Base (FWB)", true),
-        LHRATIO("Light/Heavy Ratio", false),
-        TPAREARATIO("Transition/Precursor Area Ratio", true),
-        TRANSITION_AREA("Transition Area", true),
-        TPAREAS("Transition & Precursor Areas", true),
-        MASSACCURACY("Mass Accuracy", true),
-        TICAREA("TIC Area", true);
+        RETENTION("Retention Time"),
+        TOTAL_PEAK("Total Peak Area (Precursor + Transition)"),
+        PRECURSOR_AREA("Precursor Area"),
+        FWHM("Full Width at Half Maximum (FWHM)"),
+        FWB("Full Width at Base (FWB)"),
+        LHRATIO("Light/Heavy Ratio"),
+        TPAREARATIO("Transition/Precursor Area Ratio"),
+        TPAREAS("Transition & Precursor Areas"),
+        TRANSITION_AREA("Transition Area"),
+        MASSACCURACY("Mass Accuracy"),
+        IRTINTERCEPT("iRT Intercept"),
+        IRTSLOPE("iRT Slope"),
+        IRTCORRELATION("iRT Correlation"),
+        TICAREA("TIC Area");
 
         private String _text;
-        private boolean _hasData;
 
-        MetricType(String text, boolean hasData)
+        MetricType(String text)
         {
             _text = text;
-            _hasData = hasData;
         }
 
         public static MetricType getEnum(String value)
@@ -772,11 +772,6 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         public String toString()
         {
             return _text;
-        }
-
-        public boolean hasData()
-        {
-            return _hasData;
         }
     }
 
