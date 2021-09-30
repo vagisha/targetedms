@@ -15,10 +15,10 @@
  */
 package org.labkey.targetedms.parser.skyaudit;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.util.GUID;
+import org.labkey.api.util.logging.LogHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +30,7 @@ public class AuditLogTree implements Iterable<AuditLogTree>
 {
     public static final String NULL_STRING = "(null)";
 
-    private static final Logger LOG = LogManager.getLogger(AuditLogTree.class);
+    private static final Logger LOG = LogHelper.getLogger(AuditLogTree.class, "Skyline audit log validation");
 
     private final Map<String, AuditLogTree> _children = new HashMap<>();
     private final String _entryHash;
@@ -89,15 +89,22 @@ public class AuditLogTree implements Iterable<AuditLogTree>
         return _children.getOrDefault(pEntryHash, null);
     }
 
-    public int getTreeSize(){
-        return getTreeSizeRecursive(0) + 1;
-    }
+    public int getTreeSize()
+    {
+        // Don't use call stack recursion to avoid StackOverflowErrors on large trees - issue 43980
+        List<AuditLogTree> stack = new ArrayList<>();
+        stack.add(this);
 
-    private int getTreeSizeRecursive(int pSize){
-        int s = 0;
-        for (AuditLogTree t : this)
-            s += t.getTreeSizeRecursive(pSize);
-        return pSize + _children.size() + s;
+        int result = 1;
+
+        while (!stack.isEmpty())
+        {
+            AuditLogTree current = stack.remove(0);
+            result += current._children.size();
+            stack.addAll(current._children.values());
+        }
+
+        return result;
     }
 
     /***
@@ -175,22 +182,23 @@ public class AuditLogTree implements Iterable<AuditLogTree>
 
     public AuditLogTree findVersionEntry(long pVersionId)
     {
-        return recursiveFindVersionEntry(pVersionId);
-    }
+        // Don't use call stack recursion to avoid StackOverflowErrors on large trees - issue 43980
+        List<AuditLogTree> stack = new ArrayList<>();
+        stack.add(this);
 
-    private AuditLogTree recursiveFindVersionEntry(long pVersionId)
-    {
-        if (this._versionId != null && this._versionId == pVersionId)      //check if it is the right version id
-            return this;
-        else
+        while (!stack.isEmpty())
         {
-            for (Map.Entry<String, AuditLogTree> child : _children.entrySet())
-            {       //performing depth-first search because audit log trees are typically deeper than wider.
-                AuditLogTree res = child.getValue().recursiveFindVersionEntry(pVersionId);
-                if(res != null) return res;
+            AuditLogTree currentEntry = stack.remove(0);
+            // check if it is the right version id
+            if (currentEntry._versionId != null && currentEntry._versionId == pVersionId)
+            {
+                return currentEntry;
             }
-            return null;
+
+            // performing depth-first search because audit log trees are typically deeper than wider.
+            stack.addAll(0, currentEntry._children.values());
         }
+        return null;
     }
 
     @Override
