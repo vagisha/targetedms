@@ -80,19 +80,19 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
         this.add(this.getPlotPointDetailField('Acquired', this.pointData['fullDate']));
         if (this.pointData.conversion && this.pointData.rawValue !== undefined && this.valueName.indexOf("CUSUM") === -1) {
             if (this.pointData.conversion === 'percentDeviation') {
-                this.add(this.getPlotPointDetailField('Value', this.pointData.rawValue));
+                this.add(this.getPlotPointDetailField('Value', this.formatMetricValue(this.pointData.rawValue)));
                 this.add(this.getPlotPointDetailField('Percent of Mean', (this.valueName ? this.pointData[this.valueName] : this.pointData['value']) + '%'))
             }
             else if (this.pointData.conversion === 'standardDeviation') {
-                this.add(this.getPlotPointDetailField('Value', this.pointData.rawValue));
+                this.add(this.getPlotPointDetailField('Value', this.formatMetricValue(this.pointData.rawValue)));
                 this.add(this.getPlotPointDetailField('Standard Deviations', this.valueName ? this.pointData[this.valueName] : this.pointData['value']))
             }
             else {
-                this.add(this.getPlotPointDetailField('Value', this.valueName ? this.pointData[this.valueName] : this.pointData['value']));
+                this.add(this.getPlotPointDetailField('Value', this.formatMetricValue(this.valueName ? this.pointData[this.valueName] : this.pointData['value'])));
             }
         }
         else {
-            this.add(this.getPlotPointDetailField('Value', this.valueName ? this.pointData[this.valueName] : this.pointData['value']));
+            this.add(this.getPlotPointDetailField('Value', this.formatMetricValue(this.valueName ? this.pointData[this.valueName] : this.pointData['value'])));
         }
         this.add(this.getPlotPointDetailField('File Path', this.pointData['FilePath'].replace(/\\/g, '\\<wbr>').replace(/\//g, '\/<wbr>').replace(/_/g, '_<wbr>')));
 
@@ -104,6 +104,25 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
         }
 
         this.add(Ext4.create('Ext.Component', { html: this.getPlotPointClickLinks() }));
+    },
+
+    formatMetricValue: function(value) {
+        if (Ext4.isNumeric(value)) {
+            if (value > 1000) {
+                return Ext4.util.Format.number(value, '0,000');
+            }
+            if (value > 100) {
+                return Ext4.util.Format.number(value, '0.#');
+            }
+            if (value > 10) {
+                return Ext4.util.Format.number(value, '0.##');
+            }
+            if (value > 1) {
+                return Ext4.util.Format.number(value, '0.###');
+            }
+            return Ext4.util.Format.number(value, '0.####');
+        }
+        return value;
     },
 
     getPlotPointDetailField : function(label, value, includeCls) {
