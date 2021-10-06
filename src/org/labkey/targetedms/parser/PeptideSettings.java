@@ -16,6 +16,7 @@
 package org.labkey.targetedms.parser;
 
 import org.labkey.api.targetedms.IModification;
+import org.labkey.api.targetedms.ISpectrumLibrary;
 
 import java.util.List;
 
@@ -843,7 +844,7 @@ public class PeptideSettings
         }
     }
 
-    public static final class SpectrumLibrary extends SkylineEntity
+    public static final class SpectrumLibrary extends SkylineEntity implements ISpectrumLibrary
     {
         private long _runId;
         private String _name;

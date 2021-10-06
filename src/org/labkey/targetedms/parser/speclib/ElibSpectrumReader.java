@@ -18,8 +18,13 @@ package org.labkey.targetedms.parser.speclib;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.targetedms.LibSourceFile;
+import org.labkey.api.targetedms.ISpectrumLibrary;
+import org.labkey.api.targetedms.ITargetedMSRun;
+import org.labkey.api.targetedms.LibrarySourceFiles;
 import org.labkey.targetedms.parser.speclib.LibSpectrum.RedundantSpectrum;
 import org.labkey.targetedms.parser.speclib.LibSpectrum.SpectrumKey;
+import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 
 import java.nio.ByteBuffer;
@@ -31,6 +36,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -237,5 +243,41 @@ public class ElibSpectrumReader extends LibSpectrumReader
         }
 
         return Collections.unmodifiableList(retentionTimes);
+    }
+
+    public static List<LibSourceFile> readLibSourceFiles(ITargetedMSRun run, ISpectrumLibrary library)
+    {
+        String libType = library.getLibraryType().toLowerCase();
+        if (!libType.equals("elib"))
+        {
+            return null;
+        }
+
+        Path path = LibraryManager.getLibraryFilePath(run.getId(), library);
+        String libPath = getNonEmptyLocalLibPath(run.getContainer(), path);
+        if (null == libPath)
+        {
+            return null;
+        }
+
+        try (Connection conn = getLibConnection(libPath))
+        {
+            List<LibSourceFile> sourceFiles = new ArrayList<>();
+
+            try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT DISTINCT SourceFile FROM entries"))
+            {
+                while (rs.next())
+                {
+                    String fileName = rs.getString(1);
+                    sourceFiles.add(new LibSourceFile(fileName, null, null));
+                }
+            }
+
+            return sourceFiles;
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

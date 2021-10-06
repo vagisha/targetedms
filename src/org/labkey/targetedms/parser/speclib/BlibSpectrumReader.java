@@ -20,8 +20,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
-import org.labkey.api.targetedms.BlibSourceFile;
+import org.labkey.api.targetedms.LibSourceFile;
+import org.labkey.api.targetedms.ISpectrumLibrary;
 import org.labkey.api.targetedms.ITargetedMSRun;
+import org.labkey.api.targetedms.LibrarySourceFiles;
 import org.labkey.api.util.FileUtil;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.speclib.LibSpectrum.RedundantSpectrum;
@@ -45,7 +47,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -470,29 +471,32 @@ public class BlibSpectrumReader extends LibSpectrumReader
         }
     }
 
-    // Return a map of blib file -> BlibSourceFiles
-    public static Map<String, List<BlibSourceFile>> readBlibSourceFiles(ITargetedMSRun run)
+    public static List<LibrarySourceFiles> readBlibSourceFiles(ITargetedMSRun run)
     {
-        Map<PeptideSettings.SpectrumLibrary, Path> libs = LibraryManager.getLibraryFilePaths(run.getId());
+        List<PeptideSettings.SpectrumLibrary> libs = LibraryManager.getLibraries(run.getId());
+        // Map<PeptideSettings.SpectrumLibrary, Path> libs = LibraryManager.getLibraryFilePaths(run.getId());
 
-        Map<String, List<BlibSourceFile>> m = new TreeMap<>();
-        for (Map.Entry<PeptideSettings.SpectrumLibrary, Path> entry : libs.entrySet())
+        // Map<String, List<BlibSourceFile>> m = new TreeMap<>();
+        List<LibrarySourceFiles> librarySources = new ArrayList<>();
+        for (PeptideSettings.SpectrumLibrary library : libs)
         {
-            if (!entry.getKey().getLibraryType().contains("bibliospec_lite"))
+            if (!library.getLibraryType().contains("bibliospec")) // bibliospec_lite and bibliospec
                 continue;
 
-            Path path = entry.getValue();
+            Path path = LibraryManager.getLibraryFilePath(run.getId(), library);
             String blibFilePath = getNonEmptyLocalLibPath(run.getContainer(), path);
             if (null == blibFilePath)
                 continue;
 
-            List<BlibSourceFile> blibSourceFiles = new ArrayList<>();
             try (Connection conn = getLibConnection(blibFilePath))
             {
                 if (!hasTable(conn, "SpectrumSourceFiles"))
                 {
                     continue;
                 }
+                LibrarySourceFiles libSources = new LibrarySourceFiles(library);
+                librarySources.add(libSources);
+
                 Map<Integer, Set<String>> scoreTypes = new HashMap<>(); // file id -> score types
                 if(hasTable(conn, "ScoreTypes")) // Older .blib files do not have a ScoreTypes table
                 {
@@ -533,7 +537,7 @@ public class BlibSpectrumReader extends LibSpectrumReader
                         Integer id = rs.getInt(idColumn);
                         String fileName = rs.getString(fileNameColumn);
                         String idFileName = idFileNameColumn >= 0 ? rs.getString(idFileNameColumn) : null;
-                        blibSourceFiles.add(new BlibSourceFile(fileName, idFileName, scoreTypes.getOrDefault(id, null)));
+                        libSources.addSource(new LibSourceFile(fileName, idFileName, scoreTypes.getOrDefault(id, null)));
                     }
                 }
             }
@@ -541,8 +545,85 @@ public class BlibSpectrumReader extends LibSpectrumReader
             {
                 throw new RuntimeException(e);
             }
-            m.put(path.getFileName().toString(), blibSourceFiles);
+            // m.put(path.getFileName().toString(), blibSourceFiles);
+            LibrarySourceFiles libSources = new LibrarySourceFiles(library);
         }
-        return m;
+        return librarySources;
+    }
+
+    public static List<LibSourceFile> readLibSourceFiles(ITargetedMSRun run, ISpectrumLibrary library)
+    {
+        String libType = library.getLibraryType().toLowerCase();
+        if (!("bibliospec".equals(libType) || "bibliospec_lite".equals(libType)))
+        {
+            return null;
+        }
+
+        Path path = LibraryManager.getLibraryFilePath(run.getId(), library);
+        String blibFilePath = getNonEmptyLocalLibPath(run.getContainer(), path);
+        if (null == blibFilePath)
+        {
+            return null;
+        }
+
+        try (Connection conn = getLibConnection(blibFilePath))
+        {
+            if (!hasTable(conn, "SpectrumSourceFiles"))
+            {
+                return null;
+            }
+
+            List<LibSourceFile> sourceFiles = new ArrayList<>();
+
+            Map<Integer, Set<String>> scoreTypes = new HashMap<>(); // file id -> score types
+            if(hasTable(conn, "ScoreTypes")) // Older .blib files do not have a ScoreTypes table
+            {
+                try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT DISTINCT r.fileID, s.scoreType FROM RefSpectra as r JOIN ScoreTypes s ON r.scoreType = s.id"))
+                {
+                    while (rs.next())
+                    {
+                        int fileId = rs.getInt(1);
+                        String scoreType = rs.getString(2);
+                        scoreTypes.putIfAbsent(fileId, new HashSet<>());
+                        scoreTypes.get(fileId).add(scoreType);
+                    }
+                }
+            }
+            try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT * FROM SpectrumSourceFiles"))
+            {
+                int idColumn = -1;
+                int fileNameColumn = -1;
+                int idFileNameColumn = -1;
+                ResultSetMetaData metadata = rs.getMetaData();
+                for (int i = 1; i <= metadata.getColumnCount(); i++)
+                {
+                    switch (metadata.getColumnName(i).toLowerCase())
+                    {
+                        case "id":
+                            idColumn = i;
+                            break;
+                        case "filename":
+                            fileNameColumn = i;
+                            break;
+                        case "idfilename":
+                            idFileNameColumn = i;
+                            break;
+                    }
+                }
+                while (rs.next())
+                {
+                    Integer id = rs.getInt(idColumn);
+                    String fileName = rs.getString(fileNameColumn);
+                    String idFileName = idFileNameColumn >= 0 ? rs.getString(idFileNameColumn) : null;
+                    sourceFiles.add(new LibSourceFile(fileName, idFileName, scoreTypes.getOrDefault(id, null)));
+                }
+            }
+
+            return sourceFiles;
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

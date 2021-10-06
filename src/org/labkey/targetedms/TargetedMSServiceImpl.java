@@ -25,10 +25,12 @@ import org.labkey.api.exp.XarFormatException;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.targetedms.BlibSourceFile;
 import org.labkey.api.targetedms.IModification;
 import org.labkey.api.targetedms.ISampleFile;
+import org.labkey.api.targetedms.ISpectrumLibrary;
 import org.labkey.api.targetedms.ITargetedMSRun;
+import org.labkey.api.targetedms.LibSourceFile;
+import org.labkey.api.targetedms.LibrarySourceFiles;
 import org.labkey.api.targetedms.SkylineAnnotation;
 import org.labkey.api.targetedms.SkylineDocumentImportListener;
 import org.labkey.api.targetedms.TargetedMSFolderTypeListener;
@@ -39,6 +41,8 @@ import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.datasource.MsDataSourceUtil;
 import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.speclib.BlibSpectrumReader;
+import org.labkey.targetedms.parser.speclib.ElibSpectrumReader;
+import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
@@ -161,6 +165,17 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
+    public TableInfo getTableInfoPeptideStructuralModification()
+    {
+        return TargetedMSManager.getTableInfoPeptideStructuralModification();
+    }
+    @Override
+    public TableInfo getTableInfoPeptideIsotopeModification()
+    {
+        return TargetedMSManager.getTableInfoPeptideIsotopeModification();
+    }
+
+    @Override
     public List<String> getSampleFilePaths(long runId)
     {
         return ReplicateManager.getSampleFilePaths(runId);
@@ -185,9 +200,37 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public Map<String, List<BlibSourceFile>> getBlibSourceFiles(ITargetedMSRun run)
+    public List<? extends ISpectrumLibrary> getLibraries(ITargetedMSRun run)
+    {
+        return run != null ? LibraryManager.getLibraries(run.getId()) : Collections.emptyList();
+    }
+
+    @Override
+    public @Nullable Path getSpectrumLibraryPath(ITargetedMSRun run, ISpectrumLibrary library)
+    {
+        return LibraryManager.getLibraryFilePath(run.getId(), library);
+    }
+
+    @Override
+    public List<LibrarySourceFiles> getBlibSourceFiles(ITargetedMSRun run)
     {
         return BlibSpectrumReader.readBlibSourceFiles(run);
+    }
+
+    @Override
+    public List<LibSourceFile> getLibrarySourceFiles(ITargetedMSRun run, ISpectrumLibrary library)
+    {
+        String libType = library.getLibraryType().toLowerCase();
+        switch (libType)
+        {
+            case "bibliospec":
+            case "bibliospec_lite":
+                return BlibSpectrumReader.readLibSourceFiles(run, library);
+            case "elib":
+                    return ElibSpectrumReader.readLibSourceFiles(run, library);
+            default:
+                return null;
+        }
     }
 
     @Override
@@ -266,9 +309,9 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public List<? extends ISampleFile> getSampleFilesWithData(List<? extends ISampleFile> sampleFiles, Container container)
+    public Map<String, Path> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData)
     {
-        return MsDataSourceUtil.getInstance().getSampleFilesWithData(sampleFiles, container);
+        return MsDataSourceUtil.getInstance().getDataPaths(sampleFiles, container, lookupExpData);
     }
 
     @Override
