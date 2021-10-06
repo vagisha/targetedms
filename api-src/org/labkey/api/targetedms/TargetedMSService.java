@@ -86,12 +86,17 @@ public interface TargetedMSService
     TableInfo getTableInfoGeneralPrecursor();
     TableInfo getTableInfoPrecursor();
     TableInfo getTableInfoMoleculePrecursor();
+    TableInfo getTableInfoPeptideStructuralModification();
+    TableInfo getTableInfoPeptideIsotopeModification();
 
     List<String> getSampleFilePaths(long runId);
     List<? extends ISampleFile> getSampleFiles(long runId);
     List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId);
     List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(long runId);
-    Map<String, List<BlibSourceFile>> getBlibSourceFiles(ITargetedMSRun run);
+    List<? extends ISpectrumLibrary> getLibraries(ITargetedMSRun run);
+    @Nullable Path getSpectrumLibraryPath(ITargetedMSRun run, ISpectrumLibrary library);
+    List<LibrarySourceFiles> getBlibSourceFiles(ITargetedMSRun run);
+    List<LibSourceFile> getLibrarySourceFiles(ITargetedMSRun run, ISpectrumLibrary library);
 
     // Add table customizers for the protein / peptide / modification search results
     void addProteinSearchResultCustomizer(TableCustomizer customizer);
@@ -105,11 +110,13 @@ public interface TargetedMSService
     Integer importSkylineDocument(ViewBackgroundInfo info, Path skylinePath) throws XarFormatException, PipelineValidationException;
 
     /**
+     *
      * @param sampleFiles list of sample files for which we should check if data exists
-     * @param container container where we should look for the data
-     * @return list of sample files for which data was found
+     * @param container container where we should look for data
+     * @param lookupExpData if true, look for a matching row in exp.data before looking up the filesystem
+     * @return Map of sample file names to the path on the filesystem
      */
-    List<? extends ISampleFile> getSampleFilesWithData(List<? extends ISampleFile> sampleFiles, Container container);
+    Map<String, Path> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData);
 
     /**
      * Returns the name of a chromatogram library file according to the naming pattern used for creating

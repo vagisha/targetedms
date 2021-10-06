@@ -15,15 +15,15 @@
 
 package org.labkey.targetedms.query;
 
-
-import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.targetedms.ISpectrumLibrary;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.SkylineFileUtils;
 import org.labkey.targetedms.TargetedMSManager;
@@ -47,8 +47,6 @@ import java.util.stream.Stream;
  */
 public class LibraryManager
 {
-    static final Logger LOG = LogHelper.getLogger(LibraryManager.class, "Fill in description");
-
     private LibraryManager() {}
 
     public static List<PeptideSettings.SpectrumLibrary> getLibraries(long runId)
@@ -61,10 +59,9 @@ public class LibraryManager
                                null).getArrayList(PeptideSettings.SpectrumLibrary.class);
     }
 
-    public static Path getLibraryFilePath(long runId, PeptideSettings.SpectrumLibrary library)
+    public static @Nullable Path getLibraryFilePath(long runId, @NotNull ISpectrumLibrary library)
     {
-        Map<PeptideSettings.SpectrumLibrary, Path> libraryFilePaths = getLibraryFilePaths(runId, Collections.singletonList(library));
-        return libraryFilePaths.size() > 0 ? libraryFilePaths.values().iterator().next() : null;
+        return getLibraryPath(getSkylineFilesDir(runId), library);
     }
 
     public static LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> getLibraryFilePaths(long runId)
@@ -78,20 +75,37 @@ public class LibraryManager
         if(libraries.size() == 0)
             return new LinkedHashMap<>(Collections.emptyMap());
 
+        Path skyFilesDir = getSkylineFilesDir(runId);
+
+        LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> libraryPathsMap = new LinkedHashMap<>();
+        for(PeptideSettings.SpectrumLibrary library: libraries)
+        {
+            Path libPath = getLibraryPath(skyFilesDir, library);
+            if (libPath != null)
+            {
+                libraryPathsMap.put(library, libPath);
+            }
+        }
+        return libraryPathsMap;
+    }
+
+    @NotNull
+    private static Path getSkylineFilesDir(long runId)
+    {
         TargetedMSRun run = TargetedMSManager.getRun(runId);
         if(run == null)
         {
-            throw new NotFoundException("No run found for Id "+runId);
+            throw new NotFoundException("No run found for Id "+ runId);
         }
         if(run.getDataId() == null)
         {
-            throw new NotFoundException("No dataId found for run Id "+runId);
+            throw new NotFoundException("No dataId found for run Id "+ runId);
         }
 
         ExpData expData = ExperimentService.get().getExpData(run.getDataId());
         if(expData == null)
         {
-            throw new IllegalStateException("Experiment data not found for runId "+runId+" and dataId "+run.getDataId());
+            throw new IllegalStateException("Experiment data not found for runId "+ runId +" and dataId "+run.getDataId());
         }
 
         Path file = expData.getFilePath();
@@ -99,27 +113,23 @@ public class LibraryManager
             throw new IllegalStateException("ExpData file not found.");
 
         Path skyFilesDir = file.getParent().resolve(SkylineFileUtils.getBaseName(FileUtil.getFileName(file)));
+        return skyFilesDir;
+    }
 
-        LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> libraryPathsMap = new LinkedHashMap<>();
-        for(PeptideSettings.SpectrumLibrary library: libraries)
+    private static Path getLibraryPath(Path skyFilesDir, ISpectrumLibrary library)
+    {
+        String libFileName = library.getFileNameHint();
+        if(libFileName == null)
         {
-            String libFileName = library.getFileNameHint();
-            if(libFileName == null)
-            {
-                // This could be a "document" library. Skyline xml does not include a "file_name_hint"
-                // attribute for these libraries.  They have the same name as the Skyline document.
-                // We are now adding a FileNameHint for "document" libraries during import.
-                // But we need to be able to display library spectra for Skyline documents imported before the fix.
-                // If the FileNameHint is null we assume that this is a document library.
-                // Documents libraries have the same name as the .sky file, with a .blib extension.
-                libFileName = getDocumentLibFileName(skyFilesDir);
-            }
-            if(libFileName != null)
-            {
-                libraryPathsMap.put(library, skyFilesDir.resolve(libFileName));
-            }
+            // This could be a "document" library. Skyline xml does not include a "file_name_hint"
+            // attribute for these libraries.  They have the same name as the Skyline document.
+            // We are now adding a FileNameHint for "document" libraries during import.
+            // But we need to be able to display library spectra for Skyline documents imported before the fix.
+            // If the FileNameHint is null we assume that this is a document library.
+            // Documents libraries have the same name as the .sky file, with a .blib extension.
+            libFileName = getDocumentLibFileName(skyFilesDir);
         }
-        return libraryPathsMap;
+        return libFileName != null ? skyFilesDir.resolve(libFileName) : null;
     }
 
     private static String getDocumentLibFileName(Path skyFilesDir)
@@ -136,7 +146,7 @@ public class LibraryManager
         }
         catch (IOException e)
         {
-            LOG.info("Failed to determine library file names for " + skyFilesDir + ", continuing without them being available", e);
+            throw new RuntimeException(e);
         }
 
         if(!skyFiles.isEmpty())
