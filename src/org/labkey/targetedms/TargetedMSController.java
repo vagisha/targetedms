@@ -4375,7 +4375,8 @@ public class TargetedMSController extends SpringActionController
             List<? extends ExpMaterial> materials = ExperimentService.get().getExpMaterialsByName(sampleName, null, getUser());
             if (materials.size() == 1)
             {
-                materialURL = materials.get(0).detailsURL();
+                ExpMaterial material = materials.get(0);
+                materialURL = material.detailsURL(material.getContainer(), true);
             }
 
             VBox result = new VBox();

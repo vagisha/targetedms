@@ -1,0 +1,35 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="SampleFileAssayResults" tableDbType="NOT_IN_DB">
+                <columns>
+                    <column columnName="Id">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="FileName">
+                        <url>/targetedms-showPrecursorList.view?id=${Id}</url>
+                    </column>
+                    <column columnName="PeptideGroupCount">
+                        <columnTitle>Proteins / Molecule Lists</columnTitle>
+                        <url>/targetedms-showPrecursorList.view?id=${Id}</url>
+                    </column>
+                    <column columnName="PeptideCount">
+                        <columnTitle>Peptides</columnTitle>
+                    </column>
+                    <column columnName="SmallMoleculeCount">
+                        <columnTitle>Small Molecules</columnTitle>
+                    </column>
+                    <column columnName="PrecursorCount">
+                        <columnTitle>Precursors</columnTitle>
+                    </column>
+                    <column columnName="TransitionCount">
+                        <columnTitle>Transitions</columnTitle>
+                    </column>
+                    <column columnName="ReplicateCount">
+                        <columnTitle>Replicates</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

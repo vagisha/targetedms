@@ -18,8 +18,11 @@ package org.labkey.targetedms;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.assay.sample.SampleAssayResultsConfig;
+import org.labkey.api.assay.sample.SampleAssayResultsService;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertySchema;
@@ -522,6 +525,13 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             });
         }
         TargetedMSService.setInstance(new TargetedMSServiceImpl());
+
+        SampleAssayResultsService sampleAssayService = SampleAssayResultsService.get();
+        if (sampleAssayService != null)
+            sampleAssayService.registerConfig(this, new SampleAssayResultsConfig(
+                    "Skyline Documents", "targetedms", "SampleFileAssayResults", null,
+                    "Name", "SampleName", ContainerFilter.Type.AllFolders
+            ));
     }
 
     @Override
