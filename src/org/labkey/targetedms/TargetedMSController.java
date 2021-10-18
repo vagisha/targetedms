@@ -134,7 +134,6 @@ import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.DOM;
 import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.HelpTopic;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.Link;
 import org.labkey.api.util.PageFlowUtil;
@@ -6698,7 +6697,7 @@ public class TargetedMSController extends SpringActionController
 
     private void addRootNavTrail(NavTree root, String title, PageConfig page, String helpTopic)
     {
-        page.setHelpTopic(new HelpTopic(null == helpTopic ? "targetedms" : helpTopic));
+        page.setHelpTopic(null == helpTopic ? "targetedms" : helpTopic);
         root.addChild("TargetedMS Runs", getShowListURL(getContainer()));
         if (null != title)
             root.addChild(title);

@@ -1,9 +1,8 @@
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
-<%@ page import="org.labkey.targetedms.model.passport.IProtein" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.util.HelpTopic" %>
+<%@ page import="org.labkey.targetedms.model.passport.IProtein" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
@@ -99,7 +98,7 @@
             </span>
             <span>
                 Showing raw values instead. You can
-                <%= new HelpTopic("panoRepro#config").getSimpleLinkHtml("configure your Skyline document") %>
+                <%= helpLink("panoRepro#config", "configure your Skyline document") %>
                 so that it includes normalized values.
             </span>
         </td>
@@ -111,7 +110,7 @@
             </span>
             <span>
                 Showing raw values instead. You can
-                <%= new HelpTopic("panoRepro#config").getSimpleLinkHtml("configure your Skyline document") %>
+                <%=helpLink("panoRepro#config", "configure your Skyline document") %>
                 so that it includes normalized values.
             </span>
         </td>

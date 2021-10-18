@@ -24,7 +24,6 @@ import org.labkey.api.module.MultiPortalFolderType;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.targetedms.TargetedMSService;
-import org.labkey.api.util.HelpTopic;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.Portal;
@@ -65,9 +64,9 @@ public class TargetedMSFolderType extends MultiPortalFolderType
     }
 
     @Override
-    public HelpTopic getHelpTopic()
+    public String getHelpTopic()
     {
-        return new HelpTopic("panorama");
+        return "panorama";
     }
 
     @NotNull
