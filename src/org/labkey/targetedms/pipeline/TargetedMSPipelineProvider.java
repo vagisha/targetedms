@@ -57,7 +57,7 @@ public class TargetedMSPipelineProvider extends PipelineProvider
 
         String actionId = getActionId();
         addAction(actionId, TargetedMSController.SkylineDocUploadAction.class, ACTION_LABEL,
-                directory, directory.listFiles(new UploadFileFilter()), true, false, includeAll);
+                directory, directory.listPaths(new UploadFileFilter()), true, false, includeAll);
     }
 
     public static class UploadFileFilter implements DirectoryStream.Filter<Path>
