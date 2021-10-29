@@ -19,9 +19,12 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
+import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.GeneralTransition;
+import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
+import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.SampleFileChromInfo;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
@@ -159,5 +162,10 @@ public class ChromatogramChartMakerFactory
     public JFreeChart createSampleFileChromChart(SampleFileChromInfo chromInfo, User user, Container container)
     {
         return new ChromatogramChartMaker().make(new ChromatogramDataset.SampleFileDataset(chromInfo, user, container), false, "Time", "Value");
+    }
+
+    public JFreeChart createGroupChart(PeptideGroup group, SampleFile sampleFile, ViewContext context)
+    {
+        return new ChromatogramChartMaker().make(new ChromatogramDataset.GroupDataset(group, sampleFile, context, _syncIntensity, _syncRt), false, "Retention Time", "Intensity");
     }
 }

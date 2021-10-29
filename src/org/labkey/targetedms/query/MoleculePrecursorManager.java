@@ -23,13 +23,13 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.MoleculePrecursor;
-import org.labkey.api.targetedms.RepresentativeDataState;
 
 import java.util.HashSet;
 import java.util.List;
@@ -199,7 +199,7 @@ public class MoleculePrecursorManager
     }
 
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForMolecule(long moleduleId, long sampleFileId, User user, Container container)
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForMolecule(long moleculeId, long sampleFileId, User user, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, mol.customIonName, prec.Charge");
@@ -207,7 +207,7 @@ public class MoleculePrecursorManager
         joinTablesForMoleculePrecursorChromInfo(sql, user, container);
         sql.append(" WHERE ");
         sql.append("mol.Id=? ");
-        sql.add(moleduleId);
+        sql.add(moleculeId);
 
         if(sampleFileId != 0)
         {
@@ -216,7 +216,7 @@ public class MoleculePrecursorManager
             sql.add(sampleFileId);
         }
 
-        return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
     }
 
     private static void joinTablesForMoleculePrecursorChromInfo(SQLFragment sql, User user, Container container)

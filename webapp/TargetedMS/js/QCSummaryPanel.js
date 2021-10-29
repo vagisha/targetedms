@@ -52,11 +52,17 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 container.parentOnly = containers.length == 1;
                 if (this.qcPlotPanel.qcIntrumentsArr) {
                     if (this.qcPlotPanel.qcIntrumentsArr.length > 1) {
-                        var msg = 'We recommend that each instrument use its own QC folder.'
-                        container.instrument = ' for multiple instruments - ' + this.qcPlotPanel.qcIntrumentsArr.join(', ') + '. ' + msg;
-
+                        let msg = 'We recommend that each instrument use its own QC folder.';
+                        container.instrument = ' for multiple instruments: ';
+                        let separator = '';
+                        for (let index = 0; index < this.qcPlotPanel.qcIntrumentsArr.length; index++) {
+                            let currentInstrument = this.qcPlotPanel.qcIntrumentsArr[index];
+                            container.instrument += separator + (currentInstrument ? currentInstrument : 'unknown instrument');
+                            separator = ', ';
+                        }
+                        container.instrument += '. ' + msg;
                     }
-                    else if (this.qcPlotPanel.qcIntrumentsArr.length === 1) {
+                    else if (this.qcPlotPanel.qcIntrumentsArr.length === 1 && this.qcPlotPanel.qcIntrumentsArr[0]) {
                         container.instrument = ' for ' + this.qcPlotPanel.qcIntrumentsArr[0];
                     }
                 }

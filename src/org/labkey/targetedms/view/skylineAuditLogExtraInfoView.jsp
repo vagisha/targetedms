@@ -5,15 +5,18 @@
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
 <%
-    JspView<TargetedMSController.SkylineAuditLogExtraInfoBean> me =
-            (JspView<TargetedMSController.SkylineAuditLogExtraInfoBean>) HttpView.currentView();
-    TargetedMSController.SkylineAuditLogExtraInfoBean bean = me.getModelBean();
-    AuditLogEntry entry = bean.getEntry();
+    JspView<AuditLogEntry> me =
+            (JspView<AuditLogEntry>) HttpView.currentView();
+    AuditLogEntry bean = me.getModelBean();
 %>
-<div id="targetedmsAuditLogExtraInfo" >
+    <div id="targetedmsAuditLogExtraInfo" >
+    <% if (bean == null) { %>
+        Unable to find requested audit log entry
+    <% } else { %>
     <table>
-        <tr><td><strong>User Name:</strong> <%= h(entry.getUserName()) %></td><td><span class="fa fa-times">&nbsp;</span></td></tr>
-        <tr><td colspan="2"><strong>Entry Timestamp:</strong> <%=formatDateTime(entry.getCreateTimestamp())%></td></tr>
+        <tr><td><strong>User Name:</strong> <%= h(bean.getUserName()) %></td><td><span class="fa fa-times">&nbsp;</span></td></tr>
+        <tr><td colspan="2"><strong>Entry Timestamp:</strong> <%=formatDateTime(bean.getCreateTimestamp())%></td></tr>
     </table><br/>
-    <pre style="overflow: scroll; max-height: 400px"><%=h(entry.getExtraInfo()) %></pre>
+    <pre style="overflow: scroll; max-height: 400px"><%=h(bean.getExtraInfo()) %></pre>
+    <% } %>
 </div>

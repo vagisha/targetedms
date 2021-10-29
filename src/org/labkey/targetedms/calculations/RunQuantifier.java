@@ -24,7 +24,6 @@ import org.labkey.api.util.Tuple3;
 import org.labkey.targetedms.SkylineDocImporter.IProgressStatus;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
-import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.calculations.quantification.CalibrationCurve;
 import org.labkey.targetedms.calculations.quantification.CalibrationCurveDataSet;
 import org.labkey.targetedms.calculations.quantification.GroupComparisonDataSet;
@@ -110,7 +109,6 @@ public class RunQuantifier
             return Collections.emptyList();
         }
 
-        TargetedMSSchema schema = new TargetedMSSchema(_user, _container);
         List<CalibrationCurveEntity> calibrationCurves = new ArrayList<>();
         Collection<PeptideGroup> peptideGroups = listPeptideGroups();
         int done = 0;
@@ -122,7 +120,7 @@ public class RunQuantifier
 
             List<GeneralMolecule> generalMolecules = new ArrayList<>();
             generalMolecules.addAll(MoleculeManager.getMoleculesForGroup(peptideGroup.getId()));
-            generalMolecules.addAll(PeptideManager.getPeptidesForGroup(peptideGroup.getId(), schema));
+            generalMolecules.addAll(PeptideManager.getPeptidesForGroup(peptideGroup.getId()));
             for (GeneralMolecule molecule : generalMolecules)
             {
                 NormalizationMethod normalizationMethod
@@ -306,9 +304,8 @@ public class RunQuantifier
 
     private List<GeneralMolecule> getGeneralMoleculesForGroup(PeptideGroup peptideGroup)
     {
-        TargetedMSSchema schema = new TargetedMSSchema(_user, _container);
         List<GeneralMolecule> list = new ArrayList<>();
-        list.addAll(PeptideManager.getPeptidesForGroup(peptideGroup.getId(), schema));
+        list.addAll(PeptideManager.getPeptidesForGroup(peptideGroup.getId()));
         list.addAll(MoleculeManager.getMoleculesForGroup(peptideGroup.getId()));
         return list;
     }

@@ -27,6 +27,7 @@ import org.labkey.targetedms.parser.Molecule;
 import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.MoleculeTransition;
 import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
@@ -191,21 +192,26 @@ public class LabelFactory
                 molecule.getName();
     }
 
+    public static String groupChartTitle(PeptideGroup group, SampleFile sampleFile)
+    {
+        String label = group.getLabel() == null ? group.getName() : group.getLabel();
+        return generateChromChartTitle(label, sampleFile);
+    }
+
     public static String precursorChromInfoChartTitle(PrecursorChromInfo pChromInfo)
     {
         String label = precursorLabel(pChromInfo.getPrecursorId());
-        return generalPrecursorChromInfoChartTitle(label, pChromInfo);
+        return generateChromChartTitle(label, ReplicateManager.getSampleFile(pChromInfo.getSampleFileId()));
     }
 
     public static String moleculePrecursorChromInfoChartTitle(PrecursorChromInfo pChromInfo, User user, Container container)
     {
         String label = moleculePrecursorLabel(pChromInfo.getPrecursorId(), user, container);
-        return generalPrecursorChromInfoChartTitle(label, pChromInfo);
+        return generateChromChartTitle(label, ReplicateManager.getSampleFile(pChromInfo.getSampleFileId()));
     }
 
-    private static String generalPrecursorChromInfoChartTitle(String precursorLabel, PrecursorChromInfo pChromInfo)
+    private static String generateChromChartTitle(String objectLabel, SampleFile sampleFile)
     {
-        SampleFile sampleFile = ReplicateManager.getSampleFile(pChromInfo.getSampleFileId());
         Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
         TargetedMSRun run = TargetedMSManager.getRun(replicate.getRunId());
 
@@ -221,7 +227,7 @@ public class LabelFactory
             label.append(DateUtil.formatDateTime(run.getContainer(), sampleFile.getAcquiredTime()));
         }
         label.append('\n');
-        label.append(precursorLabel);
+        label.append(objectLabel);
         return label.toString();
     }
 

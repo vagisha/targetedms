@@ -52,13 +52,9 @@ public class PrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSch
         peptideCol.setDisplayColumnFactory(colFactory);
     }
 
-    public void setPrecursorId(long precursorId)
+    public void addPrecursorFilter(long precursorId)
     {
         _precursorId = precursorId;
-    }
-
-    public void addPrecursorFilter()
-    {
         addCondition(new SimpleFilter(FieldKey.fromParts("PrecursorId"), _precursorId));
     }
 }

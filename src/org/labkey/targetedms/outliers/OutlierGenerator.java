@@ -25,21 +25,33 @@ import org.labkey.api.security.User;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.chart.ColorGenerator;
 import org.labkey.targetedms.model.GuideSet;
 import org.labkey.targetedms.model.GuideSetKey;
 import org.labkey.targetedms.model.GuideSetStats;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.model.QCPlotFragment;
 import org.labkey.targetedms.model.RawMetricDataSet;
+import org.labkey.targetedms.parser.GeneralMolecule;
+import org.labkey.targetedms.parser.GeneralPrecursor;
 import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.query.MoleculeManager;
+import org.labkey.targetedms.query.MoleculePrecursorManager;
+import org.labkey.targetedms.query.PeptideManager;
+import org.labkey.targetedms.query.PrecursorManager;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -308,26 +320,36 @@ public class OutlierGenerator
     /**
      * returns the separated plots data per peptide
      * */
-    public List<QCPlotFragment> getQCPlotFragment(List<RawMetricDataSet> rawMetricData, Map<GuideSetKey, GuideSetStats> stats)
+    public List<QCPlotFragment> getQCPlotFragment(List<RawMetricDataSet> rawMetricData, Map<GuideSetKey, GuideSetStats> stats, Container c, User u)
     {
         List<QCPlotFragment> qcPlotFragments = new ArrayList<>();
         Map<String, List<RawMetricDataSet>> rawMetricDataSetMapByLabel = new HashMap<>();
         for (RawMetricDataSet rawMetricDataSet : rawMetricData)
         {
-            rawMetricDataSetMapByLabel.computeIfAbsent(rawMetricDataSet.getSeriesLabel(),label -> new ArrayList<>());
+            rawMetricDataSetMapByLabel.computeIfAbsent(rawMetricDataSet.getSeriesLabel(), label -> new ArrayList<>());
             rawMetricDataSetMapByLabel.get(rawMetricDataSet.getSeriesLabel()).add(rawMetricDataSet);
-
         }
+
+        // Track all of the precursors that need to be assigned a color
+        Map<Integer, QCPlotFragment> fragmentsByPrecursorId = new TreeMap<>();
 
         for (Map.Entry<String, List<RawMetricDataSet>> entry : rawMetricDataSetMapByLabel.entrySet())
         {
             QCPlotFragment qcPlotFragment = new QCPlotFragment();
-            qcPlotFragment.setSeriesLabel(entry.getKey());
+
+            RawMetricDataSet firstValue = entry.getValue().get(0);
 
             /* Common values for the whole peptide */
-            qcPlotFragment.setDataType(entry.getValue().get(0).getDataType());
-            qcPlotFragment.setmZ(entry.getValue().get(0).getMz());
+            qcPlotFragment.setDataType(firstValue.getDataType());
+            qcPlotFragment.setmZ(firstValue.getMz());
 
+            // In case the data has been imported across multiple documents, find the lowest ID value for any of the precursor records
+            Optional<RawMetricDataSet> bestPrecursorIdRow = entry.getValue().stream().filter(x -> x.getPrecursorId() != null).min(Comparator.comparing(RawMetricDataSet::getPrecursorId));
+
+            // Remember the precursor ID so that we can assign a series color based on Skyline's algorithm
+            bestPrecursorIdRow.ifPresent(rawMetricDataSet -> fragmentsByPrecursorId.put(rawMetricDataSet.getPrecursorId(), qcPlotFragment));
+
+            qcPlotFragment.setSeriesLabel(entry.getKey());
             qcPlotFragment.setQcPlotData(entry.getValue());
 
             qcPlotFragments.add(qcPlotFragment);
@@ -340,6 +362,33 @@ public class OutlierGenerator
                 }
             }));
             qcPlotFragment.setGuideSetStats(guideSetStatsList);
+        }
+
+        // Now that we have all the precursor IDs, in order (important so that we de-dupe the colors in a stable order),
+        // run through them and choose a color
+        Set<Color> seriesColors = new HashSet<>();
+        for (Map.Entry<Integer, QCPlotFragment> entry : fragmentsByPrecursorId.entrySet())
+        {
+            int precursorId = entry.getKey();
+            // It could be either a small molecule or a peptide, so look up both options
+            GeneralMolecule molecule;
+            GeneralPrecursor<?> precursor = PrecursorManager.getPrecursor(c, precursorId, u);
+            if (precursor == null)
+            {
+                precursor = MoleculePrecursorManager.getPrecursor(c, precursorId, u);
+                molecule = MoleculeManager.getMolecule(c, precursor.getGeneralMoleculeId());
+            }
+            else
+            {
+                molecule = PeptideManager.getPeptide(c, precursor.getGeneralMoleculeId());
+            }
+            // Choose the color, remembering it so that we can avoid ones that are too similar to each other.
+
+            // We need a separate color per precursor. Use the molecule's text ID, and rely on the similarity comparison
+            // to ensure additional precursors for a single molecule get unique colors.
+            Color color = ColorGenerator.getColor(molecule.getTextId(), seriesColors);
+            entry.getValue().setSeriesColor(color);
+            seriesColors.add(color);
         }
 
         qcPlotFragments.sort(Comparator.comparing(QCPlotFragment::getSeriesLabel));

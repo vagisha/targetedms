@@ -1157,6 +1157,7 @@ public class TargetedMSManager
         return run;
     }
 
+    @NotNull
     public static TargetedMSRun getRunForGeneralMolecule(long id)
     {
         String sql = "SELECT run.* FROM "+

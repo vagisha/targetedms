@@ -24,7 +24,7 @@ if (!LABKEY.targetedms.SVGChart) {
 
                     var plotAndTitleHtml = '';
                     if (titleTransformer) {
-                        plotAndTitleHtml += '<div style="text-align: center; word-break: break-word">' +
+                        plotAndTitleHtml += '<div style="text-align: center; white-space: normal; word-break: break-word">' +
                                 LABKEY.Utils.encodeHtml(titleTransformer(parsedResponse.title)).split('\n').join('<br>') +
                                 '</div>';
                     }

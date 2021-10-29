@@ -19,12 +19,12 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.CommandException;
-import org.labkey.remoteapi.query.Filter;
-import org.labkey.remoteapi.query.SelectRowsCommand;
-import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.query.Filter;
 import org.labkey.remoteapi.query.Row;
 import org.labkey.remoteapi.query.Rowset;
+import org.labkey.remoteapi.query.SelectRowsCommand;
+import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.remoteapi.query.Sort;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
@@ -287,15 +287,15 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //Verify the spectrum shows up correctly.
 
         //Verify we get the expected number of chromatogram graphs.
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'generalMoleculeChromatogramChart.view')]"), 1);
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 2);
-        assertElementPresent(Locator.xpath("//img[contains(@alt, 'Chromatogram')]"), 3);
+        assertElementPresent(Locator.xpath("//table[contains(@lk-region-name, 'PeptidePrecursorChromatograms')]"));
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PeptidePrecursorChromatograms')]//div[contains(@alt, 'Chromatogram silac_1_to_4')]"), 3);
 
         //Click on a precursor icon link.
         clickAndWait(Locator.linkWithHref("precursorAllChromatogramsChart.view?"));
         //Verify expected values in detail view. Verify chromatogram.
         assertTextPresentInThisOrder("Precursor Chromatograms: LTSLNVVAGSDLR", "YAL038W", "672.8777");
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'Chromatogram')]"));
+        assertElementPresent(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]"));
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]//div[contains(@alt, 'Chromatogram silac_1_to_4')]"), 1);
 
         goBack();
         clickAndWait(Locator.linkContainingText("YAL038W"));
@@ -359,8 +359,12 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertElementPresent(Locator.xpath("//tr[td[text()='Avg. RT']][td[normalize-space()='0.9701']]"));
         assertTextPresent("Molecule Precursors");
 
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'generalMoleculeChromatogramChart.view')]"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"));
+        // Check the chromatogram plots
+        assertElementPresent(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]"));
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13417_02_WAA283_3805_071514')]"), 2);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13417_03_WAA283_3805_071514')]"), 2);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13418_02_WAA283_3805_071514')]"), 2);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13418_03_WAA283_3805_071514')]"), 2);
         ensureComparisonPlots("PC aa C26:0");
 
         //Click on Molecule Precursor Chromatogram link
@@ -373,7 +377,12 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertElementPresent(Locator.xpath("//tr[td[text()='Charge']][td[normalize-space()='1']]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='m/z']][td[normalize-space()='650.4755']]"));
 
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 4);
+        // Check the chromatogram plots
+        assertElementPresent(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]"));
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13417_02_WAA283_3805_071514')]"), 1);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13417_03_WAA283_3805_071514')]"), 1);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13418_02_WAA283_3805_071514')]"), 1);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13418_03_WAA283_3805_071514')]"), 1);
         ensureComparisonPlots("PC aa C26:0");
 
         //Go back to Document Summary page
@@ -392,8 +401,12 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         clickAndWait(Locator.linkContainingText("lysoPC a C14:0").index(0));
         assertTextPresent("Small Molecule Summary");
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'generalMoleculeChromatogramChart.view')]"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"));
+        // Check the chromatogram plots
+        assertElementPresent(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]"));
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13417_02_WAA283_3805_071514')]"), 2);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13417_03_WAA283_3805_071514')]"), 2);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13418_02_WAA283_3805_071514')]"), 2);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'MoleculePrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13418_03_WAA283_3805_071514')]"), 2);
         ensureComparisonPlots("lysoPC a C14:0");
         assertElementPresent(Locator.xpath("//a[contains(@href, 'moleculePrecursorAllChromatogramsChart.view')]"));
 
@@ -401,7 +414,12 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         clickAndWait(Locator.linkContainingText("lysoPC a C14:0").index(1));
         assertTextPresent("Molecule Precursor Chromatograms");
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 4);
+        // Check the chromatogram plots
+        assertElementPresent(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]"));
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13417_02_WAA283_3805_071514')]"), 1);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13417_03_WAA283_3805_071514')]"), 1);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13418_02_WAA283_3805_071514')]"), 1);
+        waitForElements(Locator.xpath("//table[contains(@lk-region-name, 'PrecursorChromatograms')]//div[contains(@alt, 'Chromatogram 13418_03_WAA283_3805_071514')]"), 1);
         ensureComparisonPlots("lysoPC a C14:0");
 
         //Go to Small Molecule Transition List

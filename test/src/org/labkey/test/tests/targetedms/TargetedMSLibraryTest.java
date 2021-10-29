@@ -211,7 +211,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         WebElement width= getDriver().findElement(By.xpath("//input[contains(@id, 'chartWidth-inputEl')]"));
         width.clear();
         width.sendKeys("500");
-        click(Locator.xpath("//a[contains(@class, 'x4-btn x-unselectable x4-box-item x4-toolbar-item x4-btn-default-small x4-noicon x4-btn-noicon x4-btn-default-small-noicon')]"));
+        clickButton("Update",0);
         ensureComparisonPlots("CTCF");
     }
 

@@ -104,7 +104,7 @@ public class TargetedMSSkydTextIdTest extends TargetedMSTest
     private void verifyChromatogramReplicates(List<String> detailHrefs, String...expectedReplicates) throws Exception
     {
         List<Locator> locators = Arrays.stream(expectedReplicates)
-                .map(rep->Locator.xpath("//img[@alt='Chromatogram " + rep + "']"))
+                .map(rep->Locator.xpath("//div[@alt='Chromatogram " + rep + "']"))
                 .collect(Collectors.toList());
         for (String href : detailHrefs)
         {

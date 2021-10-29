@@ -57,19 +57,19 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                 // add a new panel for each plot so we can add the title to the frame
                 if (this.showLJPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(plotIndex, ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.LeveyJennings, undefined, me);
+                    this.addEachIndividualPrecursorPlot(plotIndex, ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.LeveyJennings, undefined, me);
                 }
                 if (this.showMovingRangePlot())
                 {
-                    this.addEachIndividualPrecusorPlot(plotIndex, ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.MovingRange, undefined, me);
+                    this.addEachIndividualPrecursorPlot(plotIndex, ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.MovingRange, undefined, me);
                 }
                 if (this.showMeanCUSUMPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(plotIndex, ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, true, me);
+                    this.addEachIndividualPrecursorPlot(plotIndex, ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, true, me);
                 }
                 if (this.showVariableCUSUMPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(plotIndex, ids[plotIndex], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, false, me);
+                    this.addEachIndividualPrecursorPlot(plotIndex, ids[plotIndex], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, false, me);
                 }
             }
         }
@@ -150,19 +150,19 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
 
         if (this.showLJPlot())
         {
-            this.addEachCombinedPrecusorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
+            this.addEachCombinedPrecursorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
         }
         if (this.showMovingRangePlot())
         {
-            this.addEachCombinedPrecusorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.MovingRange);
+            this.addEachCombinedPrecursorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.MovingRange);
         }
         if (this.showMeanCUSUMPlot())
         {
-            this.addEachCombinedPrecusorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, true);
+            this.addEachCombinedPrecursorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, true);
         }
         if (this.showVariableCUSUMPlot())
         {
-            this.addEachCombinedPrecusorPlot(plotIndex, ids[plotIndex], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
+            this.addEachCombinedPrecursorPlot(plotIndex, ids[plotIndex], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
         }
 
         return true;
@@ -182,21 +182,22 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
 
     getPlotTypeProperties: function(precursorInfo, plotType, isMean)
     {
-        if (plotType == LABKEY.vis.TrendingLinePlotType.MovingRange)
+        if (plotType === LABKEY.vis.TrendingLinePlotType.MovingRange)
             return this.getMovingRangePlotTypeProperties(precursorInfo);
-        else if (plotType == LABKEY.vis.TrendingLinePlotType.CUSUM)
+        else if (plotType === LABKEY.vis.TrendingLinePlotType.CUSUM)
             return this.getCUSUMPlotTypeProperties(precursorInfo, isMean);
         else
             return this.getLJPlotTypeProperties(precursorInfo);
     },
 
-    getInitFragmentPlotData: function(fragment, dataType, mz)
+    getInitFragmentPlotData: function(fragment, dataType, mz, color)
     {
         var fragmentData = {
             fragment: fragment,
             dataType: dataType,
             data: [],
-            mz: mz
+            mz: mz,
+            color: color
         };
 
         Ext4.apply(fragmentData, this.getInitPlotMinMaxData());
@@ -230,9 +231,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
     {
         var dataType = plotDataRow['DataType'];
         var mz = Ext4.util.Format.number(plotDataRow['mz'], '0.0000');
+        var color = plotDataRow['SeriesColor'];
         if (!this.fragmentPlotData[fragment])
         {
-            this.fragmentPlotData[fragment] = this.getInitFragmentPlotData(fragment, dataType, mz);
+            this.fragmentPlotData[fragment] = this.getInitFragmentPlotData(fragment, dataType, mz, color);
         }
 
         var seriesType = row['SeriesType'] === 2 ? 'series2' : 'series1';

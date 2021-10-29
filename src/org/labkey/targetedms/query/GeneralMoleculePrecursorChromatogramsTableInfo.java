@@ -15,8 +15,6 @@
 
 package org.labkey.targetedms.query;
 
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
@@ -35,7 +33,6 @@ import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.Molecule;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
-import org.labkey.targetedms.parser.ReplicateAnnotation;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -54,14 +51,14 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
     {
         this(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), molecule,
                 "MoleculePrecursorId", "CAST(MoleculePrecursorId.Charge AS VARCHAR)",
-                form.getAnnotationFilter(), form.getReplicatesFilterList()), schema, form);
+                form), schema, form);
     }
 
     public GeneralMoleculePrecursorChromatogramsTableInfo(Peptide peptide, TargetedMSSchema schema, TargetedMSController.ChromatogramForm form)
     {
         this(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), peptide,
                 "PrecursorId", "(PrecursorId.IsotopeLabelId.Name || CAST(PrecursorId.Charge AS VARCHAR))",
-                form.getAnnotationFilter(), form.getReplicatesFilterList()), schema, form);
+                form), schema, form);
     }
 
     private GeneralMoleculePrecursorChromatogramsTableInfo(TableInfo tableInfo, TargetedMSSchema schema, TargetedMSController.ChromatogramForm form)
@@ -76,6 +73,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
                                                         ChromatogramDisplayColumnFactory.Type.GeneralMoleculePeer,
                                                         form.getChartWidth(),
                                                         form.getChartHeight(),
+                                                        null,
                                                         form.isSyncY(),
                                                         form.isSyncX(),
                                                         form.isSplitGraph(),
@@ -92,6 +90,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
                                                         ChromatogramDisplayColumnFactory.Type.PrecursorPeer,
                                                         form.getChartWidth(),
                                                         form.getChartHeight(),
+                                                        null,
                                                         form.isSyncY(),
                                                         form.isSyncX(),
                                                         form.isSplitGraph(),
@@ -140,8 +139,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
 
     private static TableInfo getPivotByPrecursorChromInfoTable(Container container, User user, GeneralMolecule generalMolecule,
                                                                String precursorIdKey, String isotopeChargeSqlFrag,
-                                                               @Nullable List<ReplicateAnnotation> filterAnnotations,
-                                                               @Nullable List<Integer> replicatesFilter)
+                                                               TargetedMSController.ChromatogramForm form)
     {
         SQLFragment sql = new SQLFragment("SELECT");
         sql.append(" replicate, sample, isotopecharge, ").append(_generalMoleculeChromInfoCol).append(", MIN(preciId) AS preciId FROM");
@@ -155,34 +153,9 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
         sql.append(" WHERE " + precursorIdKey + ".GeneralMoleculeId=").append(generalMolecule.getId());
         sql.append(" AND OptimizationStep IS NULL "); // Ignore precursorChromInfos for optimization peaks (e.g. Collision energy optimization)
-        if(replicatesFilter != null && replicatesFilter.size() != 0)
-        {
-            sql.append("\n AND ");
-            sql.append("( ");
-            String replicateIds = StringUtils.join(replicatesFilter,",");
-            sql.append("SampleFileId.ReplicateId IN ("+replicateIds+")");
-            sql.append(")");
-        }
-        if(filterAnnotations != null && !filterAnnotations.isEmpty())
-        {
-            sql.append("\n AND ")
-               .append(" SampleFileId.ReplicateId IN (SELECT replicateId FROM ")
-               .append(TargetedMSManager.getTableInfoReplicateAnnotation(), "repAnnot")
-               .append("\n WHERE ");
-            boolean first = true;
-            for(ReplicateAnnotation annotation: filterAnnotations)
-            {
-                if(!first)
-                {
-                    sql.append(" OR ");
-                }
-                sql.append(" (name = '" + annotation.getName() +"'  ")
-                   .append("  AND value = '" + annotation.getValue()+"')");
 
-                first = false;
-            }
-            sql.append(")");
-        }
+        form.appendReplicateFilters(sql, "SampleFileId.ReplicateId");
+
         sql.append(" ) X");
         sql.append("\n GROUP BY replicate, sample, ").append(_generalMoleculeChromInfoCol).append(", isotopecharge")
            .append("\n PIVOT preciId BY isotopecharge");
@@ -203,7 +176,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
             {
                 sb.append(qe.getMessage()).append('\n');
             }
-            throw new IllegalStateException(sb.toString() + "\n.SQL: " + sql.toString());
+            throw new IllegalStateException(sb + "\n.SQL: " + sql);
         }
 
         return tableInfo;

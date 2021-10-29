@@ -15,7 +15,6 @@
 
 package org.labkey.targetedms.query;
 
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
@@ -23,7 +22,6 @@ import org.labkey.api.data.DatabaseCache;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.targetedms.TargetedMSManager;
-import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.Peptide;
 
@@ -81,7 +79,7 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(GeneralMoleculeChromInfo.class);
     }
 
-    public static Collection<Peptide> getPeptidesForGroup(long peptideGroupId, TargetedMSSchema schema)
+    public static Collection<Peptide> getPeptidesForGroup(long peptideGroupId)
     {
         SQLFragment sql = new SQLFragment("SELECT gm.id, gm.id, gm.peptidegroupid, gm.rtcalculatorscore, gm.predictedretentiontime, ");
         sql.append("gm.avgmeasuredretentiontime, gm.note, gm.explicitretentiontime, ");
@@ -89,10 +87,10 @@ public class PeptideManager
         sql.append("p.id, p.sequence, p.startindex, p.endindex, p.previousaa, p.nextaa, ");
         sql.append("p.calcneutralmass, p.nummissedcleavages, p.rank, p.decoy, p.peptidemodifiedsequence, ");
         sql.append("gm.standardtype FROM targetedms.generalmolecule gm, targetedms.peptide p WHERE ");
-        sql.append("p.id = gm.id AND gm.peptidegroupid=?");
+        sql.append("p.id = gm.id AND gm.peptidegroupid=? ORDER BY gm.Id");
         sql.add(peptideGroupId);
 
-        return new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Peptide.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Peptide.class);
     }
 
     public static Double getMinRetentionTime(long peptideId)

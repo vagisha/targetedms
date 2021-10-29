@@ -16,47 +16,37 @@
 package org.labkey.targetedms.view;
 
 import org.apache.commons.lang3.StringUtils;
-import org.labkey.api.data.ButtonBar;
-import org.labkey.api.data.DataRegion;
-import org.labkey.api.query.QuerySettings;
-import org.labkey.api.view.GridView;
+import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.query.GeneralMoleculePrecursorChromatogramsTableInfo;
-import org.springframework.validation.Errors;
+import org.springframework.validation.BindException;
+
+import static org.labkey.targetedms.view.ChromatogramsDataRegion.PEPTIDE_PRECURSOR_CHROM_DATA_REGION;
 
 /**
  * User: vsharma
  * Date: 5/7/12
  * Time: 4:17 PM
  */
-public class PeptidePrecursorChromatogramsView extends GridView
+public class PeptidePrecursorChromatogramsView extends ChromatogramGridView
 {
     public PeptidePrecursorChromatogramsView(Peptide peptide, TargetedMSSchema schema,
                                              TargetedMSController.ChromatogramForm form,
-                                             Errors errors)
+                                             BindException errors, ViewContext viewContext)
     {
 
-        super(makeDataRegion(peptide, schema, form), errors);
-        QuerySettings settings = new QuerySettings(getViewContext(), "Peptide and Precursor chromatograms");
-        settings.setMaxRows(10);
-        getDataRegion().setSettings(settings);
+        super(makeDataRegion(peptide, schema, form, viewContext), errors);
     }
 
-    private static DataRegion makeDataRegion(Peptide peptide, TargetedMSSchema schema,
-                                             TargetedMSController.ChromatogramForm form)
+    private static ChromatogramsDataRegion makeDataRegion(Peptide peptide, TargetedMSSchema schema,
+                                             TargetedMSController.ChromatogramForm form, ViewContext viewContext)
     {
         GeneralMoleculePrecursorChromatogramsTableInfo tableInfo = new GeneralMoleculePrecursorChromatogramsTableInfo(peptide, schema, form);
-        DataRegion dRegion = new DataRegion();
-        dRegion.setTable(tableInfo);
-        dRegion.addColumns(tableInfo, StringUtils.join(tableInfo.getDisplayColumnNames(), ","));
-        dRegion.setShadeAlternatingRows(false);
-        dRegion.setShowPagination(true);
-        dRegion.setShowPaginationCount(true);
-        ButtonBar bar = new ButtonBar();
-        dRegion.setButtonBar(bar);
-
-        return dRegion;
+        return new ChromatogramsDataRegion(viewContext,
+                tableInfo,
+                PEPTIDE_PRECURSOR_CHROM_DATA_REGION,
+                StringUtils.join(tableInfo.getDisplayColumnNames(), ","));
     }
 }

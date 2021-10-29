@@ -141,6 +141,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_GENERAL_MOLECULE_CHROM_INFO = "GeneralMoleculeChromInfo";
     public static final String TABLE_PEPTIDE_CHROM_INFO = "PeptideChromInfo";
     public static final String TABLE_PRECURSOR_CHROM_INFO = "PrecursorChromInfo";
+    public static final String TABLE_GROUP_CHROM_INFO = "GroupChromInfo";
     public static final String TABLE_SAMPLE_FILE_CHROM_INFO = "SampleFileChromInfo";
     public static final String TABLE_PRECURSOR_CHROM_INFO_ANNOTATION = "PrecursorChromInfoAnnotation";
     public static final String TABLE_PEPTIDE_AREA_RATIO = "PeptideAreaRatio";

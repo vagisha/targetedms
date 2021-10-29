@@ -22,16 +22,18 @@ import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HttpView;
 import org.labkey.targetedms.TargetedMSController;
-import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.view.ChromatogramsDataRegion;
 import org.springframework.web.servlet.mvc.Controller;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * User: vsharma
@@ -44,6 +46,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
     private final Type _type;
     private final int _chartWidth;
     private final int _chart_height;
+    private final Consumer<ActionURL> _urlCustomizer;
     private final boolean _syncY;
     private final boolean _syncX;
     private final boolean _splitGraph;
@@ -87,6 +90,14 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                     {
                         return new FieldKey(parentFieldKey, "sample");
                     }
+                },
+        Group(TargetedMSController.GroupChromatogramChartAction.class)
+                {
+                    @Override
+                    public FieldKey getSampleNameFieldKey(FieldKey parentFieldKey)
+                    {
+                        return new FieldKey(parentFieldKey, "Id");
+                    }
                 };
 
         private final Class<? extends Controller> _actionClass;
@@ -106,16 +117,21 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 
     public ChromatogramDisplayColumnFactory(Container container, Type type)
     {
-        this(container, type, CHART_WIDTH, CHART_HEIGHT, false, false, false, false, null, null);
+        this(container, type, CHART_WIDTH, CHART_HEIGHT, null, false, false, false, false, null, null);
     }
 
     public ChromatogramDisplayColumnFactory(Container container, Type type, int chartWidth, int chartHeight)
     {
-        this(container, type, chartWidth, chartHeight, false, false, false, false, null, null);
+        this(container, type, chartWidth, chartHeight, null, false, false, false, false, null, null);
+    }
+
+    public ChromatogramDisplayColumnFactory(Container container, Type type, int chartWidth, int chartHeight, Consumer<ActionURL> urlCustomizer)
+    {
+        this(container, type, chartWidth, chartHeight, urlCustomizer, false, false, false, false, null, null);
     }
 
     public ChromatogramDisplayColumnFactory(Container container, Type type,
-                                            int chartWidth, int chartHeight,
+                                            int chartWidth, int chartHeight, Consumer<ActionURL> urlCustomizer,
                                             boolean syncIntensity, boolean syncRt,
                                             boolean splitGraph, boolean showOptimizationPeaks,
                                             String annotationsFilter, String replicatesFilter)
@@ -124,6 +140,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
         _type = type;
         _chartWidth = chartWidth;
         _chart_height = chartHeight;
+        _urlCustomizer = urlCustomizer == null ? (x) -> {} : urlCustomizer;
         _syncY = syncIntensity;
         _syncX = syncRt;
         _splitGraph = splitGraph;
@@ -136,6 +153,19 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
     public DisplayColumn createRenderer(ColumnInfo colInfo)
     {
         return new DataColumn(colInfo) {
+
+            @Override
+            public boolean isFilterable()
+            {
+                return false;
+            }
+
+            @Override
+            public boolean isSortable()
+            {
+                return false;
+            }
+
             @Override
             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
             {
@@ -145,6 +175,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 
                 ActionURL chromAction = new ActionURL(_type.getActionClass(), _container);
 
+                _urlCustomizer.accept(chromAction);
                 chromAction.addParameter("id", String.valueOf(id));
                 chromAction.addParameter("chartWidth", String.valueOf(_chartWidth));
                 chromAction.addParameter("chartHeight", String.valueOf(_chart_height));
@@ -164,8 +195,18 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 
                 String sampleName = ctx.get(_type.getSampleNameFieldKey(getBoundColumn().getFieldKey().getParent()), String.class);
 
-                String imgLink = "<a name=\"ChromInfo" + id + "\"><img style=\"border: " + (highlight ? "beige" : "white") + " solid 8px; width:" + _chartWidth +"px; height:" + _chart_height + "px\" src=\"" + PageFlowUtil.filter(chromAction.getLocalURIString()) + "\" alt=\"Chromatogram "+ PageFlowUtil.filter(sampleName)+"\"></a>";
-                out.write(imgLink);
+                String domId = GUID.makeGUID();
+                String domLabelId = domId + "-label";
+
+                ChromatogramsDataRegion dataRegion = (ChromatogramsDataRegion)ctx.getCurrentRegion();
+
+                String html = "<a name=\"ChromInfo" + id + "\"></a>";
+                html += "<div alt=\"Chromatogram " + PageFlowUtil.filter(sampleName) + "\" style=\"border: " + (highlight ? "beige" : "white") +
+                        " solid 8px; width:" + (_chartWidth + 16) + "px; min-height:" + (_chart_height + 50) + "px\" id=\"" + PageFlowUtil.filter(domId) + "\"></div>" +
+                        "<div style=\"text-align: center\" id=\"" + PageFlowUtil.filter(domLabelId) + "\"></div>";
+
+                dataRegion.addSVG(chromAction.getLocalURIString(), domId, domLabelId);
+                out.write(html);
             }
 
             @Override

@@ -31,6 +31,7 @@ public class ChromatogramGridQuerySettings extends QuerySettings
     public ChromatogramGridQuerySettings(ViewContext context, String dataRegionName)
     {
         super(dataRegionName);
+        setMaxRows(10);
         init(context);
 
         setAllowCustomizeView(false);

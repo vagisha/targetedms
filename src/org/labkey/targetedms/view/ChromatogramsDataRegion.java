@@ -15,6 +15,8 @@
 
 package org.labkey.targetedms.view;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.collections.ResultSetRowMapFactory;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.DataRegion;
@@ -23,9 +25,9 @@ import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.MenuButton;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.Results;
-import org.labkey.api.data.ShowRows;
 import org.labkey.api.data.UpdateColumn;
 import org.labkey.api.query.FilteredTable;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.ViewContext;
@@ -35,6 +37,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -47,13 +50,26 @@ import java.util.List;
  */
 public class ChromatogramsDataRegion extends DataRegion
 {
+    public static final String GROUP_CHROM_DATA_REGION = "GroupChromatograms";
     public static final String PRECURSOR_CHROM_DATA_REGION = "PrecursorChromatograms";
     public static final String PEPTIDE_CHROM_DATA_REGION = "PeptideChromatograms";
+    public static final String PEPTIDE_PRECURSOR_CHROM_DATA_REGION = "PeptidePrecursorChromatograms";
+    public static final String MOLECULE_PRECURSOR_CHROM_DATA_REGION = "MoleculePrecursorChromatograms";
 
-    public ChromatogramsDataRegion(ViewContext context, FilteredTable tableInfo, String name)
+    private final List<String> _listeningDataRegionNames = new ArrayList<>();
+    private final JSONArray _svgs = new JSONArray();
+
+    private String _legendElementId;
+
+    public ChromatogramsDataRegion(ViewContext context, FilteredTable<?> tableInfo, String name)
+    {
+        this(context, tableInfo, name, "Id");
+    }
+
+    public ChromatogramsDataRegion(ViewContext context, FilteredTable<?> tableInfo, String name, String columns)
     {
         setTable(tableInfo);
-        addColumns(tableInfo, "Id");
+        addColumns(tableInfo, columns);
 
         ChromatogramGridQuerySettings settings = new ChromatogramGridQuerySettings(context, name);
         setSettings(settings);
@@ -66,9 +82,35 @@ public class ChromatogramsDataRegion extends DataRegion
     protected void populateButtonBar()
     {
         ButtonBar bar = new ButtonBar();
-        bar.add(createPageSizeMenuButton());
         bar.add(createRowSizeMenuButton());
         setButtonBar(bar);
+    }
+
+    @Override
+    protected void renderTable(RenderContext ctx, Writer out) throws SQLException, IOException
+    {
+        super.renderTable(ctx, out);
+
+        out.write("\n<script type=\"text/javascript\">\n");
+        out.write("LABKEY.DataRegions[" + PageFlowUtil.jsString(getName()) + "].refreshPlots = function() {\n");
+        out.write("  const svgInfos = " + _svgs.toString() + ";\n");
+        out.write("  for (let i = 0; i < svgInfos.length; i++) {\n");
+        out.write("    let svgInfo = svgInfos[i];\n");
+        out.write("    LABKEY.targetedms.SVGChart.requestAndRenderSVG(svgInfo.url, document.getElementById(svgInfo.mainId), ");
+        out.write(_legendElementId == null ? "null" : ("document.getElementById(" + PageFlowUtil.jsString(_legendElementId) + ")"));
+        out.write(", document.getElementById(svgInfo.labelId));\n");
+        out.write("  }\n");
+        out.write("};\n");
+        out.write("LABKEY.DataRegions[" + PageFlowUtil.jsString(getName()) + "].refreshPlots();\n");
+
+        for (String listeningDataRegionName : _listeningDataRegionNames)
+        {
+            out.write("LABKEY.DataRegions[");
+            out.write(PageFlowUtil.jsString(listeningDataRegionName));
+            out.write("].on('selectchange', LABKEY.DataRegions[" + PageFlowUtil.jsString(getName()) + "].refreshPlots);\n");
+        }
+
+        out.write("</script>\n");
     }
 
     @Override
@@ -182,45 +224,22 @@ public class ChromatogramsDataRegion extends DataRegion
         return pageSizeMenu;
     }
 
-    protected MenuButton createPageSizeMenuButton()
+    public void addRefreshListener(String dataRegionName)
     {
-        final int maxRows = getMaxRows();
+        _listeningDataRegionNames.add(dataRegionName);
+    }
 
-        MenuButton pageSizeMenu = new MenuButton("Paging", getName() + ".Menu.PageSize")
-        {
-            final boolean showingAll = getShowRows() == ShowRows.ALL;
+    public void addSVG(String url, String mainId, String labelId)
+    {
+        JSONObject svgInfo = new JSONObject();
+        svgInfo.put("url", url);
+        svgInfo.put("mainId", mainId);
+        svgInfo.put("labelId", labelId);
+        _svgs.put(svgInfo);
+    }
 
-            @Override
-            public void render(RenderContext ctx, Writer out) throws IOException
-            {
-                addSeparator();
-
-                NavTree item = addMenuItem("Show All", null, getJavaScriptObjectReference() + ".showAll();", showingAll);
-                item.setId("Page Size:All");
-
-                super.render(ctx, out);
-            }
-        };
-
-        // insert current maxRows into sorted list of possible sizes
-        List<Integer> sizes = new LinkedList<>(Arrays.asList(10, 20, 50, 100));
-        if (maxRows > 0)
-        {
-            int index = Collections.binarySearch(sizes, maxRows);
-            if (index < 0)
-            {
-                sizes.add(-index-1, maxRows);
-            }
-        }
-
-        for (Integer pageSize : sizes)
-        {
-            boolean checked = pageSize == maxRows;
-            NavTree item = pageSizeMenu.addMenuItem(pageSize + " per page", null,
-                    getJavaScriptObjectReference() + ".setMaxRows(" + pageSize + ");", checked);
-            item.setId("Page Size:" + pageSize);
-        }
-
-        return pageSizeMenu;
+    public void setLegendElementId(String legendElementId)
+    {
+        _legendElementId = legendElementId;
     }
 }

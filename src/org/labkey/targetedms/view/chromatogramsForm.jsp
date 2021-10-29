@@ -149,7 +149,6 @@
                 type: 'table',
                 columns: 3
             }, items: [
-                { xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF },
                 {
                     xtype:'hidden',
                     name: 'id',
@@ -495,7 +494,7 @@
 }(jQuery);
 </script>
 <div id="headContainer">
-    <div onclick="showChart()" style="margin-bottom: 10px;"><img id="showGraphImg" src="<%=getWebappURL("_images/minus.gif")%>"><strong>Display Chart Settings</strong></div>
+    <div onclick="showChart()" style="margin-bottom: 10px;"><img id="showGraphImg" src="<%=getWebappURL("_images/minus.gif")%>"> <strong>Display Chart Settings</strong></div>
     <div id="formContainer" style="float:left; width:550px; padding-bottom: 25px;"></div>
     <div id="allFilters" style="float:left;">
 

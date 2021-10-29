@@ -1931,7 +1931,17 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     },
 
     getColorRange: function() {
-        return LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete());
+        // Use our default colors
+        const result = LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete());
+
+        // But override them with colors assigned by the server, when available, so that we match Skyline's assignment
+        for (let i = 0; i < this.precursors.length; i++) {
+            // We only get data points for the precursors in the current "page" so double check that it's in the fragmentPlotData object
+            if (this.fragmentPlotData[this.precursors[i]] && this.fragmentPlotData[this.precursors[i]].color) {
+                result[i] = this.fragmentPlotData[this.precursors[i]].color;
+            }
+        }
+        return result;
     }
 
 });

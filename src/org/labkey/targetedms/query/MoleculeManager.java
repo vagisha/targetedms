@@ -53,9 +53,9 @@ public class MoleculeManager
         sql.append("gm.normalizationmethod, gm.standardtype, gm.concentrationmultiplier, gm.internalstandardconcentration, ");
         sql.append("m.id, m.ionformula, m.customionname, m.massaverage, m.massmonoisotopic ");
         sql.append("FROM targetedms.generalmolecule gm, targetedms.molecule m WHERE ");
-        sql.append("m.id = gm.id AND gm.peptidegroupid=?");
+        sql.append("m.id = gm.id AND gm.peptidegroupid=? ORDER BY gm.Id");
         sql.add(peptideGroupId);
 
-        return new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Molecule.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Molecule.class);
     }
 }

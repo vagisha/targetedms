@@ -1,8 +1,10 @@
 package org.labkey.targetedms.model;
 
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.awt.*;
 import java.util.List;
 
 /**
@@ -15,6 +17,8 @@ public class QCPlotFragment
     private Double mZ;
     private List<RawMetricDataSet> qcPlotData;
     private List<GuideSetStats> guideSetStats;
+    @Nullable
+    private Color _seriesColor;
 
     public String getSeriesLabel()
     {
@@ -71,6 +75,10 @@ public class QCPlotFragment
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("DataType", getDataType());
         jsonObject.put("SeriesLabel", getSeriesLabel());
+        if (_seriesColor != null)
+        {
+            jsonObject.put("SeriesColor", "#" + Integer.toHexString(_seriesColor.getRGB()).substring(2).toUpperCase());
+        }
         jsonObject.put("mz", getmZ());
 
         JSONArray guideSetArray = new JSONArray();
@@ -131,4 +139,14 @@ public class QCPlotFragment
         return jsonObject;
     }
 
+    public void setSeriesColor(Color seriesColor)
+    {
+        _seriesColor = seriesColor;
+    }
+
+    @Nullable
+    public Color getSeriesColor()
+    {
+        return _seriesColor;
+    }
 }

@@ -713,7 +713,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         if (plotType == CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
             expectedNumPointsPerSeries *= 2;
 
-        String[] legendItemColors = new String[]{"#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494"};
+        // Use the same color assignments that Skyline generates for multi-molecule plots
+        String[] legendItemColors = new String[]{"#755538", "#A1A4AD", "#E2A0AF", "#ED8CFF", "#D19D00", "#70A783", "#00625F"};
 
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();

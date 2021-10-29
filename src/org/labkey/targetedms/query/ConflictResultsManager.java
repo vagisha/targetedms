@@ -24,6 +24,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.Formats;
 import org.labkey.targetedms.TargetedMSManager;
@@ -37,7 +38,6 @@ import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
-import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
 import java.util.ArrayList;
@@ -219,7 +219,7 @@ public class ConflictResultsManager
 
     private static List<BestPrecursorPeptide> getBestPrecursorsForProtein(int proteinId, User user, Container container)
     {
-        Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(proteinId, new TargetedMSSchema(user, container));
+        Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(proteinId);
         List<BestPrecursorPeptide> proteinPeptides = new ArrayList<>();
         for(Peptide peptide: peptides)
         {

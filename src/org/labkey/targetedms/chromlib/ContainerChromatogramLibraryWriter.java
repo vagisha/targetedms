@@ -475,7 +475,7 @@ public class ContainerChromatogramLibraryWriter
     {
         TargetedMSSchema schema = new TargetedMSSchema(_user, _container);
 
-        Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(pepGroup.getId(), schema);
+        Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(pepGroup.getId());
         for(Peptide peptide: peptides)
         {
             List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), schema);
