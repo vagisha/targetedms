@@ -36,6 +36,10 @@ public class TimeIntensities
     public TimeIntensities interpolate(float[] timesNew)
     {
         float[] intensNew = new float[timesNew.length];
+        if (timesNew.length == 0)
+        {
+            return new TimeIntensities(timesNew, intensNew);
+        }
         int iTime = 0;
         double timeLast = timesNew[0];
         double intenLast = _intensities[0];
