@@ -15,17 +15,13 @@
 
 package org.labkey.targetedms.parser.speclib;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
-import org.labkey.api.targetedms.BlibSourceFile;
-import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.util.FileUtil;
-import org.labkey.targetedms.parser.PeptideSettings;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.targetedms.parser.speclib.LibSpectrum.RedundantSpectrum;
-import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 
 import java.nio.ByteBuffer;
@@ -35,17 +31,11 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -57,7 +47,7 @@ import java.util.zip.Inflater;
 @SuppressWarnings("SqlResolve")
 public class BlibSpectrumReader extends LibSpectrumReader
 {
-    private static final Logger LOG = LogManager.getLogger(BlibSpectrumReader.class);
+    private static final Logger LOG = LogHelper.getLogger(BlibSpectrumReader.class, "Reading BiblioSpec library files (.blib)");
 
     @Override
     protected @Nullable BlibSpectrum readSpectrum(Connection conn, LibSpectrum.SpectrumKey spectrumKey, Path blibPath) throws DataFormatException, SQLException
@@ -468,81 +458,5 @@ public class BlibSpectrumReader extends LibSpectrumReader
 
             return spectrum;
         }
-    }
-
-    // Return a map of blib file -> BlibSourceFiles
-    public static Map<String, List<BlibSourceFile>> readBlibSourceFiles(ITargetedMSRun run)
-    {
-        Map<PeptideSettings.SpectrumLibrary, Path> libs = LibraryManager.getLibraryFilePaths(run.getId());
-
-        Map<String, List<BlibSourceFile>> m = new TreeMap<>();
-        for (Map.Entry<PeptideSettings.SpectrumLibrary, Path> entry : libs.entrySet())
-        {
-            if (!entry.getKey().getLibraryType().contains("bibliospec_lite"))
-                continue;
-
-            Path path = entry.getValue();
-            String blibFilePath = getNonEmptyLocalLibPath(run.getContainer(), path);
-            if (null == blibFilePath)
-                continue;
-
-            List<BlibSourceFile> blibSourceFiles = new ArrayList<>();
-            try (Connection conn = getLibConnection(blibFilePath))
-            {
-                if (!hasTable(conn, "SpectrumSourceFiles"))
-                {
-                    continue;
-                }
-                Map<Integer, Set<String>> scoreTypes = new HashMap<>(); // file id -> score types
-                if(hasTable(conn, "ScoreTypes")) // Older .blib files do not have a ScoreTypes table
-                {
-                    try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT DISTINCT r.fileID, s.scoreType FROM RefSpectra as r JOIN ScoreTypes s ON r.scoreType = s.id"))
-                    {
-                        while (rs.next())
-                        {
-                            int fileId = rs.getInt(1);
-                            String scoreType = rs.getString(2);
-                            scoreTypes.putIfAbsent(fileId, new HashSet<>());
-                            scoreTypes.get(fileId).add(scoreType);
-                        }
-                    }
-                }
-                try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT * FROM SpectrumSourceFiles"))
-                {
-                    int idColumn = -1;
-                    int fileNameColumn = -1;
-                    int idFileNameColumn = -1;
-                    ResultSetMetaData metadata = rs.getMetaData();
-                    for (int i = 1; i <= metadata.getColumnCount(); i++)
-                    {
-                        switch (metadata.getColumnName(i).toLowerCase())
-                        {
-                            case "id":
-                                idColumn = i;
-                                break;
-                            case "filename":
-                                fileNameColumn = i;
-                                break;
-                            case "idfilename":
-                                idFileNameColumn = i;
-                                break;
-                        }
-                    }
-                    while (rs.next())
-                    {
-                        Integer id = rs.getInt(idColumn);
-                        String fileName = rs.getString(fileNameColumn);
-                        String idFileName = idFileNameColumn >= 0 ? rs.getString(idFileNameColumn) : null;
-                        blibSourceFiles.add(new BlibSourceFile(fileName, idFileName, scoreTypes.getOrDefault(id, null)));
-                    }
-                }
-            }
-            catch (SQLException e)
-            {
-                throw new RuntimeException(e);
-            }
-            m.put(path.getFileName().toString(), blibSourceFiles);
-        }
-        return m;
     }
 }

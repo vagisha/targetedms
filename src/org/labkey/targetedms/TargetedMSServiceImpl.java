@@ -25,9 +25,9 @@ import org.labkey.api.exp.XarFormatException;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.targetedms.BlibSourceFile;
 import org.labkey.api.targetedms.IModification;
 import org.labkey.api.targetedms.ISampleFile;
+import org.labkey.api.targetedms.ISpectrumLibrary;
 import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.targetedms.SkylineAnnotation;
 import org.labkey.api.targetedms.SkylineDocumentImportListener;
@@ -38,7 +38,7 @@ import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.datasource.MsDataSourceUtil;
 import org.labkey.targetedms.parser.SampleFile;
-import org.labkey.targetedms.parser.speclib.BlibSpectrumReader;
+import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
@@ -46,7 +46,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -58,12 +57,12 @@ public class TargetedMSServiceImpl implements TargetedMSService
 {
     // CopyOnWriteArrayList is a thread-safe variant of ArrayList in which all mutative operations (add, set, and so on)
     // are implemented by making a fresh copy of the underlying array.
-    private List<SkylineDocumentImportListener> _skylineDocumentImportListeners = new CopyOnWriteArrayList<>();
-    private List<TargetedMSFolderTypeListener> _targetedMsFolderTypeListeners = new CopyOnWriteArrayList<>();
+    private final List<SkylineDocumentImportListener> _skylineDocumentImportListeners = new CopyOnWriteArrayList<>();
+    private final List<TargetedMSFolderTypeListener> _targetedMsFolderTypeListeners = new CopyOnWriteArrayList<>();
 
-    private List<TableCustomizer> _peptideSearchCustomizers = new CopyOnWriteArrayList<>();
-    private List<TableCustomizer> _proteinSearchCustomizers = new CopyOnWriteArrayList<>();
-    private List<TableCustomizer> _modificationSearchCustomizers = new CopyOnWriteArrayList<>();
+    private final List<TableCustomizer> _peptideSearchCustomizers = new CopyOnWriteArrayList<>();
+    private final List<TableCustomizer> _proteinSearchCustomizers = new CopyOnWriteArrayList<>();
+    private final List<TableCustomizer> _modificationSearchCustomizers = new CopyOnWriteArrayList<>();
 
     @Override
     public ITargetedMSRun getRun(long runId, Container container)
@@ -185,9 +184,15 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public Map<String, List<BlibSourceFile>> getBlibSourceFiles(ITargetedMSRun run)
+    public @NotNull List<? extends ISpectrumLibrary> getLibraries(ITargetedMSRun run)
     {
-        return BlibSpectrumReader.readBlibSourceFiles(run);
+        return run != null ? LibraryManager.getLibraries(run.getId()) : Collections.emptyList();
+    }
+
+    @Override
+    public @Nullable Path getLibraryFilePath(ITargetedMSRun run, ISpectrumLibrary library)
+    {
+       return run != null && library != null ? LibraryManager.getLibraryFilePath(run.getId(), library) : null;
     }
 
     @Override

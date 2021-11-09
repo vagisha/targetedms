@@ -31,7 +31,6 @@ import org.labkey.api.view.ViewBackgroundInfo;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 
 /**
  * User: vsharma
@@ -91,7 +90,20 @@ public interface TargetedMSService
     List<? extends ISampleFile> getSampleFiles(long runId);
     List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId);
     List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(long runId);
-    Map<String, List<BlibSourceFile>> getBlibSourceFiles(ITargetedMSRun run);
+
+    /**
+     * @param run ITargetedMSRun object representing a Skyline document
+     * @return the spectral libraries used with the given run.
+     */
+    @NotNull List<? extends ISpectrumLibrary> getLibraries(ITargetedMSRun run);
+
+    /**
+     *
+     * @param run ITargetedMSRun object representing a Skyline document
+     * @param library library
+     * @return the Path to the library file within the unzipped directory of the given Skyline document.
+     */
+    @Nullable Path getLibraryFilePath(ITargetedMSRun run, ISpectrumLibrary library);
 
     // Add table customizers for the protein / peptide / modification search results
     void addProteinSearchResultCustomizer(TableCustomizer customizer);
