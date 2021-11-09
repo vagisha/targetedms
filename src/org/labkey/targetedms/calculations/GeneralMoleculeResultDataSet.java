@@ -24,6 +24,7 @@ import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.calculations.quantification.ReplicateData;
 import org.labkey.targetedms.calculations.quantification.TransitionAreas;
+import org.labkey.targetedms.parser.ChromInfo;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.GeneralPrecursor;
@@ -34,6 +35,7 @@ import org.labkey.targetedms.parser.PeakAreaRatioCalculator;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
+import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.MoleculePrecursorManager;
@@ -49,6 +51,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by nicksh on 4/13/2016.
@@ -65,7 +68,14 @@ public class GeneralMoleculeResultDataSet
     {
         _generalMolecule = peptide;
         _replicateSet = replicateSet;
-        addPeptideResults(user, container, peptide);
+        if (replicateSet.getUseTransitionChromInfos())
+        {
+            addPeptideResults(user, container, peptide);
+        }
+        else
+        {
+            addPrecursorLevelResults(user, container, peptide);
+        }
     }
 
     public GeneralMolecule getGeneralMolecule()
@@ -91,8 +101,7 @@ public class GeneralMoleculeResultDataSet
         {
             for (ChromInfoRecord chromInfoRecord : records)
             {
-                TransitionChromInfo tci = chromInfoRecord.getTransitionChromInfo();
-                if (tci.getSampleFileId() != sampleFileId)
+                if (chromInfoRecord.getSampleFileId() != sampleFileId)
                 {
                     continue;
                 }
@@ -100,9 +109,9 @@ public class GeneralMoleculeResultDataSet
                 {
                     continue;
                 }
-                if (tci.getArea() != null)
+                if (chromInfoRecord.getArea() != null)
                 {
-                    total += tci.getArea();
+                    total += chromInfoRecord.getArea();
                 }
             }
         }
@@ -130,6 +139,38 @@ public class GeneralMoleculeResultDataSet
                             _replicateSet.getIsotopeLabelName(precursor.getIsotopeLabelId()), transition, transitionChromInfo);
                     addChromInfoRecord(chromInfoRecord);
                 }
+            }
+        }
+    }
+
+    private void addPrecursorLevelResults(User user, Container container, GeneralMolecule generalMolecule)
+    {
+        TargetedMSSchema schema = new TargetedMSSchema(user, container);
+        Map<Long, List<PrecursorChromInfo>> chromInfosByPrecursorId = PrecursorManager
+                .getPrecursorChromInfosForPeptide(generalMolecule.getId()).stream()
+                .collect(Collectors.groupingBy(precursorChromInfo -> precursorChromInfo.getPrecursorId()));
+
+        for (GeneralPrecursor precursor : getPrecursors(generalMolecule, schema))
+        {
+            List<PrecursorChromInfo> chromInfos = chromInfosByPrecursorId.get(precursor.getId());
+            if (chromInfos == null)
+            {
+                continue;
+            }
+            String isotopeLabel = _replicateSet.getIsotopeLabelName(precursor.getIsotopeLabelId());
+            String precursorKey = generalMolecule.getPrecursorKey(generalMolecule, precursor);
+            for (PrecursorChromInfo precursorChromInfo : chromInfos)
+            {
+                Replicate replicate = _replicateSet.getReplicateFromSampleFileId(precursorChromInfo.getSampleFileId());
+                if (replicate == null)
+                {
+                    continue;
+                }
+
+                addChromInfoRecord(new ChromInfoRecord(precursorKey, replicate, isotopeLabel, 1,
+                    precursorChromInfo.getTotalAreaMs1(), precursorChromInfo.getSampleFileId()));
+                addChromInfoRecord(new ChromInfoRecord(precursorKey, replicate, isotopeLabel, 2,
+                    precursorChromInfo.getTotalAreaFragment(), precursorChromInfo.getSampleFileId()));
             }
         }
     }
@@ -189,7 +230,7 @@ public class GeneralMoleculeResultDataSet
     {
         for (ChromInfoRecord record : getChromInfoRecords(replicate))
         {
-            if (record.getTransitionChromInfo().getArea() == null)
+            if (record.getArea() == null)
             {
                 continue;
             }
@@ -197,13 +238,13 @@ public class GeneralMoleculeResultDataSet
             {
                 continue;
             }
-            if (!allowTruncated && Boolean.TRUE.equals(record.getTransitionChromInfo().getTruncated()))
+            if (!allowTruncated && record.isTruncated())
             {
                 continue;
             }
             TransitionAreas transitionAreas = replicateData.ensureResultFileData().getTransitionAreas(record.getLabel());
-            double normalizationFactor = normalizationFactors.getNormalizationFactor(record.getTransitionChromInfo().getSampleFileId());
-            double area = record.getTransitionChromInfo().getArea() * normalizationFactor;
+            double normalizationFactor = normalizationFactors.getNormalizationFactor(record.getSampleFileId());
+            double area = record.getArea() * normalizationFactor;
             transitionAreas = transitionAreas.setArea(record.getFeatureName(), area);
             replicateData.ensureResultFileData().setTransitionAreas(record.getLabel(), transitionAreas);
         }
@@ -222,16 +263,31 @@ public class GeneralMoleculeResultDataSet
         private final Replicate _replicate;
         private final String _label;
         private final int _msLevel;
-        private final TransitionChromInfo _transitionChromInfo;
+        private final Double _area;
+        private final long _sampleFileId;
+        private final boolean _truncated;
 
         public ChromInfoRecord(String featureName, Replicate replicate, String isotopeLabel,
                                GeneralTransition transition, TransitionChromInfo transitionChromInfo)
         {
+            this(featureName, replicate, isotopeLabel, transition.isPrecursorIon() ? 1 : 2, transitionChromInfo.getArea(), transitionChromInfo.getSampleFileId(), Boolean.TRUE.equals(transitionChromInfo.getTruncated()));
+        }
+
+        public ChromInfoRecord(String precursorName, Replicate replicate, String isotopeLabel, int msLevel, Double area, long sampleFileId)
+        {
+            this(precursorName + "_MsLevel" + msLevel, replicate, isotopeLabel, msLevel, area, sampleFileId, false);
+        }
+
+        private ChromInfoRecord(String featureName, Replicate replicate, String isotopeLabel,
+                               int msLevel, Double area, long sampleFileId, boolean truncated)
+        {
             _featureName = featureName;
             _replicate = replicate;
             _label = isotopeLabel;
-            _msLevel = transition.isPrecursorIon() ? 1 : 2;
-            _transitionChromInfo = transitionChromInfo;
+            _msLevel = msLevel;
+            _area = area;
+            _sampleFileId = sampleFileId;
+            _truncated = truncated;
         }
 
         public String getFeatureName()
@@ -254,9 +310,19 @@ public class GeneralMoleculeResultDataSet
             return _msLevel;
         }
 
-        public TransitionChromInfo getTransitionChromInfo()
+        public Double getArea()
         {
-            return _transitionChromInfo;
+            return _area;
+        }
+
+        public long getSampleFileId()
+        {
+            return _sampleFileId;
+        }
+
+        public boolean isTruncated()
+        {
+            return _truncated;
         }
     }
 }

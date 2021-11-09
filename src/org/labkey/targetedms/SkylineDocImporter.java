@@ -408,8 +408,8 @@ public class SkylineDocImporter
             {
                 _log.info("None of the " + parser.getTransitionChromInfoCount() + " TransitionChromInfos in the file " +
                         "were imported because they exceed the limit of " +
-                        SkylineDocumentParser.MAX_TRANSITION_CHROM_INFOS + " and there are more than " +
-                        SkylineDocumentParser.MAX_PRECURSORS + " precursors");
+                        TargetedMSModule.MAX_TRANSITION_CHROM_INFOS_PROPERTY.getEffectiveValue(_container) + " and there are more than " +
+                        TargetedMSModule.MAX_PRECURSORS_PROPERTY.getEffectiveValue(_container) + " precursors");
                 SQLFragment whereClause = new SQLFragment("WHERE r.Id = ?", _runId);
 
                 // Clear out any of the TransitionChromInfo and related tables that we inserted before we exceeded
@@ -2139,7 +2139,7 @@ public class SkylineDocImporter
         try
         {
             _precursorChromInfoStmt = ensureStatement(_precursorChromInfoStmt,
-                    "INSERT INTO targetedms.precursorchrominfo( precursorid, samplefileid, generalmoleculechrominfoid, bestretentiontime, minstarttime, maxendtime, totalarea, totalbackground, maxfwhm, peakcountratio, numtruncated, librarydotp, optimizationstep, note, chromatogram, numtransitions, numpoints, maxheight, isotopedotp, averagemasserrorppm, bestmasserrorppm, userset, uncompressedsize, identified, container, chromatogramformat, chromatogramoffset, chromatogramlength, qvalue, zscore, ccs, ionmobilityms1, ionmobilityfragment, ionmobilitywindow, ionmobilitytype) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO targetedms.precursorchrominfo( precursorid, samplefileid, generalmoleculechrominfoid, bestretentiontime, minstarttime, maxendtime, totalarea, totalbackground, maxfwhm, peakcountratio, numtruncated, librarydotp, optimizationstep, note, chromatogram, numtransitions, numpoints, maxheight, isotopedotp, averagemasserrorppm, bestmasserrorppm, userset, uncompressedsize, identified, container, chromatogramformat, chromatogramoffset, chromatogramlength, qvalue, zscore, ccs, ionmobilityms1, ionmobilityfragment, ionmobilitywindow, ionmobilitytype, totalAreaMs1, totalAreaFragment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     true);
 
             int index = 1;
@@ -2178,6 +2178,8 @@ public class SkylineDocImporter
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIonMobilityFragment());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIonMobilityWindow());
             _precursorChromInfoStmt.setString(index++, preChromInfo.getIonMobilityType());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getTotalAreaMs1());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getTotalAreaFragment());
 
             try (ResultSet rs = TargetedMSManager.getSqlDialect().executeWithResults(_precursorChromInfoStmt))
             {

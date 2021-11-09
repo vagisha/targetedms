@@ -32,6 +32,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
+import org.labkey.api.util.Tuple3;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.targetedms.IrtPeptide;
 import org.labkey.targetedms.SkylineDocImporter.IProgressStatus;
@@ -186,8 +187,8 @@ public class SkylineDocumentParser implements AutoCloseable
      * has more than 100,000 AND has more than 1,000 precursors. We use both because a document may have a lot of
      * replicates, so the TransitionChromInfo count by itself isn't sufficient to do the desired screening
      */
-    public static final int MAX_TRANSITION_CHROM_INFOS = 100_000;
-    public static final int MAX_PRECURSORS = 1_000;
+    private int _maxTransitionChromInfos;
+    private int _maxPrecursors;
 
     /** Null if we haven't found a SKYD to parse */
     @Nullable
@@ -236,13 +237,32 @@ public class SkylineDocumentParser implements AutoCloseable
         _reader = inputFactory.createXMLStreamReader(_inputStream);
         _log = log;
         readDocumentVersion(_reader);
+
+        try
+        {
+            _maxPrecursors = Integer.parseInt(TargetedMSModule.MAX_PRECURSORS_PROPERTY.getEffectiveValue(container));
+        }
+        catch (NumberFormatException e)
+        {
+            _maxPrecursors = TargetedMSModule.DEFAULT_MAX_PRECURSORS;
+            _log.warn("Unable to parse MAX_PRECURSORS_PROPERTY value: " + TargetedMSModule.MAX_PRECURSORS_PROPERTY.getEffectiveValue(container) + ", defaulting to " + _maxPrecursors);
+        }
+        try
+        {
+            _maxTransitionChromInfos = Integer.parseInt(TargetedMSModule.MAX_TRANSITION_CHROM_INFOS_PROPERTY.getEffectiveValue(container));
+        }
+        catch (NumberFormatException e)
+        {
+            _maxTransitionChromInfos = TargetedMSModule.DEFAULT_MAX_TRANSITION_CHROM_INFOS;
+            _log.warn("Unable to parse MAX_TRANSITION_CHROM_INFOS_PROPERTY value: " + TargetedMSModule.MAX_TRANSITION_CHROM_INFOS_PROPERTY.getEffectiveValue(container) + ", defaulting to " + _maxTransitionChromInfos);
+        }
     }
 
     /** @return false if we've exceeded the maximum count of TransitionChromInfos that we want to store for a run,
      * or true if we're below the threshold and should retain them */
     public boolean shouldSaveTransitionChromInfos()
     {
-        return _transitionChromInfoCount < MAX_TRANSITION_CHROM_INFOS || _precursorCount < MAX_PRECURSORS;
+        return _transitionChromInfoCount < _maxTransitionChromInfos || _precursorCount < _maxPrecursors;
     }
 
     @Override
@@ -1771,46 +1791,74 @@ public class SkylineDocumentParser implements AutoCloseable
 
         _precursorCount++;
 
-        setBestMassErrorPpm(moleculePrecursor);
+        computePrecursorChromInfoValues(moleculePrecursor);
 
         return moleculePrecursor;
     }
 
-    // Issue 41973: Populate additional information for rendering chromatograms
-    // Set the BestMassErrorPpm for each PrecursorChromInfo of the given precursor. This is the mass error of the most intense
-    // transition peak in a replicate. Skyline does not give us this value but we need it to label the precursor peaks in
-    // chromatogram charts. We can query it from TransitionChromInfos but we are saving it with the PrecursorChromInfo
-    // because TransitionChromInfos do not get saved for large documents.
-    private void setBestMassErrorPpm(GeneralPrecursor<?> precursor)
+    /**
+     * Populates additional information on PrecursorChromInfos that can be calculated from the TransitionChromInfos.
+     *
+     * Issue 41973: Populate additional information for rendering chromatograms
+     * Set the BestMassErrorPpm for each PrecursorChromInfo of the given precursor. This is the mass error of the most intense
+     * transition peak in a replicate. Skyline does not give us this value but we need it to label the precursor peaks in
+     * chromatogram charts. We can query it from TransitionChromInfos but we are saving it with the PrecursorChromInfo
+     * because TransitionChromInfos do not get saved for large documents.
+     *
+     * Also: populate TotalAreaMs1 and TotalAreaFragment
+     *
+     * @param precursor
+     */
+    private void computePrecursorChromInfoValues(GeneralPrecursor<?> precursor)
     {
         TransitionSettings.FullScanSettings fullScanSettings = _transitionSettings == null ? null : _transitionSettings.getFullScanSettings();
 
         // Key is the replicate name
         // Value is a List where each member is a Pair of TransitionChromInfo and a Boolean value indicating if the transition is quantitative
-        Map<String, List<Pair<TransitionChromInfo, Boolean>>> replicateToTciListMap = new HashMap<>();
+        Map<String, List<Tuple3<TransitionChromInfo, Boolean, Integer>>> replicateToTciListMap = new HashMap<>();
+        int ms1TransitionCount = 0;
+        int fragmentTransitionCount = 0;
 
         for (GeneralTransition transition : precursor.getTransitionsList())
         {
             List<TransitionChromInfo> tciList = transition.getChromInfoList();
             Boolean quantitative = transition.isQuantitative(fullScanSettings);
+            Integer msLevel = transition.isMs1() ? 1 : 2;
             for(TransitionChromInfo tci: tciList)
             {
-                List<Pair<TransitionChromInfo, Boolean>> tcisForReplicate = replicateToTciListMap.computeIfAbsent(tci.getReplicateName(), list -> new ArrayList<>());
-                tcisForReplicate.add(new Pair(tci, quantitative));
+                List<Tuple3<TransitionChromInfo, Boolean, Integer>> tcisForReplicate = replicateToTciListMap.computeIfAbsent(tci.getReplicateName(), list -> new ArrayList<>());
+                tcisForReplicate.add(Tuple3.of(tci, quantitative, msLevel));
+            }
+            if (quantitative)
+            {
+                if (transition.isMs1())
+                {
+                    ms1TransitionCount++;
+                }
+                else
+                {
+                    fragmentTransitionCount++;
+                }
             }
         }
 
         for(PrecursorChromInfo pci: precursor.getChromInfoList())
         {
-            List<Pair<TransitionChromInfo, Boolean>> tciList = replicateToTciListMap.get(pci.getReplicateName());
+            List<Tuple3<TransitionChromInfo, Boolean, Integer>> tciList = replicateToTciListMap.get(pci.getReplicateName());
+            double totalAreaFragment = 0;
+            double totalAreaMs1 = 0;
+            int ms1AreaCount = 0;
+            int fragmentAreaCount = 0;
+
             if(tciList != null && !tciList.isEmpty())
             {
                 double maxHeight = 0.0;
                 Double bestMassError = null;
-                for(Pair<TransitionChromInfo, Boolean> tciInfo: tciList)
+                for(Tuple3<TransitionChromInfo, Boolean, Integer> tciInfo: tciList)
                 {
                     TransitionChromInfo tci = tciInfo.first;
                     Boolean quantitative = tciInfo.second;
+                    Integer msLevel = tciInfo.third;
 
                     Double height = tci.getHeight();
                     if(quantitative && height != null && height > maxHeight)
@@ -1818,9 +1866,24 @@ public class SkylineDocumentParser implements AutoCloseable
                         maxHeight = tci.getHeight();
                         bestMassError = tci.getMassErrorPPM();
                     }
+                    if (quantitative && tci.getArea() != null)
+                    {
+                        if (msLevel == 1)
+                        {
+                            totalAreaMs1 += tci.getArea();
+                            ms1AreaCount++;
+                        }
+                        else
+                        {
+                            totalAreaFragment += tci.getArea();
+                            fragmentAreaCount++;
+                        }
+                    }
                 }
                 pci.setBestMassErrorPPM(bestMassError);
             }
+            pci.setTotalAreaMs1(ms1AreaCount == ms1TransitionCount ? totalAreaMs1 : null);
+            pci.setTotalAreaFragment(fragmentAreaCount == fragmentTransitionCount ? totalAreaFragment : null);
         }
     }
 
@@ -1943,7 +2006,7 @@ public class SkylineDocumentParser implements AutoCloseable
 
         _precursorCount++;
 
-        setBestMassErrorPpm(precursor);
+        computePrecursorChromInfoValues(precursor);
         return precursor;
     }
     private Transition transitionProtoToTransition(SkylineDocument.SkylineDocumentProto.Transition transitionProto) {

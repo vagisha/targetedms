@@ -1297,7 +1297,7 @@ public class TargetedMSManager
 
         if (!success)
         {
-            logMsg = "Unable to delete " + file.toString();
+            logMsg = "Unable to delete " + file;
             logs.add(logMsg);
             _log.warn(logMsg);
         }
@@ -1355,7 +1355,7 @@ public class TargetedMSManager
                     Path viewFile = file.getParent().resolve(dirName + ".sky.view");
                     Path skydFile = file.getParent().resolve(dirName + ".skyd");
 
-                    logMsg = "All the related sampleFiles for " + file.toString() + " have been updated with newer data.";
+                    logMsg = "All the related sampleFiles for " + file + " have been updated with newer data.";
                     logMsgs.add(logMsg);
                     _log.info(logMsg);
 
@@ -1369,7 +1369,7 @@ public class TargetedMSManager
 
                     if (Files.isDirectory(dir))
                     {
-                        logMsg = "Deleting directory " + dir.toString();
+                        logMsg = "Deleting directory " + dir;
                         logMsgs.add(logMsg);
                         _log.info(logMsg);
                         FileUtil.deleteDir(dir);
@@ -1979,29 +1979,15 @@ public class TargetedMSManager
     // return the ModuleProperty value for "AUTO_QC_PING_TIMEOUT"
     public int getAutoQCPingTimeout(Container container)
     {
-        TargetedMSModule targetedMSModule = null;
         int timeoutValue = 15;
 
-        for (Module m : container.getActiveModules())
+        try
         {
-            if (m instanceof TargetedMSModule)
-            {
-                targetedMSModule = (TargetedMSModule) m;
-                break;
-            }
+            timeoutValue = Integer.parseInt(TargetedMSModule.AUTO_QC_PING_TIMEOUT_PROPERTY.getEffectiveValue(container));
         }
-
-        if (targetedMSModule != null)
+        catch (NumberFormatException e)
         {
-            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TargetedMSModule.AUTO_QC_PING_TIMEOUT);
-            try
-            {
-                timeoutValue = Integer.parseInt(moduleProperty.getEffectiveValue(container));
-            }
-            catch (NumberFormatException e)
-            {
-                // noop, stick with the default value for the timeout setting
-            }
+            // noop, stick with the default value for the timeout setting
         }
 
         return timeoutValue;

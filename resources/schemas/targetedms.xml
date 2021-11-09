@@ -564,6 +564,8 @@
                 <description>(sum area of precursors for this peptide in the same sample) / (total area of all precursors for the same grouping in the sample)</description>
             </column>
             <column columnName="TransitionChromatogramIndices"/>
+            <column columnName="TotalAreaMs1" />
+            <column columnName="TotalAreaFragment" />
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="GeneralTransition">

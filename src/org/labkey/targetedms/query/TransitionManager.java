@@ -26,6 +26,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChromatogramDataset;
 import org.labkey.targetedms.chart.ChromatogramDataset.RtRange;
@@ -343,5 +344,19 @@ public class TransitionManager
             return new RtRange(minRt != null ? minRt : 0, maxRt != null ? maxRt : 0);
         }
         return new RtRange(0,0);
+    }
+
+    /**
+     * Returns true if there are any TransitionChromInfo rows associated with the run.
+     */
+    public static boolean runHasTransitionChromInfos(TargetedMSRun run) {
+        SQLFragment sql = new SQLFragment("SELECT tci.Id FROM " +
+                TargetedMSManager.getTableInfoReplicate() + " r INNER JOIN " +
+                TargetedMSManager.getTableInfoSampleFile() + " f ON f.ReplicateId = r.Id INNER JOIN " +
+                TargetedMSManager.getTableInfoTransitionChromInfo() + " tci ON tci.SampleFileId = f.Id WHERE r.RunId = ?")
+                .add(run.getId());
+        return new SqlSelector(TargetedMSManager.getSchema(),
+                TargetedMSSchema.getSchema().getSqlDialect().limitRows(sql, 1))
+                .getObject(Long.class) != null;
     }
 }

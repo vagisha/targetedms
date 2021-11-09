@@ -25,6 +25,7 @@ import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.SkylineEntity;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.ReplicateManager;
+import org.labkey.targetedms.query.TransitionManager;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -44,6 +45,7 @@ public class ReplicateDataSet
     Map<Long, Long> _fileIdToReplicateId = new HashMap<>();
     Map<Long, Map<String, ReplicateAnnotation>> _replicateAnnotations;
     Map<Long, PeptideSettings.IsotopeLabel> _isotopeLabels;
+    private boolean _useTransitionChromInfos;
 
     public ReplicateDataSet(TargetedMSRun run)
     {
@@ -56,6 +58,7 @@ public class ReplicateDataSet
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> toAnnotationMap(entry.getValue())));
         _isotopeLabels = IsotopeLabelManager.getIsotopeLabels(run.getRunId()).stream()
                 .collect(Collectors.toMap(SkylineEntity::getId, Function.identity()));
+        _useTransitionChromInfos = TransitionManager.runHasTransitionChromInfos(run);
     }
 
     public Collection<Replicate> listReplicates()
@@ -126,5 +129,10 @@ public class ReplicateDataSet
     public Collection<PeptideSettings.IsotopeLabel> listIsotopeLabels()
     {
         return _isotopeLabels.values();
+    }
+
+    public boolean getUseTransitionChromInfos()
+    {
+        return _useTransitionChromInfos;
     }
 }

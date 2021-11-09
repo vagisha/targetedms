@@ -142,13 +142,11 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static ModuleProperty SKIP_CHROMATOGRAM_IMPORT_PROPERTY;
     public static ModuleProperty PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY;
     public static ModuleProperty SKYLINE_AUDIT_LEVEL_PROPERTY;
-
-
-    public static final String AUTO_QC_PING_TIMEOUT = "TargetedMS AutoQCPing Timeout";
-
-    public static final String SKIP_CHROMATOGRAM_IMPORT = "Skip chromatogram import into database";
-    public static final String PREFER_SKYD_FILE_CHROMATOGRAMS = "Prefer loading chromatograms from SKYD file when possible";
-    public static final String SKYLINE_AUDIT_LEVEL = "Audit log integrity level for the uploaded Skyline documents";
+    public static ModuleProperty MAX_TRANSITION_CHROM_INFOS_PROPERTY;
+    public static final int DEFAULT_MAX_TRANSITION_CHROM_INFOS = 100_000;
+    public static ModuleProperty MAX_PRECURSORS_PROPERTY;
+    public static final int DEFAULT_MAX_PRECURSORS = 1_000;
+    public static ModuleProperty AUTO_QC_PING_TIMEOUT_PROPERTY;
 
     public TargetedMSModule()
     {
@@ -164,7 +162,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             new ModuleProperty.Option("Disabled", Boolean.FALSE.toString())
         );
         // Set up the properties for controlling how chromatograms are managed in DB vs files
-        SKIP_CHROMATOGRAM_IMPORT_PROPERTY = new ModuleProperty(this, SKIP_CHROMATOGRAM_IMPORT);
+        SKIP_CHROMATOGRAM_IMPORT_PROPERTY = new ModuleProperty(this, "Skip chromatogram import into database");
         SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setInputType(ModuleProperty.InputType.combo);
         SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setOptions(options);
         SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setDefaultValue(Boolean.toString(false));
@@ -180,20 +178,20 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             new ModuleProperty.Option("2 - RSA Verification", "2")
         );
         // Set up the properties for controlling how chromatograms are managed in DB vs files
-        SKYLINE_AUDIT_LEVEL_PROPERTY = new ModuleProperty(this, SKYLINE_AUDIT_LEVEL);
+        SKYLINE_AUDIT_LEVEL_PROPERTY = new ModuleProperty(this, "Audit log integrity level for the uploaded Skyline documents");
         SKYLINE_AUDIT_LEVEL_PROPERTY.setInputType(ModuleProperty.InputType.combo);
         SKYLINE_AUDIT_LEVEL_PROPERTY.setOptions(auditOptions);
         SKYLINE_AUDIT_LEVEL_PROPERTY.setDefaultValue("0");
         SKYLINE_AUDIT_LEVEL_PROPERTY.setCanSetPerContainer(true);
-        SKYLINE_AUDIT_LEVEL_PROPERTY.setDescription("Defines requirements for the integrity of the audit log uploaded together with a Skyline document. <br>\n"+
-                "0 means that no audit log is required. If the log file is present in the uploaded file it will be parsed and loaded as is.<br>\n " +
-                "1 means that audit log is required and its integrity will be verified using MD5 hash-based algorythm. If log integrity verification fails the document upload will be cancelled.<br> \n" +
-                "2 means that audit log is required and its integrity will be verified using RSA-encryption algorythm. If log integrity verification fails the document upload will be cancelled.");
+        SKYLINE_AUDIT_LEVEL_PROPERTY.setDescription("Defines requirements for the integrity of the audit log uploaded together with a Skyline document. \n"+
+                "0 means that no audit log is required. If the log file is present in the uploaded file it will be parsed and loaded as is.\n " +
+                "1 means that audit log is required and its integrity will be verified using MD5 hash-based algorithm. If log integrity verification fails the document upload will be cancelled. \n" +
+                "2 means that audit log is required and its integrity will be verified using RSA-encryption algorithm. If log integrity verification fails the document upload will be cancelled.");
         SKYLINE_AUDIT_LEVEL_PROPERTY.setShowDescriptionInline(true);
         addModuleProperty(SKYLINE_AUDIT_LEVEL_PROPERTY);
         //------------------------rr
 
-        PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY = new ModuleProperty(this, PREFER_SKYD_FILE_CHROMATOGRAMS);
+        PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY = new ModuleProperty(this, "Prefer loading chromatograms from SKYD file when possible");
         PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setInputType(ModuleProperty.InputType.combo);
         PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setOptions(options);
         PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setDefaultValue(Boolean.toString(false));
@@ -203,12 +201,29 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         addModuleProperty(PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY);
 
         // setup the QC Summary webpart AutoQCPing timeout
-        ModuleProperty autoQCPingProp = new ModuleProperty(this, AUTO_QC_PING_TIMEOUT);
-        autoQCPingProp.setDescription("The number of minutes before the most recent AutoQCPing indicator is considered stale.");
-        autoQCPingProp.setDefaultValue("15");
-        autoQCPingProp.setShowDescriptionInline(true);
-        autoQCPingProp.setCanSetPerContainer(true);
-        addModuleProperty(autoQCPingProp);
+        AUTO_QC_PING_TIMEOUT_PROPERTY = new ModuleProperty(this, "TargetedMS AutoQCPing Timeout");
+        AUTO_QC_PING_TIMEOUT_PROPERTY.setDescription("The number of minutes before the most recent AutoQCPing indicator is considered stale.");
+        AUTO_QC_PING_TIMEOUT_PROPERTY.setDefaultValue("15");
+        AUTO_QC_PING_TIMEOUT_PROPERTY.setShowDescriptionInline(true);
+        AUTO_QC_PING_TIMEOUT_PROPERTY.setCanSetPerContainer(true);
+        addModuleProperty(AUTO_QC_PING_TIMEOUT_PROPERTY);
+
+        MAX_TRANSITION_CHROM_INFOS_PROPERTY = new ModuleProperty(this, "TransitionChromInfo storage limit");
+        MAX_TRANSITION_CHROM_INFOS_PROPERTY.setInputType(ModuleProperty.InputType.text);
+        MAX_TRANSITION_CHROM_INFOS_PROPERTY.setDefaultValue(Integer.toString(DEFAULT_MAX_TRANSITION_CHROM_INFOS));
+        MAX_TRANSITION_CHROM_INFOS_PROPERTY.setCanSetPerContainer(true);
+        MAX_TRANSITION_CHROM_INFOS_PROPERTY.setDescription("Large DIA Skyline documents may have many transition/replicate chromatograms which may not be very useful to store in the database. Panorama can skip importing them to save storage space and import time, if the number of separately configured precursors is also exceeded");
+        MAX_TRANSITION_CHROM_INFOS_PROPERTY.setShowDescriptionInline(true);
+        addModuleProperty(MAX_TRANSITION_CHROM_INFOS_PROPERTY);
+
+        MAX_PRECURSORS_PROPERTY = new ModuleProperty(this, "Precursor storage limit");
+        MAX_PRECURSORS_PROPERTY.setInputType(ModuleProperty.InputType.text);
+        MAX_PRECURSORS_PROPERTY.setDefaultValue(Integer.toString(DEFAULT_MAX_PRECURSORS));
+        MAX_PRECURSORS_PROPERTY.setCanSetPerContainer(true);
+        MAX_PRECURSORS_PROPERTY.setDescription("If a document has more than a specified number of precursors AND more than the separate transition/replicate chromatogram limit, Panorama will skip storing them in the database to save space and import time");
+        MAX_PRECURSORS_PROPERTY.setShowDescriptionInline(true);
+        addModuleProperty(MAX_PRECURSORS_PROPERTY);
+
     }
 
     @Override
@@ -220,7 +235,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public Double getSchemaVersion()
     {
-        return 21.009;
+        return 21.010;
     }
 
     @Override

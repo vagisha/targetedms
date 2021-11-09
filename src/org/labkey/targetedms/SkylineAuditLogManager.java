@@ -32,7 +32,6 @@ import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
@@ -520,8 +519,7 @@ public class SkylineAuditLogManager
 
         private void enableHashValidation()
         {
-            TargetedMSModule targetedMSModule = ModuleLoader.getInstance().getModule(TargetedMSModule.class);
-            ModuleProperty logLevelProperty = targetedMSModule.getModuleProperties().get(TargetedMSModule.SKYLINE_AUDIT_LEVEL);
+            ModuleProperty logLevelProperty = TargetedMSModule.SKYLINE_AUDIT_LEVEL_PROPERTY;
             logLevelProperty.saveValue(null, _container, Integer.toString(SkylineAuditLogSecurityManager.INTEGRITY_LEVEL.HASH.getValue()));
         }
 

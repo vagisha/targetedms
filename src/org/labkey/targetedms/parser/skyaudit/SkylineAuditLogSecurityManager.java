@@ -19,9 +19,6 @@ package org.labkey.targetedms.parser.skyaudit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.Container;
-import org.labkey.api.module.Module;
-import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.module.ModuleProperty;
 import org.labkey.targetedms.TargetedMSModule;
 
 import javax.annotation.Nullable;
@@ -37,7 +34,7 @@ public class SkylineAuditLogSecurityManager
     {
         ANY(0), HASH(1), RSA(2);
 
-        private int value;
+        private final int value;
         INTEGRITY_LEVEL(int pValue){this.value = pValue;}
         public int getValue(){return this.value;}
 
@@ -51,9 +48,7 @@ public class SkylineAuditLogSecurityManager
     {
         _jobLogger = jobLogger;
 
-        TargetedMSModule targetedMSModule = ModuleLoader.getInstance().getModule(TargetedMSModule.class);
-        ModuleProperty logLevelProperty = targetedMSModule.getModuleProperties().get(TargetedMSModule.SKYLINE_AUDIT_LEVEL);
-        int propIndex = Integer.parseInt(logLevelProperty.getEffectiveValue(container));
+        int propIndex = Integer.parseInt(TargetedMSModule.SKYLINE_AUDIT_LEVEL_PROPERTY.getEffectiveValue(container));
         _verificationLevel = INTEGRITY_LEVEL.values()[propIndex];
     }
 
