@@ -5,7 +5,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.categories.Daily;
+import org.labkey.test.categories.Data;
 import org.labkey.test.components.ext4.ComboBox;
 import org.labkey.test.util.DataRegionTable;
 import org.openqa.selenium.WebElement;
@@ -83,7 +85,11 @@ public class TargetedMSMultiplePeptidePlotTest extends TargetedMSTest
 
         log("Verifying the chromatogram plots for peptides");
         clickAndWait(Locator.linkWithText("VYVEELKPTPEGDLEILLQK"));
-        List<WebElement> svgs = Locator.tag("svg").findElements(new DataRegionTable("PeptidePrecursorChromatograms", getDriver()));
-        checker().verifyEquals("Incorrect SVG graphs", 20, svgs.size());
+        int expectedGraphCount = 20;
+        table = new DataRegionTable("PeptidePrecursorChromatograms", getDriver());
+        waitForElementToDisappear(Locator.tagWithAttributeContaining("div", "alt", "Chromatogram Q_Exactive")
+                .withText("Loading..."), WebDriverWrapper.WAIT_FOR_PAGE);
+        List<WebElement> svgs = Locator.tag("svg").findElements(table);
+        checker().withScreenshot("SVGCount").verifyEquals("Incorrect SVG graphs", expectedGraphCount, svgs.size());
     }
 }
