@@ -1473,7 +1473,7 @@ public class TargetedMSSchema extends UserSchema
                     StringExpression urlUpdate = urlExpr(QueryAction.updateQueryRow);
                     if (urlUpdate != null)
                     {
-                        UpdateColumn update = new UpdateColumn(urlUpdate) {
+                        var update = new UpdateColumn.Impl(urlUpdate) {
                             @Override
                             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {
