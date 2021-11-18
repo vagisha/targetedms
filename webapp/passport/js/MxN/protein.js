@@ -28,6 +28,7 @@ protein =
         protein.selectedPrecursor = precursor;
 
         $('#seriesLegend').empty();
+        $('#precursorRadio' + precursorId).prop("checked", true);
 
         const chromParent = $('#chromatograms');
         chromParent.empty();
@@ -75,7 +76,7 @@ protein =
 
         protein.selectedPrecursor.ReplicateInfo.forEach(function(replicate) {
             const parentElement = $('#chrom' + replicate.PrecursorChromInfoId);
-            LABKEY.targetedms.SVGChart.requestAndRenderSVG(chromatogramUrl + "id=" + replicate.PrecursorChromInfoId + "&syncY=true&syncX=false&chartWidth=275&chartHeight=300",
+            LABKEY.targetedms.SVGChart.requestAndRenderSVG(chromatogramUrl + "id=" + replicate.PrecursorChromInfoId + "&syncY=true&syncYBasedOnPrecursor=true&syncX=false&chartWidth=275&chartHeight=300",
                     parentElement[0],
                     $('#seriesLegend')[0],
                     false,
@@ -194,9 +195,15 @@ protein =
         let hasCalibratedArea = false;
         let hasNormalizedArea = false;
 
+        let hasStartIndex = false;
+
         Object.keys(precursorGrouped).forEach(function(precursorId ) {
             const precursorRows = precursorGrouped[precursorId];
             const precursor = precursorRows[0];
+
+            if (precursor.StartIndex) {
+                hasStartIndex = true;
+            }
 
             const precursorData = {
                 Sequence: precursor.PeptideSequence,
@@ -242,6 +249,10 @@ protein =
             protein.precursors.push(precursorData);
         });
 
+        if (!hasStartIndex) {
+            $('#sequenceLocationPeptideSortOption').remove();
+        }
+
         const refreshFunction = function () {
             protein.updateUI();
         };
@@ -255,26 +266,6 @@ protein =
 
                 peptide.Enabled = peptide.Sequence.length >= bounds.start && peptide.Sequence.length <= bounds.end;
             }
-            const sortBy = protein.settings.getSortBy();
-            if (sortBy === "Sequence Location") {
-                protein.precursors.sort(function (a, b) {
-                    return a.StartIndex - b.StartIndex;
-                });
-            }
-
-            const sortValue = "Area";
-            if (sortBy === "Intensity") {
-                protein.precursors.sort(function (a, b) {
-                    return b[sortValue] - a[sortValue];
-                });
-            }
-            const clipboardPeptides = [];
-            protein.precursors.forEach(function (a) {
-                if (a.Enabled) {
-                    clipboardPeptides.push(a.Sequence) // add to copy clipboard feature
-                }
-            });
-            $("#copytoclipboard").attr("clipboard", clipboardPeptides.join("\r"));
 
             setFilteredPeptideCount();
 
@@ -285,7 +276,8 @@ protein =
                         activePeptides++
                 });
 
-                $("#filteredPeptideCount > green").text(activePeptides);
+                $("#filteredPrecursorCount").text(activePeptides);
+                $("#totalPrecursorCount").text(protein.precursors.length);
             }
 
             // Coalesce updates to the rest of the plot because the slider can rapidly fire many updates
@@ -321,7 +313,6 @@ protein =
         protein.settings.update();
         if(protein != null && data.rows.length > 0) {
             $(window).resize(function() { protein.updateUI() });
-            protein.selectPrecursor(protein.precursors[0].PrecursorId, false);
         }
     },
 
@@ -451,7 +442,7 @@ protein =
 
                 summaryDataTable.push({
                     precursorChromInfoId: row.precursorChromInfoId,
-                    precursorId: precursorId,
+                    precursorId: parseInt(precursorId),
                     sequence: row.sequence,
                     peptideSequence: row.peptideSequence,
                     charge: row.charge,
@@ -470,14 +461,15 @@ protein =
             if (sortBy === "Sequence Location") {
                 sortFunction = function (a, b) { return a.StartIndex - b.StartIndex };
             }
-
-            if (sortBy === "Intensity") {
+            else if (sortBy === "Sequence") {
+                sortFunction = function (a, b) { return a.sequence.localeCompare(b.sequence) };
+            }
+            else if (sortBy === "Intensity") {
                 sortFunction = function (a, b) {
                     return medians[b.precursorId] - medians[a.precursorId];
                 };
             }
-
-            if (sortBy === "Coefficient of Variation") {
+            else if (sortBy === "Coefficient of Variation") {
                 sortFunction = function (a, b) {
                     return cvs[b.precursorId] - cvs[a.precursorId];
                 };
@@ -489,10 +481,20 @@ protein =
             cvLineData.sort(sortFunction);
             summaryDataTable.sort(sortFunction);
 
+            const clipboardPeptides = [];
+            summaryDataTable.forEach(function (a) {
+                clipboardPeptides.push(a.sequence) // add to copy clipboard feature
+            });
+            $("#copytoclipboard").attr("clipboard", clipboardPeptides.join("\r"));
+
+            if (!protein.selectedPrecursor) {
+                protein.selectPrecursor(summaryDataTable[0].precursorId, false);
+            }
+
             let tableHTML = '';
-            summaryDataTable.forEach(function(row) {
+            summaryDataTable.forEach(function(row, index) {
                 tableHTML += '<tr' + (row.enabled ? '' : ' style="text-decoration: line-through; background-color: LightGray"') + '>' +
-                        '<td colspan="2"><a href="#chrom' + row.precursorChromInfoId + '" onclick="protein.selectPrecursor(' + row.precursorId + ', true)">' + LABKEY.Utils.encodeHtml(row.sequence) + '</a></td>' +
+                        '<td colspan="2"><input type="radio" ' + (row.precursorId === protein.selectedPrecursor.PrecursorId ? 'checked="true"' : '') + ' name="precursorRadio" id="precursorRadio' + row.precursorId + '" onclick="protein.selectPrecursor(' + row.precursorId + ', true)" /><a href="#chrom' + row.precursorChromInfoId + '" onclick="protein.selectPrecursor(' + row.precursorId + ', true)">' + LABKEY.Utils.encodeHtml(row.sequence) + '</a></td>' +
                         '<td>' + LABKEY.Utils.encodeHtml((row.charge >= 0 ? '+' : '') + row.charge) + '</td>' +
                         '<td style="text-align: right">' + LABKEY.Utils.encodeHtml(row.mz.toFixed(4)) + '</td>' +
                         '<td style="text-align: right">' + (row.StartIndex ? row.StartIndex : '') + '</td>' +

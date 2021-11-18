@@ -17,6 +17,7 @@ package org.labkey.targetedms.chart;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.jfree.chart.ChartColor;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
@@ -36,6 +37,7 @@ import org.labkey.targetedms.model.PrecursorComparator;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
+import org.labkey.targetedms.parser.GeneralPrecursor;
 import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.Molecule;
 import org.labkey.targetedms.parser.MoleculePrecursor;
@@ -835,6 +837,7 @@ public abstract class ChromatogramDataset
     static class PrecursorDataset extends ChromatogramDataset
     {
         protected final PrecursorChromInfo _pChromInfo;
+        private final boolean _precursorSync;
         private Precursor _precursor;
         private List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> _peptideIdRetentionTimes;
 
@@ -845,13 +848,14 @@ public abstract class ChromatogramDataset
         protected int _bestTransitionSeriesIndex;
         protected Double _bestTransitionPpm;
 
-        public PrecursorDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
+        public PrecursorDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean precursorSync, boolean syncRt, User user, Container container)
         {
             super(user, container);
             _run = TargetedMSManager.getRunForPrecursor(pChromInfo.getPrecursorId());
             _pChromInfo = pChromInfo;
             _syncRt = syncRt;
             _syncIntensity = syncIntensity;
+            _precursorSync = precursorSync;
 
             _fullScanSettings = TargetedMSManager.getTransitionFullScanSettings(_run.getId());
         }
@@ -863,6 +867,13 @@ public abstract class ChromatogramDataset
                 _precursor = PrecursorManager.getPrecursor(_container, _pChromInfo.getPrecursorId(), _user);
             }
             return _precursor == null ? 0 : _precursor.getGeneralMoleculeId();
+        }
+
+        @Nullable
+        private GeneralPrecursor getPrecursor()
+        {
+            getGeneralMoleculeId();
+            return _precursor;
         }
 
         @Override
@@ -1007,14 +1018,14 @@ public abstract class ChromatogramDataset
                 // If we are synchronizing the intensity axis, get the maximum intensity for a transition
                 // (of the given type - PRECURSOR, PRODUCT or ALL) over all replicates.
                 // TODO: Filter to the currently selected replicates.
-                _maxDisplayIntensity = TransitionManager.getMaxTransitionIntensity(generalMoleculeId, getTransitionType());
+                _maxDisplayIntensity = TransitionManager.getMaxTransitionIntensity(generalMoleculeId, _precursorSync ? getPrecursor() : null, getTransitionType());
                 if(_maxDisplayIntensity == null)
                 {
                     // If we are not saving TransitionChromInfos then get the max value of the MaxHeight on PrecursorChromInfos
                     // This will not take into account the transition type (e.g. "precursor", "product") so is not ideal when
                     // we are showing "split" graphs - separate graphs for "precursor" and "product" fragments. "Precursor"
                     // ions are typically more intense that "product" ions so the axis range for the "product" ion plots wouldb be too large.
-                    _maxDisplayIntensity = PrecursorManager.getMaxPrecursorMaxHeight(generalMoleculeId);
+                    _maxDisplayIntensity = PrecursorManager.getMaxPrecursorMaxHeight(generalMoleculeId, _precursorSync ? getPrecursor() : null);
                 }
             }
         }
@@ -1162,9 +1173,9 @@ public abstract class ChromatogramDataset
     {
         private MoleculePrecursor _molPrecursor;
 
-        public MoleculePrecursorDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
+        public MoleculePrecursorDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean precursorSync, boolean syncRt, User user, Container container)
         {
-            super(pChromInfo, syncIntensity, syncRt, user, container);
+            super(pChromInfo, syncIntensity, precursorSync, syncRt, user, container);
         }
 
         @Override
@@ -1249,9 +1260,9 @@ public abstract class ChromatogramDataset
 
     static class PrecursorSplitDataset extends PrecursorDataset
     {
-        public PrecursorSplitDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
+        public PrecursorSplitDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean precursorSync, boolean syncRt, User user, Container container)
         {
-            super(pChromInfo, syncIntensity, syncRt, user, container);
+            super(pChromInfo, syncIntensity, precursorSync, syncRt, user, container);
         }
 
         @Override
@@ -1269,9 +1280,9 @@ public abstract class ChromatogramDataset
 
     static class ProductSplitDataset extends PrecursorDataset
     {
-        public ProductSplitDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
+        public ProductSplitDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean precursorSync, boolean syncRt, User user, Container container)
         {
-            super(pChromInfo, syncIntensity, syncRt, user, container);
+            super(pChromInfo, syncIntensity, precursorSync, syncRt, user, container);
         }
 
         @Override
@@ -1362,7 +1373,7 @@ public abstract class ChromatogramDataset
 
         public TransitionDataset(PrecursorChromInfo pChromInfo, TransitionChromInfo tChromInfo, User user, Container container)
         {
-            super(pChromInfo, false, false, user, container);
+            super(pChromInfo, false, false, false, user, container);
             _pChromInfo = pChromInfo;
             _tChromInfo = tChromInfo;
             _user = user;
