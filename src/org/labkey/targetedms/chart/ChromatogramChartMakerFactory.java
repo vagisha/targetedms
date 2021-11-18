@@ -41,6 +41,7 @@ public class ChromatogramChartMakerFactory
     private boolean _splitGraph;
     private boolean _showOptimizationPeaks;
     private boolean _legend = true;
+    private boolean _syncIntensityBasedOnPrecursor;
 
     public void setSyncIntensity(boolean syncIntensity)
     {
@@ -87,12 +88,12 @@ public class ChromatogramChartMakerFactory
         }
         else if(!_splitGraph)
         {
-            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container), _legend);
+            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorDataset(pChromInfo, _syncIntensity, _syncIntensityBasedOnPrecursor, _syncRt, user, container), _legend);
         }
         else
         {
-            ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.PrecursorSplitDataset(pChromInfo, _syncIntensity, _syncRt, user, container);
-            ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.ProductSplitDataset(pChromInfo, _syncIntensity, _syncRt, user, container) {
+            ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.PrecursorSplitDataset(pChromInfo, _syncIntensity, _syncIntensityBasedOnPrecursor, _syncRt, user, container);
+            ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.ProductSplitDataset(pChromInfo, _syncIntensity, _syncIntensityBasedOnPrecursor, _syncRt, user, container) {
                 @Override
                 int getSeriesOffset()
                 {
@@ -108,11 +109,11 @@ public class ChromatogramChartMakerFactory
     {
         if(!_splitGraph)
         {
-            return new ChromatogramChartMaker().make(new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container));
+            return new ChromatogramChartMaker().make(new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncIntensityBasedOnPrecursor, _syncRt, user, container));
         }
         else
         {
-            ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container)
+            ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncIntensityBasedOnPrecursor, _syncRt, user, container)
             {
                 @Override
                 Transition.Type getTransitionType()
@@ -126,7 +127,7 @@ public class ChromatogramChartMakerFactory
                     return transition.isPrecursorIon();
                 }
             };
-            ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container) {
+            ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncIntensityBasedOnPrecursor, _syncRt, user, container) {
 
                 @Override
                 Transition.Type getTransitionType()
@@ -167,5 +168,15 @@ public class ChromatogramChartMakerFactory
     public JFreeChart createGroupChart(PeptideGroup group, SampleFile sampleFile, ViewContext context)
     {
         return new ChromatogramChartMaker().make(new ChromatogramDataset.GroupDataset(group, sampleFile, context, _syncIntensity, _syncRt), false, "Retention Time", "Intensity");
+    }
+
+    public void setSyncIntensityBasedOnPrecursor(boolean syncIntensityBasedOnPrecursor)
+    {
+        _syncIntensityBasedOnPrecursor = syncIntensityBasedOnPrecursor;
+    }
+
+    public boolean getSyncIntensityBasedOnPrecursor()
+    {
+        return _syncIntensityBasedOnPrecursor;
     }
 }

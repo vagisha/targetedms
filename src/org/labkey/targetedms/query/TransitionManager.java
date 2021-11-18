@@ -29,6 +29,7 @@ import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChromatogramDataset;
 import org.labkey.targetedms.chart.ChromatogramDataset.RtRange;
+import org.labkey.targetedms.parser.GeneralPrecursor;
 import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Transition;
@@ -118,7 +119,7 @@ public class TransitionManager
                                  .getObject(TransitionChromInfo.class);
     }
 
-    public static Double getMaxTransitionIntensity(long generalMoleculeId, Transition.Type fragmentType)
+    public static Double getMaxTransitionIntensity(long generalMoleculeId, @Nullable GeneralPrecursor<?> precursor, Transition.Type fragmentType)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(tci.Height) FROM ");
         sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
@@ -149,6 +150,13 @@ public class TransitionManager
         sql.append(" AND ");
         sql.append("gmci.GeneralMoleculeId=?");
         sql.add(generalMoleculeId);
+
+        if (precursor != null)
+        {
+            sql.append(" AND ");
+            sql.append("preci.PrecursorId=?");
+            sql.add(precursor.getId());
+        }
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }

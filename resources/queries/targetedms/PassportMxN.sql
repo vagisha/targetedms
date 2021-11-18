@@ -4,7 +4,7 @@ SELECT
     PrecursorId.Id,
     SampleFileId.ReplicateId.Name AS Replicate,
     SampleFileId.AcquiredTime AS AcquiredTime,
-    COALESCE(ifdefined(SampleFileId.ReplicateId.Day), ifdefined(SampleFileId.ReplicateId.SampleGroup)) AS Timepoint,
+    COALESCE(SampleFileId.ReplicateId.BatchName, ifdefined(SampleFileId.ReplicateId.Day), ifdefined(SampleFileId.ReplicateId.SampleGroup)) AS Timepoint,
     ifdefined(SampleFileId.ReplicateId.SampleGroup2) AS Grouping,
     PrecursorId.PeptideId.PeptideGroupId.Label AS ProteinName,
     PrecursorId.PeptideId.PeptideGroupId.SequenceId.SeqId AS seq,

@@ -38,6 +38,7 @@ import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChromatogramDataset.RtRange;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
+import org.labkey.targetedms.parser.GeneralPrecursor;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 
@@ -544,7 +545,7 @@ public class PrecursorManager
      * This can be used for getting the height of the tallest transition peak for a peptide over all the replicates
      * when we are synchronizing the intensity axis for transition peak chromatograms.
      */
-    public static Double getMaxPrecursorMaxHeight(long generalMoleculeId)
+    public static Double getMaxPrecursorMaxHeight(long generalMoleculeId, @Nullable GeneralPrecursor<?> precursor)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(pci.maxHeight) FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
@@ -554,6 +555,11 @@ public class PrecursorManager
         sql.append(" WHERE");
         sql.append(" gmci.GeneralMoleculeId=?");
         sql.add(generalMoleculeId);
+        if (precursor != null)
+        {
+            sql.append(" AND pci.PrecursorId=?");
+            sql.add(precursor.getId());
+        }
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }

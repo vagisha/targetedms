@@ -63,7 +63,8 @@
             <label for="peptideSort">Sort by:&nbsp;</label>
             <select id="peptideSort" name="peptideSort">
                 <option value="intensity">Intensity</option>
-                <option value="sequencelocation">Sequence Location</option>
+                <option value="sequence">Sequence</option>
+                <option value="sequencelocation" id="sequenceLocationPeptideSortOption">Sequence Location</option>
                 <option value="cv">Coefficient of Variation</option>
             </select>
         </td>
@@ -86,9 +87,7 @@
         </td>
         <td style="padding-left: 2em">
             Matching precursors:
-            <span id="filteredPeptideCount">
-                <green><%=protein.getPep().size()%></green>/<%=protein.getPep().size()%>
-            </span>
+            <span id="filteredPrecursorCount"></span>/<span id="totalPrecursorCount"></span>
         </td>
     </tr>
     <tr>

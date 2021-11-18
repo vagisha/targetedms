@@ -1512,6 +1512,7 @@ public class TargetedMSController extends SpringActionController
 
             ChromatogramChartMakerFactory factory = new ChromatogramChartMakerFactory();
             factory.setSyncIntensity(form.isSyncY());
+            factory.setSyncIntensityBasedOnPrecursor(form.isSyncYBasedOnPrecursor());
             factory.setSyncRt(form.isSyncX());
             factory.setSplitGraph(form.isSplitGraph());
             factory.setShowOptimizationPeaks(form.isShowOptimizationPeaks());
@@ -2217,6 +2218,7 @@ public class TargetedMSController extends SpringActionController
     {
         private long _id;
         private boolean _syncY = false;
+        private boolean _syncYBasedOnPrecursor = false;
         private boolean _syncX = false;
         private boolean _splitGraph = false;
         private boolean _showOptimizationPeaks = false;
@@ -2324,6 +2326,16 @@ public class TargetedMSController extends SpringActionController
         public void setSyncY(boolean syncY)
         {
             _syncY = syncY;
+        }
+
+        public boolean isSyncYBasedOnPrecursor()
+        {
+            return _syncYBasedOnPrecursor;
+        }
+
+        public void setSyncYBasedOnPrecursor(boolean syncYBasedOnPrecursor)
+        {
+            _syncYBasedOnPrecursor = syncYBasedOnPrecursor;
         }
 
         public boolean isSyncX()

@@ -992,14 +992,14 @@ public class TargetedMSSchema extends UserSchema
             labelColumn.setURL(result.getDetailsURL(null, null));
             if (proteomics)
             {
-                // Figure out if we have at least 3 replicates marked as QCs, and we have a "Day" annotation column
-                SQLFragment reproducibilitySQL = new SQLFragment("(SELECT CASE WHEN COUNT(*) > 2 THEN COUNT(*) END FROM ");
+                // Figure out if we have at least 3 replicates marked as QCs, and we have a "Day" or "SampleGroup" annotation, or a value for BatchName
+                SQLFragment reproducibilitySQL = new SQLFragment("(SELECT CASE WHEN COUNT(DISTINCT r.Id) > 2 THEN COUNT(DISTINCT r.Id) END FROM ");
                 reproducibilitySQL.append(TargetedMSManager.getTableInfoReplicate(), "r");
-                reproducibilitySQL.append(" INNER JOIN ");
+                reproducibilitySQL.append(" LEFT OUTER JOIN ");
                 reproducibilitySQL.append(TargetedMSManager.getTableInfoReplicateAnnotation(), "ra");
-                reproducibilitySQL.append(" ON ra.ReplicateId = r.Id AND LOWER(ra.Name) = 'day' WHERE r.RunId = ");
+                reproducibilitySQL.append(" ON ra.ReplicateId = r.Id AND (LOWER(ra.Name) = 'day' OR LOWER(ra.Name) = 'samplegroup') WHERE r.RunId = ");
                 reproducibilitySQL.append(ExprColumn.STR_TABLE_ALIAS);
-                reproducibilitySQL.append(".RunId AND (r.SampleType IS NULL OR r.SampleType IN ('qc'))");
+                reproducibilitySQL.append(".RunId AND (r.SampleType IS NULL OR r.SampleType IN ('qc')) AND (ra.ReplicateId IS NOT NULL OR r.BatchName IS NOT NULL)");
                 reproducibilitySQL.append(")");
 
                 // Render a link to the reproducibility report

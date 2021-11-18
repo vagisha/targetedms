@@ -78,10 +78,20 @@ public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
 
         //TODO : More verifications to add for new sample file.
         checker().verifyTrue("Missing calibration curve webpart",
-                isElementPresent(Locator.css("span.labkey-wp-title-text").withText("Calibration Curve")));
+                Locator.css("span.labkey-wp-title-text").
+                        withText("Calibration Curve").
+                        findWhenNeeded(getDriver()).
+                        withTimeout(WAIT_FOR_JAVASCRIPT).
+                        isDisplayed());
 
         checker().verifyTrue("Missing Figures of Merit  webpart",
-                isElementPresent(Locator.css("span.labkey-wp-title-text").withText("Figures of Merit")));
+                Locator.css("span.labkey-wp-title-text").
+                        withText("Figures of Merit").
+                        findWhenNeeded(getDriver()).
+                        withTimeout(WAIT_FOR_JAVASCRIPT).
+                        isDisplayed());
+
+        checker().screenShotIfNewError("calcurve-and-fom");
 
         log("Verifying Calibration Curves link");
         clickTab("Proteins");
