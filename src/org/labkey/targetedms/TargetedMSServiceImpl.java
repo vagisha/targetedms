@@ -25,6 +25,7 @@ import org.labkey.api.exp.XarFormatException;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.targetedms.IModification;
 import org.labkey.api.targetedms.ISampleFile;
 import org.labkey.api.targetedms.ISpectrumLibrary;
@@ -43,10 +44,14 @@ import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 /**
  * User: vsharma
@@ -187,6 +192,33 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public @NotNull List<? extends ISpectrumLibrary> getLibraries(ITargetedMSRun run)
     {
         return run != null ? LibraryManager.getLibraries(run.getId()) : Collections.emptyList();
+    }
+
+    @Override
+    public @Nullable ISpectrumLibrary getLibrary(long id, @Nullable Container container, User user)
+    {
+        return LibraryManager.getLibrary(id, container, user);
+    }
+
+    @Override
+    public @Nullable ITargetedMSRun getRun(long runId, User user)
+    {
+        ITargetedMSRun run = TargetedMSManager.getRun(runId);
+        return run != null && run.getContainer().hasPermission(user, ReadPermission.class) ? run : null;
+    }
+
+    @Override
+    public List<ITargetedMSRun> getRuns(Collection<Long> runIds, User user)
+    {
+        List<ITargetedMSRun> runs = new ArrayList<>();
+        if (runIds != null)
+        {
+            runIds.stream().forEach(id -> runs.add(TargetedMSManager.getRun(id)));
+        }
+        return runs.stream()
+                .filter(Objects::nonNull)
+                .filter(r -> r.getContainer().hasPermission(user, ReadPermission.class))
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -30,6 +30,7 @@ import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.view.ViewBackgroundInfo;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -65,8 +66,10 @@ public interface TargetedMSService
     String PROP_CHROM_LIB_REVISION = "chromLibRevision";
 
     ITargetedMSRun getRun(long runId, Container container);
+    @Nullable ITargetedMSRun getRun(long runId, User user);
     ITargetedMSRun getRunByFileName(String fileName, Container container);
     List<ITargetedMSRun> getRuns(Container container);
+    List<ITargetedMSRun> getRuns(Collection<Long> runIds, User user);
     ITargetedMSRun getRunByLsid(String lsid, Container container);
     List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);
     void registerSkylineDocumentImportListener(SkylineDocumentImportListener skyLineDocumentImportListener);
@@ -90,6 +93,8 @@ public interface TargetedMSService
     List<? extends ISampleFile> getSampleFiles(long runId);
     List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId);
     List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(long runId);
+
+    @Nullable ISpectrumLibrary getLibrary(long id, @Nullable Container container, User user);
 
     /**
      * @param run ITargetedMSRun object representing a Skyline document

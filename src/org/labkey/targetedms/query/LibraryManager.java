@@ -19,12 +19,16 @@ package org.labkey.targetedms.query;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.targetedms.ISpectrumLibrary;
+import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.NotFoundException;
@@ -52,6 +56,20 @@ public class LibraryManager
     static final Logger LOG = LogHelper.getLogger(LibraryManager.class, "Getting information for spectral libraries linked to Skyline documents");
 
     private LibraryManager() {}
+
+    public static @Nullable ISpectrumLibrary getLibrary(long id, @Nullable Container container, User user)
+    {
+        ISpectrumLibrary library = new TableSelector(TargetedMSManager.getTableInfoSpectrumLibrary()).getObject(id, PeptideSettings.SpectrumLibrary.class);
+        if (library != null)
+        {
+            ITargetedMSRun run = TargetedMSManager.getRun(library.getRunId());
+            if (run != null && (container == null || container.equals(run.getContainer())) && run.getContainer().hasPermission(user, ReadPermission.class))
+            {
+                return library;
+            }
+        }
+        return null;
+    }
 
     public static List<PeptideSettings.SpectrumLibrary> getLibraries(long runId)
     {
