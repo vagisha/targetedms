@@ -30,7 +30,6 @@ import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.view.ViewBackgroundInfo;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -69,7 +68,6 @@ public interface TargetedMSService
     @Nullable ITargetedMSRun getRun(long runId, User user);
     ITargetedMSRun getRunByFileName(String fileName, Container container);
     List<ITargetedMSRun> getRuns(Container container);
-    List<ITargetedMSRun> getRuns(Collection<Long> runIds, User user);
     ITargetedMSRun getRunByLsid(String lsid, Container container);
     List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);
     void registerSkylineDocumentImportListener(SkylineDocumentImportListener skyLineDocumentImportListener);

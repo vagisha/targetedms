@@ -44,14 +44,10 @@ import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 /**
  * User: vsharma
@@ -205,20 +201,6 @@ public class TargetedMSServiceImpl implements TargetedMSService
     {
         ITargetedMSRun run = TargetedMSManager.getRun(runId);
         return run != null && run.getContainer().hasPermission(user, ReadPermission.class) ? run : null;
-    }
-
-    @Override
-    public List<ITargetedMSRun> getRuns(Collection<Long> runIds, User user)
-    {
-        List<ITargetedMSRun> runs = new ArrayList<>();
-        if (runIds != null)
-        {
-            runIds.stream().forEach(id -> runs.add(TargetedMSManager.getRun(id)));
-        }
-        return runs.stream()
-                .filter(Objects::nonNull)
-                .filter(r -> r.getContainer().hasPermission(user, ReadPermission.class))
-                .collect(Collectors.toList());
     }
 
     @Override
