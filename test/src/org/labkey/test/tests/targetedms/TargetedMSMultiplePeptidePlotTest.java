@@ -7,10 +7,10 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.categories.Daily;
-import org.labkey.test.categories.Data;
 import org.labkey.test.components.ext4.ComboBox;
 import org.labkey.test.util.DataRegionTable;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.io.File;
 import java.util.List;
@@ -63,8 +63,8 @@ public class TargetedMSMultiplePeptidePlotTest extends TargetedMSTest
         String replicateName = "Q_Exactive_08_09_2013_JGB_32";
 
         click(Locator.tagWithText("strong", "Display Chart Settings"));
-        setFormElement(Locator.name("chartWidth"), width);
-        setFormElement(Locator.name("chartHeight"), height);
+        setFormElement(shortWait().until(ExpectedConditions.visibilityOfElementLocated(Locator.name("chartWidth"))), width);
+        setFormElement(shortWait().until(ExpectedConditions.visibilityOfElementLocated(Locator.name("chartHeight"))), height);
         new ComboBox.ComboBoxFinder(getDriver()).withInputNamed("replicatesFilter")
                 .findWhenNeeded(getDriver()).setMultiSelect(true).selectComboBoxItem(replicateName);
         clickButton("Update");
