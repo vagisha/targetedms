@@ -25,6 +25,7 @@ import org.labkey.api.exp.XarFormatException;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.targetedms.IModification;
 import org.labkey.api.targetedms.ISampleFile;
 import org.labkey.api.targetedms.ISpectrumLibrary;
@@ -187,6 +188,19 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public @NotNull List<? extends ISpectrumLibrary> getLibraries(ITargetedMSRun run)
     {
         return run != null ? LibraryManager.getLibraries(run.getId()) : Collections.emptyList();
+    }
+
+    @Override
+    public @Nullable ISpectrumLibrary getLibrary(long id, @Nullable Container container, User user)
+    {
+        return LibraryManager.getLibrary(id, container, user);
+    }
+
+    @Override
+    public @Nullable ITargetedMSRun getRun(long runId, User user)
+    {
+        ITargetedMSRun run = TargetedMSManager.getRun(runId);
+        return run != null && run.getContainer().hasPermission(user, ReadPermission.class) ? run : null;
     }
 
     @Override

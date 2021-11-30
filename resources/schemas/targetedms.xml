@@ -952,6 +952,7 @@
         </columns>
     </table>
     <table tableName="spectrumlibrary" tableDbType="TABLE">
+        <titleColumn>name</titleColumn>
         <columns>
             <column columnName="Id">
                 <isHidden>true</isHidden>

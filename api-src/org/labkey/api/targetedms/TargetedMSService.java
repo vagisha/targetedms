@@ -65,6 +65,7 @@ public interface TargetedMSService
     String PROP_CHROM_LIB_REVISION = "chromLibRevision";
 
     ITargetedMSRun getRun(long runId, Container container);
+    @Nullable ITargetedMSRun getRun(long runId, User user);
     ITargetedMSRun getRunByFileName(String fileName, Container container);
     List<ITargetedMSRun> getRuns(Container container);
     ITargetedMSRun getRunByLsid(String lsid, Container container);
@@ -90,6 +91,8 @@ public interface TargetedMSService
     List<? extends ISampleFile> getSampleFiles(long runId);
     List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId);
     List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(long runId);
+
+    @Nullable ISpectrumLibrary getLibrary(long id, @Nullable Container container, User user);
 
     /**
      * @param run ITargetedMSRun object representing a Skyline document
