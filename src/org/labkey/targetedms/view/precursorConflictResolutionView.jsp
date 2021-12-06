@@ -74,18 +74,18 @@ $(document).ready(function () {
         var oldPrecursorCells = table.cells(".oldPrecursor").nodes();
         var newPrecursorCells = table.cells(".newPrecursor").nodes();
         $(newPrecursorCells).removeClass('representative').addClass('representative');
-        $(newPrecursorCells).find(':checkbox').attr('checked', 'checked');
+        $(newPrecursorCells).find(':checkbox').prop('checked', true);
         $(oldPrecursorCells).removeClass('representative');
-        $(oldPrecursorCells).find(':checkbox').removeAttr('checked');
+        $(oldPrecursorCells).find(':checkbox').prop('checked', false);
     });
     $("#selectAllOld").click(function(){
 
         var oldPrecursorCells = table.cells(".oldPrecursor").nodes();
         var newPrecursorCells = table.cells(".newPrecursor").nodes();
         $(oldPrecursorCells).removeClass('representative').addClass('representative');
-        $(oldPrecursorCells).find(':checkbox').attr('checked', 'checked');
+        $(oldPrecursorCells).find(':checkbox').prop('checked', true);
         $(newPrecursorCells).removeClass('representative');
-        $(newPrecursorCells).find(':checkbox').removeAttr('checked');
+        $(newPrecursorCells).find(':checkbox').prop('checked', false);
     });
 
     table = $("#dataTable").DataTable(
@@ -188,13 +188,13 @@ function toggleCheckboxSelection(element)
 
     if(element.is(":checked"))
     {
-        $("."+cls).removeAttr('checked'); // Both old and new precursor checkboxes have the same class. First deselect all.
-        element.prop('checked', 'checked'); // Select the one that triggered this function call.
+        $("input."+cls+":checkbox").prop('checked', false); // Both old and new precursor checkboxes have the same class. First deselect all.
+        element.prop('checked', true); // Select the one that triggered this function call.
     }
     else
     {
-        $("."+cls).prop('checked', 'checked'); // First select all.
-        element.removeAttr('checked');        // Deselect the one that triggered the function call.
+        $("input."+cls+":checkbox").prop('checked', true); // First select all.
+        element.prop('checked', false);       // Deselect the one that triggered the function call.
     }
 }
 

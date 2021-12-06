@@ -116,9 +116,8 @@ public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
 
         // Go to the view via the schema browser to make sure it's not giving the link to the reproducibility report
         goToSchemaBrowser();
-        DataRegionTable table = viewQueryData("targetedms", "PeptideGroup");
-        table.goToView("Library Proteins");
-        table = new DataRegionTable("query", this);
+        viewQueryData("targetedms", "PeptideGroup");
+        DataRegionTable table = new DataRegionTable("query", this);
         table.setFilter("Label", "Equals", "gi|171455|gb|AAA88712.1|");
 
         assertElementNotPresent("Shouldn't have reproducibility report link", reproducibilityReportLink());
@@ -139,7 +138,9 @@ public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
         checker().verifyFalse("Reproducibility report link should not be present", isElementPresent(reproducibilityReportLink()));
         checker().verifyTrue("Calibration curve icon should be present", isElementPresent(calibrationCurvesLink()));
 
-        clickAndWait(calibrationCurvesLink().index(2));
+        DataRegionTable table = new DataRegionTable("PeptideGroup", this);
+        table.setFilter("Label", "Equals", "TG|1578-1589|z2");
+        clickAndWait(calibrationCurvesLink());
 
         log("Verifying the FOM values");
         waitForElement(Locator.css("span.labkey-wp-title-text").withText("Figures of Merit"));
