@@ -72,18 +72,18 @@ $(document).ready(function () {
         var oldProteinCells = table.cells(".oldProtein").nodes();
         var newProteinCells = table.cells(".newProtein").nodes();
         $(newProteinCells).removeClass('representative').addClass('representative');
-        $(newProteinCells).find(':checkbox').attr('checked', 'checked');
+        $(newProteinCells).find(':checkbox').prop('checked', true);
         $(oldProteinCells).removeClass('representative');
-        $(oldProteinCells).find(':checkbox').removeAttr('checked');
+        $(oldProteinCells).find(':checkbox').prop('checked', false);
     });
     $("#selectAllOld").click(function(){
 
         var oldProteinCells = table.cells(".oldProtein").nodes();
         var newProteinCells = table.cells(".newProtein").nodes();
         $(oldProteinCells).removeClass('representative').addClass('representative');
-        $(oldProteinCells).find(':checkbox').attr('checked', 'checked');
+        $(oldProteinCells).find(':checkbox').prop('checked', true);
         $(newProteinCells).removeClass('representative');
-        $(newProteinCells).find(':checkbox').removeAttr('checked');
+        $(newProteinCells).find(':checkbox').prop('checked', false);
     });
 
     table = $("#dataTable").DataTable(
@@ -178,19 +178,19 @@ function loadProteinDetails(tr, newProteinId, oldProteinId, response, request) {
 function toggleCheckboxSelection(element)
 {
     var cls = element.attr('class').split(' ')[0]; // get the first class name
-    //console.log(cls);
+    // console.log(cls);
 
     $("td."+cls).toggleClass("representative");
 
     if(element.is(":checked"))
     {
-        $("."+cls).removeAttr('checked'); // Both old and new protein checkboxes have the same class. First deselect all.
-        element.prop('checked', 'checked'); // Select the one that triggered this function call.
+        $("input."+cls+":checkbox").prop('checked', false); // Both old and new protein checkboxes have the same class. First deselect all.
+        element.prop('checked', true); // Select the one that triggered this function call.
     }
     else
     {
-        $("."+cls).prop('checked', 'checked'); // First select all.
-        element.removeAttr('checked');        // Deselect the one that triggered the function call.
+        $("input."+cls+":checkbox").prop('checked', true); // First select all.
+        element.prop('checked', false);        // Deselect the one that triggered the function call.
     }
 }
 
@@ -199,9 +199,9 @@ function toggleCheckboxSelection(element)
         var selectedIds = [];
         table.rows().every(function(){
             var selected = $(this.nodes()).find("input:checked").val();
-            //console.log(selected);
             selectedIds.push(selected);
         });
+        // console.log("Selected: " + selectedIds);
         $("#conflictTableForm #selectedInputValues").val(selectedIds);
         $("#conflictTableForm").submit();
     }

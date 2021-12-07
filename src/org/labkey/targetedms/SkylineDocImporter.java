@@ -351,6 +351,10 @@ public class SkylineDocImporter
             OptimizationInfo optimizationInfo = insertTransitionSettings(parser.getTransitionSettings());
 
             // 2. Replicates and sample files
+            if((_isProteinLibraryDoc || _isPeptideLibraryDoc) && parser.getReplicateCount() == 0)
+            {
+                throw new PipelineJobException("The Skyline document does not have any replicates. Documents imported to a chromatogram library folder must have chromatograms.");
+            }
             ReplicateInfo replicateInfo = insertReplicates(run, parser, optimizationInfo, folderType);
 
             // 3. Peptide settings

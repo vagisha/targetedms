@@ -19,8 +19,11 @@ import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSSchema;
+
+import static org.labkey.api.targetedms.TargetedMSService.FolderType.LibraryProtein;
 
 public class PeptideGroupViewWebPart extends QueryView
 {
@@ -41,7 +44,11 @@ public class PeptideGroupViewWebPart extends QueryView
         QuerySettings settings = schema.getSettings(portalCtx, dataRegionName, TargetedMSSchema.TABLE_PEPTIDE_GROUP);
 
         if (!portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
-            settings.setViewName("LibraryProteins");
+        {
+            var folderType = TargetedMSService.get().getFolderType(portalCtx.getContainer());
+            var viewName = folderType == LibraryProtein ? "LibraryProteins" : "";
+            settings.setViewName(viewName);
+        }
 
         return settings;
     }
