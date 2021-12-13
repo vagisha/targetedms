@@ -74,7 +74,7 @@ public class AuditLogEntry
     public static AuditLogEntry retrieve(int pEntryId, ViewContext viewContext)
     {
         TargetedMSSchema schema = new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer());
-        TableSelector sel =  new TableSelector(schema.getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_ENTRY), new SimpleFilter(FieldKey.fromParts("EntryId"), pEntryId), null);
+        TableSelector sel = new TableSelector(TargetedMSManager.getTableInfoSkylineAuditLog(), new SimpleFilter(FieldKey.fromParts("EntryId"), pEntryId), null);
         List<AuditLogEntry> results = sel.getArrayList(AuditLogEntry.class);
         // Possible to get more than one match if two documents share an audit history. In this case, we don't care
         // which we use

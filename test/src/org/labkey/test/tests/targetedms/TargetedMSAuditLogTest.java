@@ -53,9 +53,9 @@ public class TargetedMSAuditLogTest extends TargetedMSTest
         log("Verifying the imported logs");
         assertEquals("Invalid number of audit logs", 9, auditLog.getDataRowCount());
         assertEquals("Start message is incorrect", "Start of audit log for already existing document",
-                auditLog.getDataAsText(0, "message_text"));
+                auditLog.getDataAsText(0, "MessageText"));
         assertEquals("End message is incorrect", "Managed results",
-                auditLog.getDataAsText(8, "message_text"));
+                auditLog.getDataAsText(8, "MessageText"));
 
     }
 }
