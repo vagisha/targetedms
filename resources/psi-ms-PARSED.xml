@@ -17,8 +17,11 @@
     <instrument id="MS:1000695" name="apex ultra" vendor="Bruker Daltonics apex series" description="Bruker Daltonics' apex ultra: ESI, MALDI, Nanospray, APCI, APPI, Qh-FT_ICR."/>
     <instrument id="MS:1000142" name="apex Q" vendor="Bruker Daltonics apex series" description="Bruker Daltonics' apex Q: ESI, MALDI, Nanospray, APCI, APPI, Qh-FT_ICR."/>
     <instrument id="MS:1000141" name="apex IV" vendor="Bruker Daltonics apex series" description="Bruker Daltonics' apex IV: ESI, MALDI, Nanospray, APCI, APPI, Qh-FT_ICR."/>
+    <instrument id="MS:1003229" name="timsTOF" vendor="Bruker Daltonics timsTOF series" description="Bruker Daltonics' timsTOF."/>
     <instrument id="MS:1003124" name="timsTOF fleX" vendor="Bruker Daltonics timsTOF series" description="Bruker Daltonics' timsTOF fleX"/>
     <instrument id="MS:1003005" name="timsTOF Pro" vendor="Bruker Daltonics timsTOF series" description="Bruker Daltonics' timsTOF Pro."/>
+    <instrument id="MS:1003231" name="timsTOF SCP" vendor="Bruker Daltonics timsTOF series" description="Bruker Daltonics' timsTOF SCP."/>
+    <instrument id="MS:1003230" name="timsTOF Pro 2" vendor="Bruker Daltonics timsTOF series" description="Bruker Daltonics' timsTOF Pro 2."/>
     <instrument id="MS:1002279" name="maXis 4G" vendor="Bruker Daltonics maXis series" description="Bruker Daltonics' maXis 4G: ESI Q-TOF, Nanospray, APCI, APPI, GC-APCI, CaptiveSpray."/>
     <instrument id="MS:1001541" name="maXis" vendor="Bruker Daltonics maXis series" description="Bruker Daltonics' maXis: ESI Q-TOF, Nanospray, APCI, APPI."/>
     <instrument id="MS:1003004" name="maXis II" vendor="Bruker Daltonics maXis series" description="Bruker Daltonics' maXis II."/>
@@ -136,10 +139,13 @@
     <instrument id="MS:1001788" name="Acquity TQD" vendor="Waters" description="Waters quadrupole based Acquity TQD."/>
     <instrument id="MS:1000170" name="M@LDI L" vendor="Waters" description="Waters oa-ToF based MALDI L."/>
     <instrument id="MS:1001782" name="Synapt MS" vendor="Waters" description="Waters oa-ToF based Synapt MS."/>
+    <instrument id="MS:1003185" name="SELECT SERIES MRT" vendor="Waters" description="Waters oa-ToF based SELECT SERIES MRT."/>
     <instrument id="MS:1000171" name="M@LDI LR" vendor="Waters" description="Waters oa-ToF based MALDI LR."/>
     <instrument id="MS:1001783" name="Xevo G2 Q-Tof" vendor="Waters" description="Waters oa-ToF based Xevo G2 Q-Tof."/>
+    <instrument id="MS:1003184" name="SELECT SERIES Cyclic IMS" vendor="Waters" description="Waters oa-ToF based SELECT SERIES Cyclic IMS."/>
     <instrument id="MS:1001781" name="Synapt HDMS" vendor="Waters" description="Waters oa-ToF based Synapt HDMS."/>
     <instrument id="MS:1001780" name="Synapt G2-S MS" vendor="Waters" description="Waters oa-ToF based Synapt G2-S MS."/>
+    <instrument id="MS:1003183" name="Synapt XS" vendor="Waters" description="Waters oa-ToF based Synapt XS."/>
     <instrument id="MS:1001761" name="ACQUITY UPLC" vendor="Waters" description="Waters LC-system ACQUITY UPLC."/>
     <instrument id="MS:1002726" name="SYNAPT G2-Si" vendor="Waters" description="Waters Corporation SYNAPT G2-Si orthogonal acceleration time-of-flight mass spectrometer."/>
     <instrument id="MS:1000150" name="Auto Spec Ultima NT" vendor="Waters" description="Waters magnetic sector based AutoSpec Ultima NT MS."/>
@@ -178,6 +184,7 @@
     <instrument id="MS:1003002" name="LCMS-8040" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-8040 MS."/>
     <instrument id="MS:1000606" name="LCMS-2010A" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-2010A MS."/>
     <instrument id="MS:1003003" name="LCMS-2020" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-2020."/>
+    <instrument id="MS:1003152" name="GCMS-QP2010SE" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments GCMS-QP2010SE."/>
     <instrument id="MS:1002382" name="Shimadzu MALDI-7090" vendor="Shimadzu MALDI-TOF" description="Shimadzu MALDI-7090: MALDI-TOF-TOF."/>
     <instrument id="MS:1000607" name="AXIMA CFR MALDI-TOF" vendor="Shimadzu MALDI-TOF" description="Shimadzu Biotech AXIMA CFR MALDI-TOF MS."/>
     <instrument id="MS:1000608" name="AXIMA-QIT" vendor="Shimadzu MALDI-TOF" description="Shimadzu Biotech AXIMA-QIT MS."/>
