@@ -193,9 +193,12 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_GENERAL_PRECURSOR = "GeneralPrecursor";
     public static final String TABLE_GENERAL_TRANSITION = "GeneralTransition";
     public static final String TABLE_MOLECULE_PRECURSOR = "MoleculePrecursor";
+
     public static final String TABLE_SKYLINE_AUDITLOG = "AuditLog";
     public static final String TABLE_SKYLINE_AUDITLOG_ENTRY = "AuditLogEntry";
     public static final String TABLE_SKYLINE_AUDITLOG_MESSAGE = "AuditLogMessage";
+
+    public static final String TABLE_SKYLINE_AUDITLOG_PREFIX = "AuditLog_Run";
 
     public static final String TABLE_LIST_DEFINITION = "ListDefinition";
     public static final String TABLE_LIST_COLUMN_DEFINITION = "ListColumnDefinition";
@@ -1374,21 +1377,18 @@ public class TargetedMSSchema extends UserSchema
             return result;
         }
 
-        if (TABLE_SKYLINE_AUDITLOG_ENTRY.equalsIgnoreCase(name))
+        if (name.toLowerCase().startsWith(TABLE_SKYLINE_AUDITLOG_PREFIX.toLowerCase()))
         {
-            // Swap for the view that pulls in the VersionId/RunId for every row. We keep its name the as AuditLogEntry
-            // for backwards compatibility with queries
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(TABLE_SKYLINE_AUDITLOG), this, cf, ContainerJoinType.RunFK);
-            result.setName(TABLE_SKYLINE_AUDITLOG_ENTRY);
-            result.getMutableColumn("RunId").setFk(QueryForeignKey.from(this, cf).table(TABLE_RUNS));
-            return result;
-        }
-
-        if (TABLE_SKYLINE_AUDITLOG_MESSAGE.equalsIgnoreCase(name))
-        {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.EntryVersionFK);
-            result.getMutableColumn("EntryId").setFk(QueryForeignKey.from(this, cf).table(TABLE_SKYLINE_AUDITLOG_ENTRY));
-            return result;
+            try
+            {
+                long runId = Long.parseLong(name.substring(TABLE_SKYLINE_AUDITLOG_PREFIX.length()));
+                TargetedMSRun run = TargetedMSManager.getRun(runId);
+                if (run != null && run.getContainer().equals(getContainer()))
+                {
+                    return new SkylineAuditTable(name, this, run);
+                }
+            }
+            catch (NumberFormatException ignored) {}
         }
 
         // Issue 35966 - Show a custom set of columns by default for a run-scoped replicate view
@@ -1581,8 +1581,6 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_QC_METRIC_EXCLUSION);
         hs.add(TABLE_QC_ENABLED_METRICS);
         hs.add(TABLE_QC_TRACE_METRIC_VALUES);
-        hs.add(TABLE_SKYLINE_AUDITLOG_ENTRY);
-        hs.add(TABLE_SKYLINE_AUDITLOG_MESSAGE);
         hs.add(TABLE_LIST_DEFINITION);
         hs.add(TABLE_BIBLIOSPEC_LIB_INFO);
         hs.add(TABLE_HUNTER_LIB_INFO);

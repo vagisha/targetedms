@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -42,11 +43,13 @@ public class TargetedMSLibraryTest extends TargetedMSTest
 {
     private static final String SKY_FILE1 = "Stergachis-SupplementaryData_2_a.sky.zip";
     private static final String SKY_FILE2 = "Stergachis-SupplementaryData_2_b.sky.zip";
-    private static final String SKY_FILE3 = "MRMer_renamed_protein.zip";
+    private static final String SKY_FILE3 = "QC_1.sky.zip"; // NOTE: do not use MRMer.zip in this test. The document format is too old - no "modified_sequence" attributes for peptides;
+    private static final String SKY_FILE4 = "MRMer_renamed_protein.zip"; // Does not have any replicates; should fail to import
 
     @Test
     public void testSteps()
     {
+        int serverErrorCount = getServerErrorCount();
         setupFolder(FolderType.LibraryProtein);
         importData(SKY_FILE1);
         verifyRevision1();
@@ -56,6 +59,8 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         verifyAndResolveConflicts();
         verifyRevision3();
         testImportSucceedAfterConflictResolved();
+        testImportFailSkyDocWithoutReplicates();
+        checkExpectedErrors(serverErrorCount + 3); // Clear the errors to keep the test from failing
     }
 
     private void testImportFailAfterConflict()
@@ -63,17 +68,24 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         // Imports in a library folder with conflicts should fail
         importData(SKY_FILE3, 3, true);
         PipelineStatusTable statusTable = new PipelineStatusTable(getDriver());
-        var status = statusTable.clickStatusLink("Skyline document import - MRMer_renamed_protein.zip");
+        var status = statusTable.clickStatusLink("Skyline document import - QC_1.sky.zip");
         status.assertLogTextContains("The library folder has conflicts.", "New Skyline documents can be added to the folder after the conflicts have been resolved");
-
-        checkExpectedErrors(1); // Clear the error to keep the test from failing
     }
 
     private void testImportSucceedAfterConflictResolved()
     {
         // Delete the failed job first otherwise the test fails
-        deletePipelineJob("Skyline document import - MRMer_renamed_protein.zip", false);
+        deletePipelineJob("Skyline document import - QC_1.sky.zip", false);
         importData(SKY_FILE3, 3);
+    }
+
+    private void testImportFailSkyDocWithoutReplicates()
+    {
+        // Importing a Skyline document without any replicates should fail in a library folder
+        importData(SKY_FILE4, 4, true);
+        PipelineStatusTable statusTable = new PipelineStatusTable(getDriver());
+        var status = statusTable.clickStatusLink("Skyline document import - MRMer_renamed_protein.zip");
+        status.assertLogTextContains("The Skyline document does not have any replicates. Documents imported to a chromatogram library folder must have chromatograms.");
     }
 
     @Override
@@ -257,7 +269,43 @@ public class TargetedMSLibraryTest extends TargetedMSTest
             assertEquals("Unexpected document name for current library protein " + expectedRowValues.get(1), expectedRowValues.get(2), getTableCellText(table, i, 7));
         }
 
+        // Select a protein from the older document to keep in the library. Test that checking / unchecking checkboxes works
+        var proteinName = "MAX";
+        var oldProteinCb = getCheckBox(proteinName, true).waitForElement(shortWait());
+        var newProteinCb = getCheckBox(proteinName, false).waitForElement(shortWait());
+        assertTrue(isChecked(newProteinCb));   // checkbox for the protein in the new document should be checked
+        assertFalse(isChecked(oldProteinCb));  // checkbox for the protein in the old document should be unchecked
+        // check, uncheck and check again (See Issue 44424)
+        changeChecked(oldProteinCb, newProteinCb , true, proteinName);
+        changeChecked(oldProteinCb, newProteinCb , false, proteinName);
+        changeChecked(oldProteinCb, newProteinCb , true, proteinName);
+
         clickButton("Apply Changes");
+    }
+
+    private void changeChecked(WebElement oldProteinCb, WebElement newProteinCb, boolean selectOld, String proteinName)
+    {
+        setCheckbox(oldProteinCb, selectOld);
+        if (selectOld)
+        {
+            assertFalse("Expected " + proteinName + " from the new document to be unchecked", isChecked(newProteinCb));  // new protein unchecked
+            assertTrue("Expected " + proteinName + " from the old document to be checked", isChecked(oldProteinCb));   // old protein checked
+        }
+        else
+        {
+            assertTrue("Expected " + proteinName + " from the new document to be checked", isChecked(newProteinCb));  // new protein checked
+            assertFalse("Expected " + proteinName + " from the old document to be unchecked", isChecked(oldProteinCb));   // old protein unchecked
+        }
+    }
+
+    private Locator getCheckBox(String proteinName, boolean oldProtein)
+    {
+        var cls = oldProtein ? "oldProtein" : "newProtein";
+        // Example xpath:
+        // //td[contains(@class, 'oldProtein')][span[contains(text(), 'MAX')]]/preceding-sibling::td[contains(@class, 'oldProtein')][input[@type='checkbox']]/input[contains(@name, 'selectedVals')]
+        return Locator.tag("td").withClass(cls).withChild(Locator.XPathLocator.tag("span").withText(proteinName))
+                      .precedingSibling("td").withClass(cls).withChild(Locator.XPathLocator.checkbox())
+                      .child(Locator.XPathLocator.checkbox().withAttribute("name", "selectedVals"));
     }
 
     private void verifyConflictsAsReadOnlyUser()
@@ -275,14 +323,14 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         log("Verifying expected protein/peptide counts in library revision 3 after resolving conflicts");
 
         // Download link, library statistics and revision in the ChromatogramLibraryDownloadWebpart
-        verifyChromatogramLibraryDownloadWebPart(10, 91, 597, 3);
+        verifyChromatogramLibraryDownloadWebPart(10, 89, 586, 3);
 
         assertTextPresent("Archived Revisions");
 
         // Expected proteins in library:
         //  CTCF                        -> SKY_FILE1
         //  TAF11                       -> SKY_FILE1
-        //  MAX                         -> SKY_FILE2 (conflict resolved)
+        //  MAX                         -> SKY_FILE1 (conflict resolved; protein from older document was selected to keep in the library)
         //  HPRR1440042                 -> SKY_FILE2 (conflict resolved)
         //  QPrEST_CystC_HPRR5000001    -> SKY_FILE2 (conflict resolved)
         //  DifferentProteinSameLabel   -> SKY_FILE2 (conflict resolved)
@@ -292,11 +340,11 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         //  iRT-C18 Standard Peptides   -> SKY_FILE2
 
         clickTab("Proteins");
-        List<String> proteins = Arrays.asList( /*Proteins from SKY_FILE1*/ "CTCF", "TAF11",
-                /*Proteins from SKY_FILE2*/ "TP53", "GATA3", "HPRR350065", "MAX", "HPRR1440042", "HPRR5000001", "DifferentProteinSameLabel",
+        List<String> proteins = Arrays.asList( /*Proteins from SKY_FILE1*/ "CTCF", "TAF11","MAX",
+                /*Proteins from SKY_FILE2*/ "TP53", "GATA3", "HPRR350065", "HPRR1440042", "HPRR5000001", "DifferentProteinSameLabel",
                 /*iRT peptides; always from the latest file (SKY_FILE2)*/"iRT-C18 Standard Peptides");
-        List<String> files = Arrays.asList(SKY_FILE1, SKY_FILE1,
-                SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2,
+        List<String> files = Arrays.asList(SKY_FILE1, SKY_FILE1, SKY_FILE1,
+                SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2,
                 SKY_FILE2);
 
         verifyLibraryProteins(proteins, files);
