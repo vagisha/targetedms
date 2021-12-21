@@ -56,8 +56,9 @@ public class SkylineAuditTable extends VirtualTable<TargetedMSSchema>
         }
         cteSQL.append("\n FROM ");
         cteSQL.append(TargetedMSManager.getTableInfoSkylineAuditLogEntry(), "e");
-        cteSQL.append(" WHERE e.VersionId = ");
-        cteSQL.append(_run.getId());
+        cteSQL.append(" WHERE e.VersionId = ? AND e.DocumentGUID = ?");
+        cteSQL.add(_run.getId());
+        cteSQL.add(_run.getDocumentGUID());
 
         cteSQL.append("\n");
         cteSQL.append("UNION ALL");
@@ -80,7 +81,8 @@ public class SkylineAuditTable extends VirtualTable<TargetedMSSchema>
         }
         cteSQL.append("\n FROM ");
         cteSQL.append(TargetedMSManager.getTableInfoSkylineAuditLogEntry(), "nxt");
-        cteSQL.append(" JOIN logTree prev ON prev.parentEntryHash = nxt.entryHash");
+        cteSQL.append(" JOIN logTree prev ON prev.parentEntryHash = nxt.entryHash AND nxt.DocumentGUID = ?");
+        cteSQL.add(_run.getDocumentGUID());
 
         SQLFragment result = new SQLFragment();
         result.addCommonTableExpression("TargetedMSAuditCTE", "logTree", cteSQL, getSqlDialect().isPostgreSQL());
