@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 %>
-<%@ page import="org.labkey.api.util.UniqueID" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
@@ -45,7 +44,7 @@
 
     ActionURL modificationSearchUrl = new ActionURL(TargetedMSController.ModificationSearchAction.class, getContainer());
 
-    String renderId = "modification-search-form-" + UniqueID.getRequestScopedUID(HttpView.currentRequest());
+    String renderId = "modification-search-form-" + getRequestScopedUID();
 %>
 <div id=<%=q(renderId)%>></div>
 

@@ -21,8 +21,6 @@
 */
 
 %>
-<%@ page import="org.labkey.api.util.UniqueID" %>
-<%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
@@ -48,7 +46,7 @@
     }
 %>
 <%
-    int uid = UniqueID.getRequestScopedUID(HttpView.currentRequest());
+    int uid = getRequestScopedUID();
     String reportPanelId = "reportHeaderPanel-" + uid;
     String plotPanelId = "tiledPlotPanel-" + uid;
     String plotPaginationPanelId = "plotPaginationPanel-" + uid;

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 %>
-<%@ page import="org.labkey.api.util.UniqueID" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
@@ -33,7 +32,7 @@
     }
 %>
 <%
-    int uid = UniqueID.getRequestScopedUID(HttpView.currentRequest());
+    int uid = getRequestScopedUID();
     String qcSummaryId = "qcSummary-" + uid;
     Integer sampleLimit = (Integer)HttpView.currentModel();
 %>

@@ -21,8 +21,6 @@
 */
 
 %>
-<%@ page import="org.labkey.api.util.UniqueID" %>
-<%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
@@ -37,8 +35,8 @@
         dependencies.add("targetedms/js/ParetoPlotPanel.js");
     }
 %>
-<%!
-    String tiledPlotPanelId = "tiledPlotPanel-" + UniqueID.getRequestScopedUID(HttpView.currentRequest());
+<%
+    String tiledPlotPanelId = "tiledPlotPanel-" + getRequestScopedUID();
 %>
 
 <div id=<%=q(tiledPlotPanelId)%> class="tiledPlotPanel"></div>
