@@ -15,7 +15,8 @@
  */
 package org.labkey.targetedms.datasource;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.resource.FileResource;
@@ -42,7 +43,7 @@ public class PsiInstruments
 {
     private static Map<String, PsiInstrument> _instruments = new HashMap<>();
 
-    private static final Logger LOG = Logger.getLogger(PsiInstruments.class);
+    private static final Logger LOG = LogManager.getLogger(PsiInstruments.class);
 
     static
     {
