@@ -19,15 +19,14 @@ package org.labkey.test.tests.targetedms.passport;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
-import org.labkey.test.categories.External;
-import org.labkey.test.categories.MS2;
+import org.labkey.test.categories.Daily;
 import org.labkey.test.util.APIUserHelper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.UIContainerHelper;
 
 import java.util.List;
 
-@Category({External.class, MS2.class})
+@Category({Daily.class})
 public class PassportTest  extends PassportTestPart
 {
     public PassportTest()

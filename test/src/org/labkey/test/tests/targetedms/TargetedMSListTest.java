@@ -24,7 +24,6 @@ import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.Daily;
-import org.labkey.test.categories.MS2;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -37,7 +36,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@Category({Daily.class, MS2.class})
+@Category({Daily.class})
 public class TargetedMSListTest extends TargetedMSTest
 {
     private static final String LIST_SKY_FILE_1 = "ListTest.sky.zip";
