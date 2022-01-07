@@ -141,6 +141,7 @@ public class MsDataSourceTypes
         // Can return more than one data source type. For example, Bruker and Waters both have .d extension;
         // Thermo and Waters both have .raw extension
         var sources = EXTENSION_SOURCE_MAP.get(extension(name));
+        if (sources == null) sources = EXTENSION_SOURCE_MAP.get(extension(name, 2)); // .wiff.scan file, for example
         return sources != null ? sources : Collections.emptyList();
     }
 
@@ -149,16 +150,33 @@ public class MsDataSourceTypes
         return Arrays.stream(sourceTypes).filter(s -> s.isInstrumentSource(vendorOrModel)).findFirst().orElse(null);
     }
 
+    public static String getBaseName(String fileName, int dots)
+    {
+        String baseName = fileName;
+        while (dots-- > 0 && baseName.indexOf('.') != -1)
+            baseName = baseName.substring(0, baseName.lastIndexOf('.'));
+        return baseName;
+    }
+
     private static String extension(String name)
     {
+        return extension(name, 1);
+    }
+
+    private static String extension(String name, int dotCount)
+    {
+        String extension = "";
         if(name != null)
         {
-            int idx = name.lastIndexOf('.');
-            if(idx != -1)
+            String baseName = name;
+            while (dotCount-- > 0)
             {
-                return name.substring(idx).toLowerCase();
+                int idx = baseName.lastIndexOf('.');
+                if (idx == -1) break;
+                extension = baseName.substring(idx).toLowerCase() + extension;
+                baseName = baseName.substring(0, idx);
             }
         }
-        return "";
+        return extension;
     }
 }

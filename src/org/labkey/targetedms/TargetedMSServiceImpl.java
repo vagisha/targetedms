@@ -47,6 +47,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -161,6 +162,23 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
+    public TableInfo getTableInfoPeptideStructuralModification()
+    {
+        return TargetedMSManager.getTableInfoPeptideStructuralModification();
+    }
+    @Override
+    public TableInfo getTableInfoPeptideIsotopeModification()
+    {
+        return TargetedMSManager.getTableInfoPeptideIsotopeModification();
+    }
+
+    @Override
+    public TableInfo getTableInfoInstrument()
+    {
+        return TargetedMSManager.getTableInfoInstrument();
+    }
+
+    @Override
     public List<String> getSampleFilePaths(long runId)
     {
         return ReplicateManager.getSampleFilePaths(runId);
@@ -184,7 +202,6 @@ public class TargetedMSServiceImpl implements TargetedMSService
         return ModificationManager.getIsotopeModificationsUsedInRun(runId);
     }
 
-    @Override
     public @NotNull List<? extends ISpectrumLibrary> getLibraries(ITargetedMSRun run)
     {
         return run != null ? LibraryManager.getLibraries(run.getId()) : Collections.emptyList();
@@ -285,9 +302,9 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public List<? extends ISampleFile> getSampleFilesWithData(List<? extends ISampleFile> sampleFiles, Container container)
+    public Map<String, Path> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData)
     {
-        return MsDataSourceUtil.getInstance().getSampleFilesWithData(sampleFiles, container);
+        return MsDataSourceUtil.getInstance().getDataPaths(sampleFiles, container, lookupExpData);
     }
 
     @Override

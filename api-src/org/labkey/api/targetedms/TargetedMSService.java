@@ -31,6 +31,7 @@ import org.labkey.api.view.ViewBackgroundInfo;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: vsharma
@@ -86,6 +87,9 @@ public interface TargetedMSService
     TableInfo getTableInfoGeneralPrecursor();
     TableInfo getTableInfoPrecursor();
     TableInfo getTableInfoMoleculePrecursor();
+    TableInfo getTableInfoPeptideStructuralModification();
+    TableInfo getTableInfoPeptideIsotopeModification();
+    TableInfo getTableInfoInstrument();
 
     List<String> getSampleFilePaths(long runId);
     List<? extends ISampleFile> getSampleFiles(long runId);
@@ -120,11 +124,13 @@ public interface TargetedMSService
     Integer importSkylineDocument(ViewBackgroundInfo info, Path skylinePath) throws XarFormatException, PipelineValidationException;
 
     /**
+     *
      * @param sampleFiles list of sample files for which we should check if data exists
-     * @param container container where we should look for the data
-     * @return list of sample files for which data was found
+     * @param container container where we should look for data
+     * @param lookupExpData if true, look for a matching row in exp.data before looking up the filesystem
+     * @return Map of sample file names to the path on the filesystem
      */
-    List<? extends ISampleFile> getSampleFilesWithData(List<? extends ISampleFile> sampleFiles, Container container);
+    Map<String, Path> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData);
 
     /**
      * Returns the name of a chromatogram library file according to the naming pattern used for creating

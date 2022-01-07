@@ -2,6 +2,7 @@ package org.labkey.targetedms.datasource;
 
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -39,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -238,23 +240,27 @@ public class MsDataSourceUtil
      *
      * @param sampleFiles list of sample files for which we should check if data exists
      * @param container container where we should look for data
-     * @return list of sample files for which data was found
+     * @return Map of sample file names to the path on the filesystem
      */
     @NotNull
-    public List<? extends ISampleFile> getSampleFilesWithData(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container)
+    public Map<String, Path> getDataPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, boolean lookupExpData)
     {
-        List<ISampleFile> dataFound = new ArrayList<>();
+        FileContentService fcs = FileContentService.get();
+        boolean lookupFs = fcs != null && !fcs.isCloudRoot(container);
+        ExperimentService expSvc = lookupExpData ? ExperimentService.get() : null;
+        return getDataPaths(sampleFiles, container, expSvc, lookupFs);
+    }
+
+    @NotNull
+    private Map<String, Path> getDataPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, @Nullable ExperimentService expSvc, boolean lookupFs)
+    {
+        Map<String, Path> dataPaths = new HashMap<>();
+        sampleFiles.stream().forEach(s -> dataPaths.put(s.getFileName(), null));
 
         Path rawFilesDir = getRawFilesDir(container);
         if (rawFilesDir == null || !Files.exists(rawFilesDir))
         {
-            return dataFound;
-        }
-
-        ExperimentService expSvc = ExperimentService.get();
-        if(expSvc == null)
-        {
-            return dataFound;
+            return dataPaths;
         }
 
         for(ISampleFile sampleFile: sampleFiles)
@@ -262,38 +268,47 @@ public class MsDataSourceUtil
             MsDataSource dataSource = getMsDataSource(sampleFile);
 
             String fileName = sampleFile.getFileName();
-            if(hasData(fileName, dataSource, container, rawFilesDir, expSvc))
-            {
-                dataFound.add(sampleFile);
+            Path path = getDataPath(fileName, dataSource, container, rawFilesDir, expSvc, lookupFs);
+            dataPaths.put(fileName, path);
             }
-        }
-        return dataFound;
+
+        return dataPaths;
     }
 
-    private boolean hasData(String fileName, MsDataSource dataSource, Container container, Path rawFilesDir, ExperimentService expSvc)
+    private Path getDataPath(String fileName, MsDataSource dataSource, Container container, Path rawFilesDir, ExperimentService expSvc, boolean lookupFs)
+    {
+        if (expSvc != null)
     {
         List<? extends ExpData> expDatas = getExpData(fileName, container, rawFilesDir, expSvc);
-
         if(expDatas.size() > 0)
         {
             for (ExpData data : expDatas)
             {
                 if (dataSource.isValidNameAndData(data, expSvc))
                 {
-                   return true;
+                        return data.getFilePath();
                 }
             }
         }
-        else
-        {
-            FileContentService fcs = FileContentService.get();
-            if (fcs != null && !fcs.isCloudRoot(container))
-            {
-                // No matches found in exp.data.  Look on the filesystem
-                return dataExists(fileName, dataSource, rawFilesDir);
-            }
         }
-        return false;
+        if (lookupFs)
+        {
+            // We did not lookup exp.data or no matches found in exp.data. Look on the filesystems
+            return getDataPath(fileName, dataSource, rawFilesDir);
+        }
+        return null;
+    }
+
+    private Path getDataPath(String fileName, MsDataSource sourceType, Path rawFilesDir)
+        {
+        try
+            {
+            return Files.walk(rawFilesDir).filter(p -> isSourceMatch(p, fileName, sourceType)).findFirst().orElse(null);
+            }
+        catch (IOException e)
+        {
+            throw UnexpectedException.wrap(e,"Error checking for data in sub-directories of " + rawFilesDir);
+        }
     }
 
     private boolean dataExists(String fileName, MsDataSource sourceType, Path rawFilesDir)
