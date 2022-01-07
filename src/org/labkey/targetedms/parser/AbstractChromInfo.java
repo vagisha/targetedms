@@ -25,6 +25,7 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.util.Tuple3;
 import org.labkey.api.util.UnexpectedException;
+import org.labkey.targetedms.PanoramaBadDataException;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSRun;
 
@@ -204,9 +205,14 @@ public abstract class AbstractChromInfo extends ChromInfo<PrecursorChromInfoAnno
             byte[] uncompressedBytes = SkylineBinaryParser.uncompressStoredBytes(compressedBytes, getUncompressedSize(), _numPoints, getNumTransitions());
             return binaryFormat.readChromatogram(uncompressedBytes, _numPoints, getNumTransitions(), status);
         }
-        catch (IOException | DataFormatException exception)
+        catch (DataFormatException e)
         {
-            throw new UnexpectedException(exception);
+            // Data was mangled. Don't report the exception but throw with specifics to let an admin track down the file if desired
+            throw new PanoramaBadDataException("Unable to load chromatogram for run " + run.getId() + " in document " + run.getFileName() + " in " + run.getContainer().getPath() + " starting at offset " + getChromatogramOffset(), e);
+        }
+        catch (IOException e)
+        {
+            throw UnexpectedException.wrap(e);
         }
     }
 
@@ -227,11 +233,11 @@ public abstract class AbstractChromInfo extends ChromInfo<PrecursorChromInfoAnno
                     if (skydPath == null)
                     {
                         status = Chromatogram.SourceStatus.skydMissing;
-                        LOG.debug("No path available for " + toString() + ", bucket may be unavailable for URL " + skydData.getDataFileUrl());
+                        LOG.debug("No path available for " + this + ", bucket may be unavailable for URL " + skydData.getDataFileUrl());
                     }
                     else
                     {
-                        LOG.debug("Attempting to fetch chromatogram bytes (possibly cached) from " + skydPath + " for " + toString());
+                        LOG.debug("Attempting to fetch chromatogram bytes (possibly cached) from " + skydPath + " for " + this);
                         byte[] diskBytes = ON_DEMAND_CHROM_CACHE.get(new Tuple3<>(skydPath, _chromatogramOffset, _chromatogramLength));
                         if (diskBytes == null)
                         {
@@ -239,7 +245,7 @@ public abstract class AbstractChromInfo extends ChromInfo<PrecursorChromInfoAnno
                         }
                         else if (databaseBytes != null && !Arrays.equals(databaseBytes, diskBytes))
                         {
-                            LOG.error("Chromatogram bytes for " + toString() + " do not match between .skyd and DB. Using database copy. Lengths: " + diskBytes.length + " vs " + (databaseBytes == null ? "null" : Integer.toString(databaseBytes.length)));
+                            LOG.error("Chromatogram bytes for " + this + " do not match between .skyd and DB. Using database copy. Lengths: " + diskBytes.length + " vs " + databaseBytes.length);
                             status = Chromatogram.SourceStatus.mismatch;
                         }
                         else
@@ -256,7 +262,7 @@ public abstract class AbstractChromInfo extends ChromInfo<PrecursorChromInfoAnno
             }
             else
             {
-                LOG.debug("No length, offset, and/or SKYD DataId for " + toString());
+                LOG.debug("No length, offset, and/or SKYD DataId for " + this);
                 status = Chromatogram.SourceStatus.dbOnly;
             }
         }
@@ -267,7 +273,7 @@ public abstract class AbstractChromInfo extends ChromInfo<PrecursorChromInfoAnno
         return new CompressedBytesAndStatus(compressedBytes, status);
     }
 
-    private class CompressedBytesAndStatus
+    private static class CompressedBytesAndStatus
     {
         private final byte[] _compressedBytes;
         private final Chromatogram.SourceStatus _status;

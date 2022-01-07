@@ -2990,6 +2990,11 @@ public class TargetedMSController extends SpringActionController
             validatePeptideGroup(form);
             validatePeptide(form);
             validateMolecule(form);
+
+            if (_molecule == null && _peptide == null && _peptideGrp == null)
+            {
+                throw new NotFoundException();
+            }
         }
 
         @Override
