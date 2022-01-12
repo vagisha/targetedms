@@ -19,11 +19,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.categories.Daily;
-import org.labkey.test.categories.MS2;
 
 import static org.junit.Assert.assertEquals;
 
-@Category({Daily.class, MS2.class})
+@Category({Daily.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 5)
 public class TargetedMSExperimentIrtTest extends TargetedMSIrtTest
 {

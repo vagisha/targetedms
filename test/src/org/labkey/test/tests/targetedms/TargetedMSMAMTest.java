@@ -18,33 +18,13 @@ package org.labkey.test.tests.targetedms;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.CommandException;
-import org.labkey.remoteapi.Connection;
-import org.labkey.remoteapi.query.Filter;
-import org.labkey.remoteapi.query.Row;
-import org.labkey.remoteapi.query.Rowset;
-import org.labkey.remoteapi.query.SelectRowsCommand;
-import org.labkey.remoteapi.query.SelectRowsResponse;
-import org.labkey.remoteapi.query.Sort;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.Daily;
-import org.labkey.test.categories.MS2;
-import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.EscapeUtil;
-import org.labkey.test.util.Ext4Helper;
-import org.labkey.test.util.LogMethod;
-import org.openqa.selenium.WebElement;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.labkey.test.util.DataRegionTable.DataRegion;
-
-@Category({Daily.class, MS2.class})
+@Category({Daily.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 8)
 public class TargetedMSMAMTest extends TargetedMSTest
 {

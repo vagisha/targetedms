@@ -22,7 +22,6 @@ import org.labkey.remoteapi.query.UpdateRowsCommand;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.Daily;
-import org.labkey.test.categories.MS2;
 import org.labkey.test.pages.targetedms.PKReportPage;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Maps;
@@ -40,7 +39,7 @@ import static org.junit.Assert.assertEquals;
  * match the values that are in the CSV files in /SampleData/TargetedMS/Quantification/CalibrationScenariosTest.
  * Those data were generated from the Skyline unit test "CalibrationScenariosTest".
  */
-@Category({Daily.class, MS2.class})
+@Category({Daily.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 25)
 public class TargetedMSCalibrationCurveTest extends AbstractQuantificationTest
 {

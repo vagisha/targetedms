@@ -5,13 +5,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.Daily;
-import org.labkey.test.categories.MS2;
 import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
 
 import static org.junit.Assert.assertEquals;
 
-@Category({Daily.class, MS2.class})
+@Category({Daily.class})
 //@BaseWebDriverTest.ClassTimeout(minutes = 25)
 public class TargetedMSAuditLogTest extends TargetedMSTest
 {
