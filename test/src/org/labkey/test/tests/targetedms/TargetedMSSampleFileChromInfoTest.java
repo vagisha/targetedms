@@ -24,12 +24,11 @@ import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.Daily;
-import org.labkey.test.categories.MS2;
 import org.labkey.test.util.DataRegionTable;
 
 import java.util.Arrays;
 
-@Category({Daily.class, MS2.class})
+@Category({Daily.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 6)
 public class TargetedMSSampleFileChromInfoTest extends TargetedMSTest
 {
