@@ -1,1 +1,0 @@
-ALTER TABLE targetedms.LibrarySettings ADD ionMatchTolerance DOUBLE PRECISION;
