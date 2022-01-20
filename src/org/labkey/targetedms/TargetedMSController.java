@@ -5658,7 +5658,7 @@ public class TargetedMSController extends SpringActionController
 
             if ("skyp".equalsIgnoreCase(form.getView()))
             {
-                String url = data.getWebDavURL(ExpData.PathType.full);
+                String url = data.getWebDavURL(FileContentService.PathType.full);
                 if (url != null)
                 {
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(url.getBytes(StringUtilsLabKey.DEFAULT_CHARSET));

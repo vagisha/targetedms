@@ -40,6 +40,7 @@ import org.labkey.api.exp.api.ExperimentUrls;
 import org.labkey.api.exp.api.SampleTypeService;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.exp.query.SamplesSchema;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
@@ -328,7 +329,7 @@ public class SampleFileTable extends TargetedMSTable
                         Long dataSize = downloadInfo.getSize();
                         String size = dataSize != null ? FileUtils.byteCountToDisplaySize(dataSize) : "";
                         ExpData expData = downloadInfo.getExpData();
-                        String url = expData.getWebDavURL(ExpData.PathType.full);
+                        String url = expData.getWebDavURL(FileContentService.PathType.full);
                         if(!downloadInfo.isFile())
                         {
                             int idx = url.lastIndexOf('/');
