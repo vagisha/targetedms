@@ -9,6 +9,7 @@ public class GuideSetKey
 
     private final int _guideSetId;
     private final String _seriesLabel;
+    private final int _hashCode;
 
     public GuideSetKey(int metricId, int metricSeriesIndex, int guideSetId, String seriesLabel)
     {
@@ -16,6 +17,7 @@ public class GuideSetKey
         _metricSeriesIndex = metricSeriesIndex;
         _guideSetId = guideSetId;
         _seriesLabel = seriesLabel;
+        _hashCode = Objects.hash(_metricId, _metricSeriesIndex, _guideSetId, _seriesLabel);
     }
 
     public int getMetricId()
@@ -53,7 +55,7 @@ public class GuideSetKey
     @Override
     public int hashCode()
     {
-        return Objects.hash(_metricId, _metricSeriesIndex, _guideSetId, _seriesLabel);
+        return _hashCode;
     }
 
     @Override

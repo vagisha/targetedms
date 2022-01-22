@@ -111,11 +111,11 @@ public class QCPlotFragment
         {
             JSONObject dataJsonObject = new JSONObject();
             dataJsonObject.put("Value", plotData.getMetricValue());
-            dataJsonObject.put("SampleFileId", plotData.getSampleFileId());
+            dataJsonObject.put("SampleFileId", plotData.getSampleFile().getId());
             dataJsonObject.put("PrecursorChromInfoId", plotData.getPrecursorChromInfoId());
-            dataJsonObject.put("InGuideSetTrainingRange", plotData.isInGuideSetTrainingRange());
-            dataJsonObject.put("GuideSetId", plotData.getGuideSetId());
-            dataJsonObject.put("IgnoreInQC", plotData.isIgnoreInQC());
+            dataJsonObject.put("InGuideSetTrainingRange", plotData.getSampleFile().isInGuideSetTrainingRange());
+            dataJsonObject.put("GuideSetId", plotData.getSampleFile().getGuideSetId());
+            dataJsonObject.put("IgnoreInQC", plotData.getSampleFile().isIgnoreInQC(plotData.getMetricId()));
             dataJsonObject.put("PrecursorId", plotData.getPrecursorId());
             dataJsonObject.put("SeriesType", plotData.getMetricSeriesIndex());
             if (includeMR)

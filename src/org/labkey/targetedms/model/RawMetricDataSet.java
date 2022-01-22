@@ -19,41 +19,162 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.targetedms.model.OutlierCounts;
 import org.labkey.api.visualization.Stats;
+import org.labkey.targetedms.chart.LabelFactory;
 
 import java.text.DecimalFormat;
-import java.util.Date;
 
 public class RawMetricDataSet
 {
+    private final SampleFileQCMetadata _sampleFile;
+
     String seriesLabel;
     Double metricValue;
     int metricId;
     int metricSeriesIndex;
-    int guideSetId;
-    long sampleFileId;
 
-    Integer precursorId;
-    Integer precursorChromInfoId;
-    String dataType;
-    Double mz;
-    Date acquiredTime;
-    boolean ignoreInQC;
-    boolean inGuideSetTrainingRange;
+    Long precursorChromInfoId;
+
     Double mR;
     Double cusumMP;
     Double cusumMN;
     Double cusumVP;
     Double cusumVN;
 
-    String filePath;
-    long replicateId;
+    PrecursorInfo _precursor;
 
-    String modifiedSequence;
-    String customIonName;
-    String ionFormula;
-    Double massMonoisotopic;
-    Double massAverage;
-    String precursorCharge;
+    private GuideSetKey _guideSetKey;
+
+    public RawMetricDataSet(SampleFileQCMetadata metadata, PrecursorInfo precursor)
+    {
+        if (metadata == null)
+        {
+            throw new IllegalArgumentException();
+        }
+        _sampleFile = metadata;
+        _precursor = precursor;
+    }
+
+    public SampleFileQCMetadata getSampleFile()
+    {
+        return _sampleFile;
+    }
+
+    public static class PrecursorInfo
+    {
+        /** Not thread safe but expensive to create so carefully shared */
+        DecimalFormat format;
+
+        long precursorId;
+        double mz;
+        String modifiedSequence;
+        String customIonName;
+        String ionFormula;
+        Double massMonoisotopic;
+        Double massAverage;
+        int precursorCharge;
+
+        String seriesLabel;
+
+        public PrecursorInfo(DecimalFormat format)
+        {
+            this.format = format;
+        }
+
+        public void setPrecursorId(long precursorId)
+        {
+            this.precursorId = precursorId;
+        }
+
+        public long getPrecursorId()
+        {
+            return precursorId;
+        }
+
+        public void setMz(double mz)
+        {
+            this.mz = mz;
+        }
+
+        public void setPrecursorCharge(int precursorCharge)
+        {
+            this.precursorCharge = precursorCharge;
+        }
+
+        public void setModifiedSequence(String modifiedSequence)
+        {
+            this.modifiedSequence = modifiedSequence;
+        }
+
+        public void setCustomIonName(String customIonName)
+        {
+            this.customIonName = customIonName;
+        }
+
+        public void setIonFormula(String ionFormula)
+        {
+            this.ionFormula = ionFormula;
+        }
+
+        public void setMassMonoisotopic(Double massMonoisotopic)
+        {
+            this.massMonoisotopic = massMonoisotopic;
+        }
+
+        public void setMassAverage(Double massAverage)
+        {
+            this.massAverage = massAverage;
+        }
+
+        public String getSeriesLabel()
+        {
+            if (seriesLabel == null)
+            {
+                StringBuilder modifiedSL = new StringBuilder();
+
+                if (null != modifiedSequence)
+                {
+                    modifiedSL.append(modifiedSequence);
+                }
+                else
+                {
+                    if (null != customIonName)
+                    {
+                        modifiedSL.append(customIonName);
+                        modifiedSL.append(", ");
+                    }
+
+                    if (null != ionFormula)
+                    {
+                        modifiedSL.append(ionFormula);
+                        modifiedSL.append(",");
+                    }
+
+                    if (null != massMonoisotopic && null != massAverage)
+                    {
+                        modifiedSL.append(" [");
+                        modifiedSL.append(format.format(massMonoisotopic));
+                        modifiedSL.append("/");
+                        modifiedSL.append(format.format(massAverage));
+                        modifiedSL.append("] ");
+                    }
+                }
+
+                modifiedSL.append(" ");
+                modifiedSL.append(LabelFactory.getChargeLabel(precursorCharge, false));
+
+                modifiedSL.append(", ");
+                modifiedSL.append(format.format(mz));
+
+                seriesLabel = modifiedSL.toString();
+            }
+            return seriesLabel;
+        }
+
+        public String getDataType()
+        {
+            return modifiedSequence != null ? "Peptide" : "Fragment";
+        }
+    }
 
     @Nullable
     public String getSeriesLabel()
@@ -62,54 +183,11 @@ public class RawMetricDataSet
         {
             return seriesLabel;
         }
-        else
+        else if (_precursor != null)
         {
-            DecimalFormat df = new DecimalFormat();
-            df.setMinimumFractionDigits(4);
-            StringBuilder modifiedSL = new StringBuilder();
-
-            if (null != modifiedSequence)
-            {
-                modifiedSL.append(modifiedSequence);
-            }
-            else
-            {
-                if (null != customIonName)
-                {
-                    modifiedSL.append(customIonName);
-                    modifiedSL.append(", ");
-                }
-
-                if (null != ionFormula)
-                {
-                    modifiedSL.append(ionFormula);
-                    modifiedSL.append(",");
-                }
-
-                if (null != massMonoisotopic && null != massAverage)
-                {
-                    modifiedSL.append(" [");
-                    modifiedSL.append(df.format(massMonoisotopic));
-                    modifiedSL.append("/");
-                    modifiedSL.append(df.format(massAverage));
-                    modifiedSL.append("] ");
-                }
-            }
-
-            if (null != precursorCharge)
-            {
-                modifiedSL.append(" ");
-                modifiedSL.append(precursorCharge);
-            }
-
-            if (null != mz)
-            {
-                modifiedSL.append(", ");
-                modifiedSL.append(df.format(mz));
-            }
-
-            return modifiedSL.toString();
+            return _precursor.getSeriesLabel();
         }
+        return "";
     }
 
     public void setSeriesLabel(String seriesLabel)
@@ -150,101 +228,39 @@ public class RawMetricDataSet
 
     public GuideSetKey getGuideSetKey()
     {
-        return new GuideSetKey(getMetricId(), getMetricSeriesIndex(), getGuideSetId(), getSeriesLabel());
-    }
-
-    public int getGuideSetId()
-    {
-        return guideSetId;
-    }
-
-    public void setGuideSetId(int guideSetId)
-    {
-        this.guideSetId = guideSetId;
+        if (_guideSetKey == null)
+        {
+            _guideSetKey = new GuideSetKey(getMetricId(), getMetricSeriesIndex(), _sampleFile.getGuideSetId(), getSeriesLabel());
+        }
+        return _guideSetKey;
     }
 
     @Nullable
-    public Integer getPrecursorId()
+    public Long getPrecursorId()
     {
-        return precursorId;
-    }
-
-    public void setPrecursorId(Integer precursorId)
-    {
-        this.precursorId = precursorId;
+        return _precursor == null ? null : _precursor.precursorId;
     }
 
     @Nullable
-    public Integer getPrecursorChromInfoId()
+    public Long getPrecursorChromInfoId()
     {
         return precursorChromInfoId;
     }
 
-    public void setPrecursorChromInfoId(Integer precursorChromInfoId)
+    public void setPrecursorChromInfoId(Long precursorChromInfoId)
     {
         this.precursorChromInfoId = precursorChromInfoId;
     }
 
     public String getDataType()
     {
-        return dataType;
-    }
-
-    public void setDataType(String dataType)
-    {
-        this.dataType = dataType;
+        return _precursor == null ? "Other" : _precursor.getDataType();
     }
 
     @Nullable
     public Double getMz()
     {
-        return mz;
-    }
-
-    public void setMz(Double mz)
-    {
-        this.mz = mz;
-    }
-
-    @Nullable
-    public Date getAcquiredTime()
-    {
-        return acquiredTime;
-    }
-
-    public void setAcquiredTime(Date acquiredTime)
-    {
-        this.acquiredTime = acquiredTime;
-    }
-
-    public boolean isIgnoreInQC()
-    {
-        return ignoreInQC;
-    }
-
-    public void setIgnoreInQC(boolean ignoreInQC)
-    {
-        this.ignoreInQC = ignoreInQC;
-    }
-
-    public boolean isInGuideSetTrainingRange()
-    {
-        return inGuideSetTrainingRange;
-    }
-
-    public void setInGuideSetTrainingRange(boolean inGuideSetTrainingRange)
-    {
-        this.inGuideSetTrainingRange = inGuideSetTrainingRange;
-    }
-
-    public long getSampleFileId()
-    {
-        return sampleFileId;
-    }
-
-    public void setSampleFileId(long sampleFileId)
-    {
-        this.sampleFileId = sampleFileId;
+        return _precursor == null ? null : _precursor.mz;
     }
 
     @Nullable
@@ -302,89 +318,9 @@ public class RawMetricDataSet
         this.cusumVN = d;
     }
 
-    public String getFilePath()
-    {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath)
-    {
-        this.filePath = filePath;
-    }
-
-    public long getReplicateId()
-    {
-        return replicateId;
-    }
-
-    public void setReplicateId(long replicateId)
-    {
-        this.replicateId = replicateId;
-    }
-
-    public String getModifiedSequence()
-    {
-        return modifiedSequence;
-    }
-
-    public void setModifiedSequence(String modifiedSequence)
-    {
-        this.modifiedSequence = modifiedSequence;
-    }
-
-    public String getCustomIonName()
-    {
-        return customIonName;
-    }
-
-    public void setCustomIonName(String customIonName)
-    {
-        this.customIonName = customIonName;
-    }
-
-    public String getIonFormula()
-    {
-        return ionFormula;
-    }
-
-    public void setIonFormula(String ionFormula)
-    {
-        this.ionFormula = ionFormula;
-    }
-
-    public Double getMassMonoisotopic()
-    {
-        return massMonoisotopic;
-    }
-
-    public void setMassMonoisotopic(Double massMonoisotopic)
-    {
-        this.massMonoisotopic = massMonoisotopic;
-    }
-
-    public Double getMassAverage()
-    {
-        return massAverage;
-    }
-
-    public void setMassAverage(Double massAverage)
-    {
-        this.massAverage = massAverage;
-    }
-
-    public String getPrecursorCharge()
-    {
-        return precursorCharge;
-    }
-
-    public void setPrecursorCharge(String precursorCharge)
-    {
-        this.precursorCharge = precursorCharge;
-    }
-
     public boolean isLeveyJenningsOutlier(GuideSetStats stat)
     {
-        if (ignoreInQC || metricValue == null || stat == null)
+        if (stat == null || _sampleFile.isIgnoreInQC(stat.getKey().getMetricId()) || metricValue == null)
         {
             return false;
         }
@@ -397,12 +333,12 @@ public class RawMetricDataSet
 
     public boolean isMovingRangeOutlier(GuideSetStats stat)
     {
-        return !isIgnoreInQC() && stat != null && mR != null && mR > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * stat.getMovingRangeAverage();
+        return  stat != null && !_sampleFile.isIgnoreInQC(getMetricId()) && mR != null && mR > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * stat.getMovingRangeAverage();
     }
 
     private boolean isCUSUMOutlier(Double value)
     {
-        return !isIgnoreInQC() && value != null && value > Stats.CUSUM_CONTROL_LIMIT;
+        return !_sampleFile.isIgnoreInQC(getMetricId()) && value != null && value > Stats.CUSUM_CONTROL_LIMIT;
     }
 
     public boolean isCUSUMvPOutlier()

@@ -148,8 +148,10 @@ public class TargetedMSExperimentalQCLinkTest extends TargetedMSTest
         qcDashboard = new PanoramaDashboard(this);
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
 
+
         checker().verifyEquals("Incorrect expRange information", expRange, qcPlotsWebPart.getExperimentRangeRectTitle());
         checker().verifyEquals("Incorrect guideSet information", guideSetTitle, qcPlotsWebPart.getGuideSetTrainingRectTitle(2));
+        checker().screenShotIfNewError("InitialRangeFiltering");
 
         String testStartDate = "2013-08-19";
         String testEndDate = "2013-08-27";

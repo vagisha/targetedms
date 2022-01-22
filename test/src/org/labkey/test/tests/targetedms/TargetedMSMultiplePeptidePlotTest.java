@@ -67,6 +67,7 @@ public class TargetedMSMultiplePeptidePlotTest extends TargetedMSTest
         setFormElement(shortWait().until(ExpectedConditions.visibilityOfElementLocated(Locator.name("chartHeight"))), height);
         new ComboBox.ComboBoxFinder(getDriver()).withInputNamed("replicatesFilter")
                 .findWhenNeeded(getDriver()).setMultiSelect(true).selectComboBoxItem(replicateName);
+
         clickButton("Update");
 
         checker().verifyEquals("Only one graph should have been displayed", 1, table.getDataRowCount());

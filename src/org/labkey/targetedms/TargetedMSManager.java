@@ -19,17 +19,19 @@ package org.labkey.targetedms;
 import com.google.common.base.Joiner;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fhcrc.cpas.exp.xml.ExperimentArchiveDocument;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.cache.Cache;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
@@ -76,6 +78,7 @@ import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -121,6 +124,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -131,12 +135,20 @@ public class TargetedMSManager
 {
     private static final TargetedMSManager _instance = new TargetedMSManager();
 
-    private static final Logger _log = LogManager.getLogger(TargetedMSManager.class);
+    private static final Logger _log = LogHelper.getLogger(TargetedMSManager.class, "Panorama utility and DB querying code");
 
     private TargetedMSManager()
     {
         // prevent external construction with a private default constructor
     }
+
+    /**
+     * A cache to make it faster to render QC folders. A number of API calls come from the
+     * client rendering the overview, all of which need to know the enabled configs.
+     *
+     * Could switch to a longer-lived cache that's invalidated by changes to the configuration for even more benefit.
+     */
+    private static final Cache<Container, List<QCMetricConfiguration>> _metricCache = CacheManager.getCache(1000, TimeUnit.HOURS.toMillis(1), "Enabled QC metric configs");
 
     public static TargetedMSManager get()
     {
@@ -159,7 +171,7 @@ public class TargetedMSManager
 
     public static DbSchema getSchema()
     {
-        return DbSchema.get(TargetedMSSchema.SCHEMA_NAME);
+        return DbSchema.get(TargetedMSSchema.SCHEMA_NAME, DbSchemaType.Module);
     }
 
     public static SqlDialect getSqlDialect()
@@ -592,15 +604,6 @@ public class TargetedMSManager
                 @Override
                 public File getLogFile()
                 {
-                    throw new UnsupportedOperationException();
-                }
-
-                @Override
-                public File getRoot()
-                {
-                    if (!FileUtil.hasCloudScheme(path))
-                        return path.toFile().getParentFile();
-
                     throw new UnsupportedOperationException();
                 }
 
@@ -1110,6 +1113,9 @@ public class TargetedMSManager
                     throw new RuntimeException("Pipeline root not found.");
                 }
             }
+
+            // We may have deleted the last set of data for a given metric
+            TargetedMSManager.get().clearCachedEnabledQCMetrics(run.getContainer());
         }
 
         // Mark all of the runs for deletion
@@ -1281,7 +1287,7 @@ public class TargetedMSManager
     @NotNull
     private static List<String> deleteFileWithLogging(@NotNull Path file, @NotNull List<String> logs)
     {
-        String logMsg = "Deleting " + file.toString();
+        String logMsg = "Deleting " + file;
         logs.add(logMsg);
         _log.info(logMsg);
 
@@ -2105,56 +2111,59 @@ public class TargetedMSManager
 
     public static List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user)
     {
-        QuerySchema targetedMSSchema = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
-        if (targetedMSSchema == null)
+        return _metricCache.get(container, null, (p, argument) ->
         {
-            // Module must not be enabled in this folder, so bail out
-            return Collections.emptyList();
-        }
-        TableInfo metricsTable = targetedMSSchema.getTable("qcMetricsConfig", null);
-        List<QCMetricConfiguration> metrics = new TableSelector(metricsTable, new SimpleFilter(FieldKey.fromParts("Enabled"), false, CompareType.NEQ_OR_NULL), new Sort(FieldKey.fromParts("Name"))).getArrayList(QCMetricConfiguration.class);
-        List<QCMetricConfiguration> result = new ArrayList<>();
-        for (QCMetricConfiguration metric : metrics)
-        {
-            if (metric.getEnabled() == null)
+            QuerySchema targetedMSSchema = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
+            if (targetedMSSchema == null)
             {
-                if (metric.getEnabledQueryName() == null || metric.getEnabledSchemaName() == null)
+                // Module must not be enabled in this folder, so bail out
+                return Collections.emptyList();
+            }
+            TableInfo metricsTable = targetedMSSchema.getTable("qcMetricsConfig", null);
+            List<QCMetricConfiguration> metrics = new TableSelector(metricsTable, new SimpleFilter(FieldKey.fromParts("Enabled"), false, CompareType.NEQ_OR_NULL), new Sort(FieldKey.fromParts("Name"))).getArrayList(QCMetricConfiguration.class);
+            List<QCMetricConfiguration> result = new ArrayList<>();
+            for (QCMetricConfiguration metric : metrics)
+            {
+                if (metric.getEnabled() == null)
                 {
-                    // Metrics without a query to define their default enabled status are on by default
-                    result.add(metric);
-                }
-                else
-                {
-                    QuerySchema enabledSchema = TargetedMSSchema.SCHEMA_NAME.equalsIgnoreCase(metric.getEnabledSchemaName()) ? targetedMSSchema : DefaultSchema.get(user, container).getSchema(metric.getEnabledSchemaName());
-                    if (enabledSchema != null)
+                    if (metric.getEnabledQueryName() == null || metric.getEnabledSchemaName() == null)
                     {
-                        TableInfo enabledQuery = enabledSchema.getTable(metric.getEnabledQueryName(), null);
-                        if (enabledQuery != null)
+                        // Metrics without a query to define their default enabled status are on by default
+                        result.add(metric);
+                    }
+                    else
+                    {
+                        QuerySchema enabledSchema = TargetedMSSchema.SCHEMA_NAME.equalsIgnoreCase(metric.getEnabledSchemaName()) ? targetedMSSchema : DefaultSchema.get(user, container).getSchema(metric.getEnabledSchemaName());
+                        if (enabledSchema != null)
                         {
-                            if (new TableSelector(enabledQuery).exists())
+                            TableInfo enabledQuery = enabledSchema.getTable(metric.getEnabledQueryName(), null);
+                            if (enabledQuery != null)
                             {
-                                result.add(metric);
+                                if (new TableSelector(enabledQuery).exists())
+                                {
+                                    result.add(metric);
+                                }
+                            }
+                            else
+                            {
+                                _log.warn("Could not find query " + metric.getEnabledSchemaName() + "." + metric.getEnabledQueryName() + " to determine if metric " + metric.getName() + " should be enabled in container " + container.getPath());
                             }
                         }
                         else
                         {
-                            _log.warn("Could not find query " + metric.getEnabledSchemaName() + "." + metric.getEnabledQueryName() + " to determine if metric " + metric.getName() + " should be enabled in container " + container.getPath());
+                            _log.warn("Could not find schema " + metric.getEnabledSchemaName() + " to determine if metric " + metric.getName() + " should be enabled in container " + container.getPath());
                         }
                     }
-                    else
-                    {
-                        _log.warn("Could not find schema " + metric.getEnabledSchemaName() + " to determine if metric " + metric.getName() + " should be enabled in container " + container.getPath());
-                    }
+                }
+                else
+                {
+                    result.add(metric);
                 }
             }
-            else
-            {
-                result.add(metric);
-            }
-        }
-        // Ensure we get a case-insensitive sort regardless of DB collation
-        Collections.sort(result);
-        return result;
+            // Ensure we get a case-insensitive sort regardless of DB collation
+            Collections.sort(result);
+            return Collections.unmodifiableList(result);
+        });
     }
 
     public List<SampleFileInfo> getSampleFileInfos(Container container, User user, Integer sampleFileLimit)
@@ -2600,5 +2609,10 @@ public class TargetedMSManager
         sql.append(" WHERE r.Container = ").append(container);
 
         return new SqlSelector(getSchema(), sql).getMap();
+    }
+
+    public void clearCachedEnabledQCMetrics(Container container)
+    {
+        getSchema().getScope().addCommitTask(() -> _metricCache.remove(container), DbScope.CommitTaskOption.IMMEDIATE, DbScope.CommitTaskOption.POSTCOMMIT, DbScope.CommitTaskOption.POSTROLLBACK);
     }
 }

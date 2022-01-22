@@ -141,6 +141,7 @@
             name: 'chromForm',
             border: false, frame: false,
             width:550,
+            height: 160,
             defaults: {
                 labelWidth: 150,
                 labelHeight: 23,
@@ -259,21 +260,21 @@
                     value:'<a style="color:#069; cursor:pointer;" id="clear-annot" onclick="clearAnnotations()">Clear</a>',
                     style:'margin-left:15px;',
                     name: "hideAnnotations"
+                },
+                {
+                    xtype: 'button',
+                    text: 'Update',
+                    handler: function(btn) {
+                        form.getForm().findField("annotationsFilter").setValue(form.getForm().findField("annotationsFilter").getValue().join(","));
+                        form.getForm().findField("replicatesFilter").setValue(form.getForm().findField("replicatesFilter").getValue().join(","));
+                        form.getForm().findField("update").setValue(true);
+                        form.submit({
+                            url: <%=q(bean.getResultsUri())%>,
+                            method: 'GET'
+                        });
+                    }
                 }
             ],
-            buttonAlign: 'left',
-            buttons: [{
-                text: 'Update',
-                handler: function(btn) {
-                    form.getForm().findField("annotationsFilter").setValue(form.getForm().findField("annotationsFilter").getValue().join(","));
-                    form.getForm().findField("replicatesFilter").setValue(form.getForm().findField("replicatesFilter").getValue().join(","));
-                    form.getForm().findField("update").setValue(true);
-                    form.submit({
-                    url: <%=q(bean.getResultsUri())%>,
-                        method: 'GET'
-                    });
-                }
-            }]
         });
 
         // This has to happen after form is rendered.
@@ -468,35 +469,28 @@
         manageFilterListVisibility();
     }
 
-    $(document).ready(function() {
-        if ( $('#formContainer').length) // formContainer must exist inorder for showChart to work.
-        {
-            showChart();
-        }
-    });
-
-    // Handels showing and hiding the form.
+    // Handles showing and hiding the form.
     showChart = function()
     {
-        if($('#showGraphImg').attr('src') === LABKEY.contextPath + "/_images/plus.gif")
+        if($('#showGraphImg').attr('src') === <%= q(getWebappURL("/_images/plus.gif")) %>)
         {
-            $('#showGraphImg').attr('src', LABKEY.contextPath + "/_images/minus.gif");
-            $('#formContainer').show("slow");
-            $('#allFilters').show("slow");
+            $('#showGraphImg').attr('src', <%= q(getWebappURL("/_images/minus.gif")) %>);
+            $('#formContainer').show();
+            $('#allFilters').show();
         }
         else
         {
-            $('#showGraphImg').attr('src', LABKEY.contextPath + "/_images/plus.gif");
-            $('#formContainer').hide("slow");
-            $('#allFilters').hide("slow");
+            $('#showGraphImg').attr('src', <%= q(getWebappURL("/_images/plus.gif")) %>);
+            $('#formContainer').hide();
+            $('#allFilters').hide();
         }
     }
 }(jQuery);
 </script>
 <div id="headContainer">
-    <div onclick="showChart()" style="margin-bottom: 10px;"><img id="showGraphImg" src="<%=getWebappURL("_images/minus.gif")%>"> <strong>Display Chart Settings</strong></div>
-    <div id="formContainer" style="float:left; width:550px; padding-bottom: 25px;"></div>
-    <div id="allFilters" style="float:left;">
+    <div onclick="showChart()" style="margin-bottom: 10px;"><img id="showGraphImg" src="<%=getWebappURL("_images/plus.gif")%>"> <strong>Display Chart Settings</strong></div>
+    <div id="formContainer" style="float:left; width:550px; height: 160px; padding-bottom: 25px; display: none;"></div>
+    <div id="allFilters" style="float:left; display: none;">
 
         <div style="float:left;" class="chrom_title_box" id="reptitle" >
             <h3 class="title">Replicate Filters</h3>

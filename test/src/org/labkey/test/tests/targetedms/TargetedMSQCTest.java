@@ -73,13 +73,13 @@ public class TargetedMSQCTest extends TargetedMSTest
             "VLVLDTDYK",
             "VYVEELKPTPEGDLEILLQK"};
     private static final String[] PRECURSOR_TITLES = {
-            "ATEEQLK +2, 409.7163",
-            "FFVAPFPEVFGK +2, 692.8686",
-            "GASIVEDK +2, 409.7163",
-            "LVNELTEFAK +2, 582.3190",
-            "VLDALDSIK +2, 487.2819",
-            "VLVLDTDYK +2, 533.2950",
-            "VYVEELKPTPEGDLEILLQK +2, 1,157.1330"};
+            "ATEEQLK ++, 409.7163",
+            "FFVAPFPEVFGK ++, 692.8686",
+            "GASIVEDK ++, 409.7163",
+            "LVNELTEFAK ++, 582.3190",
+            "VLDALDSIK ++, 487.2819",
+            "VLVLDTDYK ++, 533.2950",
+            "VYVEELKPTPEGDLEILLQK ++, 1,157.1330"};
 
     private static final String QCREPLICATE_1 = "25fmol_Pepmix_spike_SRM_1601_01";
     private static final String QCREPLICATE_2 = "25fmol_Pepmix_spike_SRM_1601_02";
@@ -529,8 +529,8 @@ public class TargetedMSQCTest extends TargetedMSTest
     public void testDocsWithOverlappingSampleFiles()
     {
         List<String> precursors = new ArrayList<>();
-        precursors.add("AGGSSEPVTGLADK +2, 644.8226");
-        precursors.add("VEATFGVDESANK +2, 683.8279");
+        precursors.add("AGGSSEPVTGLADK ++, 644.8226");
+        precursors.add("VEATFGVDESANK ++, 683.8279");
         Collections.sort(precursors);
 
         String subFolderName = "OverlappingSampleFiles";
