@@ -939,15 +939,18 @@ public class TargetedMSSchema extends UserSchema
             return result;
         }
 
-        if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
+        // Issue 44713: Disconnect on table name in metadata for targetedms.RepresentativeDataState_Run/RunRepresentativeDataState
+        if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name) || RunRepresentativeDataState.class.getSimpleName().equalsIgnoreCase(name))
         {
-            return new EnumTableInfo<>(
+            EnumTableInfo result = new EnumTableInfo<>(
                     RunRepresentativeDataState.class,
                     this,
                     RunRepresentativeDataState::getLabel,
                     true,
                     "Possible states a run might be in for resolving representative data after upload"
                     );
+            result.setName(TABLE_REPRESENTATIVE_DATA_STATE_RUN);
+            return result;
         }
         if (TABLE_REPRESENTATIVE_DATA_STATE.equalsIgnoreCase(name))
         {
