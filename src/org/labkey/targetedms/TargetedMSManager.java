@@ -129,6 +129,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
+import static org.labkey.api.targetedms.TargetedMSService.FolderType.Library;
+import static org.labkey.api.targetedms.TargetedMSService.FolderType.LibraryProtein;
 import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
 
 public class TargetedMSManager
@@ -1846,6 +1848,12 @@ public class TargetedMSManager
             // return undefined if the string does not match any type
             return TargetedMSService.FolderType.Undefined;
         }
+    }
+
+    public static boolean isLibraryFolder(Container container)
+    {
+        var folderType = getFolderType(container);
+        return LibraryProtein == folderType || Library == folderType;
     }
 
     public static void renameRun(long runId, String newDescription, User user) throws BatchValidationException

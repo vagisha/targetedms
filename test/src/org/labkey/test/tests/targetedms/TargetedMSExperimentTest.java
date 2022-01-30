@@ -537,16 +537,16 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals("1343.7409", query.getDataAsText(0, "Peptide Neutral Mass"));
         query.clearFilter("PrecursorId");
 
-        // Test query against targetedms.librarydocprecursor
+        // Test query against targetedms.experimentprecursor
         querySql = "SELECT GeneralMoleculeId.Id AS Id1, \n" +
                 "GeneralMoleculeId.Sequence AS Sequence1,\n" +
                 "GeneralMoleculeId.PeptideGroupId.Label AS Protein1,\n" +
                 "PeptideId.Id AS Id2,\n" +
                 "PeptideId.Sequence AS Sequence2,\n" +
                 "PeptideId.PeptideGroupId.Label AS Protein2\n" +
-                "FROM librarydocprecursor";
-        createQuery(getProjectName(), "query_librarydocprecursor", "targetedms", querySql, null, false);
-        navigateToQuery("targetedms", "query_librarydocprecursor");
+                "FROM experimentprecursor";
+        createQuery(getProjectName(), "query_experimentprecursor", "targetedms", querySql, null, false);
+        navigateToQuery("targetedms", "query_experimentprecursor");
         waitForElement(Locator.paginationText(89));
         query = new DataRegionTable("query", this);
         query.setFilter("Protein1", "Equals", "YAL038W_renamed");

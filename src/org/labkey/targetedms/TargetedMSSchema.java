@@ -47,7 +47,6 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.api.targetedms.RunRepresentativeDataState;
-import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.StringExpression;
@@ -63,6 +62,7 @@ import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.query.*;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 import org.labkey.targetedms.view.FontAwesomeLinkColumn;
+import org.labkey.targetedms.view.LibraryQueryViewWebPart;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.mvc.Controller;
 
@@ -79,9 +79,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
-
-import static org.labkey.api.targetedms.TargetedMSService.FolderType.Library;
-import static org.labkey.api.targetedms.TargetedMSService.FolderType.LibraryProtein;
+import java.util.stream.Collectors;
 
 public class TargetedMSSchema extends UserSchema
 {
@@ -1141,11 +1139,7 @@ public class TargetedMSSchema extends UserSchema
             result.addColumn(noteAnnotation);
 
             SQLFragment libPrecursorCountSQL;
-            if (!isLibraryFolder(getContainer()))
-            {
-                libPrecursorCountSQL = new SQLFragment(" (SELECT 0) ");
-            }
-            else
+            if (TargetedMSManager.isLibraryFolder(getContainer()))
             {
                 libPrecursorCountSQL = new SQLFragment(" (SELECT COUNT(p.Id) FROM ")
                         .append(TargetedMSManager.getTableInfoGeneralPrecursor(), "p")
@@ -1153,6 +1147,10 @@ public class TargetedMSSchema extends UserSchema
                         .append(" WHERE gm.peptidegroupid = ").append(ExprColumn.STR_TABLE_ALIAS).append(".id ")
                         .append(" AND p.RepresentativeDataState = ? ").add(RepresentativeDataState.Representative.ordinal())
                         .append(") ");
+            }
+            else
+            {
+                libPrecursorCountSQL = new SQLFragment(" (SELECT 0) ");
             }
             ExprColumn currentLibPrecursorCountCol = new ExprColumn(result, "RepresentivePrecursorCount", libPrecursorCountSQL, JdbcType.INTEGER);
             currentLibPrecursorCountCol.setHidden(true);
@@ -1486,22 +1484,15 @@ public class TargetedMSSchema extends UserSchema
         return null;
     }
 
-    private static boolean isLibraryFolder(Container container)
-    {
-        var folderType = TargetedMSService.get().getFolderType(container);
-        return folderType == LibraryProtein || folderType == Library;
-    }
-
     @Override
     protected QuerySettings createQuerySettings(String dataRegionName, String queryName, String viewName)
     {
-        if(TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(queryName)
-           || TABLE_TRANSITION.equalsIgnoreCase(queryName))
+        if(TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(queryName) || TABLE_TRANSITION.equalsIgnoreCase(queryName))
         {
             return new QuerySettings(dataRegionName)
             {
                 {
-                    setMaxRows(10);
+                    setMaxRows(10); // Show upto 10 protein rows in the nested document view
                 }
             };
         }
@@ -1552,39 +1543,21 @@ public class TargetedMSSchema extends UserSchema
         return super.createView(context, settings, errors);
     }
 
+    @Override
     public List<CustomView> getModuleCustomViews(Container container, QueryDefinition qd)
     {
         var customViews = super.getModuleCustomViews(container, qd);
-        String schema = qd.getSchema().getName();
-        String title = qd.getTitle();
-        String name = qd.getName();
-        if (isLibraryFolder(container) || !SCHEMA_NAME.equals(qd.getSchema().getName()))
+        var tableName = qd.getName();
+
+        if (!SCHEMA_NAME.equals(qd.getSchema().getName())
+                || !LibraryQueryViewWebPart.TABLES_LIBRARY_VIEWS.containsKey(tableName)
+                || TargetedMSManager.isLibraryFolder(container))
         {
             return customViews;
         }
-        else
-        {
-            var views = new ArrayList<CustomView>();
 
-            for (CustomView view : customViews)
-            {
-                var queryName = view.getQueryName();
-                boolean skip;
-                switch (queryName)
-                {
-                    case TargetedMSSchema.TABLE_PEPTIDE_GROUP -> skip = "LibraryProteins".equals(view.getName());
-                    case TargetedMSSchema.TABLE_PEPTIDE -> skip = "LibraryPeptides".equals(view.getName());
-                    case TargetedMSSchema.TABLE_MOLECULE -> skip = "LibraryMolecules".equals(view.getName());
-                    case TargetedMSSchema.TABLE_PRECURSOR, TargetedMSSchema.TABLE_MOLECULE_PRECURSOR -> skip = "LibraryPrecursors".equals(view.getName());
-                    default -> skip = false;
-                }
-                if (!skip)
-                {
-                    views.add(view);
-                }
-            }
-            return views;
-        }
+        return customViews.stream().filter(v -> v.getName() == null || !v.getName().equals(LibraryQueryViewWebPart.TABLES_LIBRARY_VIEWS.get(v.getQueryName())))
+                .collect(Collectors.toList());
     }
 
     private Set<String> getAllTableNames(boolean caseInsensitive)
