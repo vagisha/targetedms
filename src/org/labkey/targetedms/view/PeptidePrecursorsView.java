@@ -15,7 +15,6 @@
 
 package org.labkey.targetedms.view;
 
-import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryNestingOption;
@@ -50,18 +49,7 @@ public class PeptidePrecursorsView extends DocumentPrecursorsView
     public TableInfo createTable()
     {
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in PeptidePrecursorsView class!";
-        String viewName = getSettings().getViewName();
-
         PrecursorTableInfo tinfo = (PrecursorTableInfo) _targetedMsSchema.getTable(_tableName, null, true, true);
-
-        if (_tableName.equalsIgnoreCase(TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR) &&
-                (StringUtils.isBlank(viewName)))
-        {
-            // If we are looking at the default view for the precursor list of a document in a library
-            // folder, show only the current representative precursors.
-            PrecursorTableInfo.LibraryPrecursorTableInfo tableInfo = (PrecursorTableInfo.LibraryPrecursorTableInfo) tinfo;
-            tableInfo.selectRepresentative();
-        }
 
         if (tinfo != null)
         {

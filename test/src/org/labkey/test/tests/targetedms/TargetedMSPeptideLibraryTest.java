@@ -20,10 +20,12 @@ import org.junit.experimental.categories.Category;
 import org.labkey.api.util.Pair;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.Locators;
 import org.labkey.test.categories.Daily;
 import org.labkey.test.components.CustomizeView;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.PortalHelper;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -102,7 +104,13 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
     {
         log("Verify precursors in the library");
 
-        DataRegionTable precursorTable = new DataRegionTable("LibraryPrecursor",getDriver());
+        // The grid in the "Library Precursors" webpart cannot be customized so click the title of the webpart to display the
+        // full, customizable query view.
+        var webpart = new PortalHelper(getDriver()).getBodyWebPart("Library Precursors");
+        webpart.getComponentElement().click();
+        var panelTitleLink = Locators.panelWebpartTitle.withText("Library Precursors").parent("a").withAttribute("href").findElement(getDriver());
+        clickAndWait(panelTitleLink);
+        DataRegionTable precursorTable = new DataRegionTable("query", this);
         CustomizeView customizeView = precursorTable.openCustomizeGrid();
         customizeView.addColumn("ModifiedSequence");
         customizeView.applyCustomView();

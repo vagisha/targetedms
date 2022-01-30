@@ -69,7 +69,6 @@ import org.labkey.targetedms.search.ProteinSearchWebPart;
 import org.labkey.targetedms.view.CalibrationCurveView;
 import org.labkey.targetedms.view.FiguresOfMeritView;
 import org.labkey.targetedms.view.LibraryQueryViewWebPart;
-import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.QCSummaryWebPart;
 import org.labkey.targetedms.view.TargetedMSRunsWebPartView;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
@@ -282,7 +281,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 @Override
                 public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
                 {
-                   return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_LIBRARY_PRECURSOR, "Precursors", "LibraryPrecursors");
+                   return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_PRECURSOR, "Precursors");
                 }
             },
 
@@ -291,7 +290,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 @Override
                 public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
                 {
-                   return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_LIBRARY_MOLECULE_PRECURSOR, "Precursors", "LibraryPrecursors");
+                    return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, "Precursors");
                 }
             },
 
@@ -300,7 +299,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 @Override
                 public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
                 {
-                    return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_PEPTIDE, "Peptides", "LibraryPeptides");
+                    return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_PEPTIDE, "Peptides");
                 }
             },
 
@@ -309,7 +308,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 @Override
                 public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
                 {
-                    return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_MOLECULE, "Molecules", "LibraryMolecules");
+                    return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_MOLECULE, "Molecules");
                 }
             },
 
@@ -318,7 +317,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 @Override
                 public WebPartView<?> getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
                 {
-                    return new PeptideGroupViewWebPart(portalCtx);
+                    return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_PEPTIDE_GROUP, "Proteins");
                 }
             },
 

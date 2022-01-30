@@ -28,6 +28,7 @@ import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
 import org.labkey.api.module.Module;
 import org.labkey.api.ms2.MS2Service;
+import org.labkey.api.query.CustomView;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
@@ -35,6 +36,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.LookupForeignKey;
 import org.labkey.api.query.QueryAction;
+import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
@@ -45,6 +47,7 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.targetedms.RepresentativeDataState;
 import org.labkey.api.targetedms.RunRepresentativeDataState;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.StringExpression;
@@ -76,6 +79,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+
+import static org.labkey.api.targetedms.TargetedMSService.FolderType.Library;
+import static org.labkey.api.targetedms.TargetedMSService.FolderType.LibraryProtein;
 
 public class TargetedMSSchema extends UserSchema
 {
@@ -111,9 +117,6 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PEPTIDE_ANNOTATION = "PeptideAnnotation";
     public static final String TABLE_PRECURSOR = "Precursor";
     public static final String TABLE_EXPERIMENT_PRECURSOR = "ExperimentPrecursor";
-    public static final String TABLE_LIBRARY_PRECURSOR = "LibraryPrecursor";
-    public static final String TABLE_LIBRARY_MOLECULE_PRECURSOR = "LibraryMoleculePrecursor";
-    public static final String TABLE_LIBRARY_DOC_PRECURSOR = "LibraryDocPrecursor";
     public static final String TABLE_PRECURSOR_ANNOTATION = "PrecursorAnnotation";
     public static final String TABLE_TRANSITION = "Transition";
     public static final String TABLE_MOLECULE_TRANSITION = "MoleculeTransition";
@@ -1137,6 +1140,23 @@ public class TargetedMSSchema extends UserSchema
             }
             result.addColumn(noteAnnotation);
 
+            SQLFragment libPrecursorCountSQL;
+            if (!isLibraryFolder(getContainer()))
+            {
+                libPrecursorCountSQL = new SQLFragment(" (SELECT 0) ");
+            }
+            else
+            {
+                libPrecursorCountSQL = new SQLFragment(" (SELECT COUNT(p.Id) FROM ")
+                        .append(TargetedMSManager.getTableInfoGeneralPrecursor(), "p")
+                        .append(" INNER JOIN ").append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON p.generalmoleculeid = gm.id ")
+                        .append(" WHERE gm.peptidegroupid = ").append(ExprColumn.STR_TABLE_ALIAS).append(".id ")
+                        .append(" AND p.RepresentativeDataState = ? ").add(RepresentativeDataState.Representative.ordinal())
+                        .append(") ");
+            }
+            ExprColumn currentLibPrecursorCountCol = new ExprColumn(result, "RepresentivePrecursorCount", libPrecursorCountSQL, JdbcType.INTEGER);
+            currentLibPrecursorCountCol.setHidden(true);
+            result.addColumn(currentLibPrecursorCountCol);
             return result;
         }
 
@@ -1262,14 +1282,6 @@ public class TargetedMSSchema extends UserSchema
             return new PrecursorTableInfo.ExperimentPrecursorTableInfo(this, cf);
         }
 
-        if (TABLE_LIBRARY_PRECURSOR.equalsIgnoreCase(name) || TABLE_LIBRARY_DOC_PRECURSOR.equalsIgnoreCase(name))
-        {
-            return new PrecursorTableInfo.LibraryPrecursorTableInfo(this, cf);
-        }
-        if (TABLE_LIBRARY_MOLECULE_PRECURSOR.equalsIgnoreCase(name))
-        {
-            return new MoleculePrecursorTableInfo.LibraryMoleculePrecursorTableInfo(this, cf);
-        }
         if (TABLE_GENERAL_MOLECULE_ANNOTATION.equalsIgnoreCase(name) || TABLE_PEPTIDE_ANNOTATION.equalsIgnoreCase(name))
         {
             GeneralMoleculeAnnotationTableInfo result = new GeneralMoleculeAnnotationTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_ANNOTATION), this, cf, ContainerJoinType.GeneralMoleculeFK);
@@ -1474,12 +1486,16 @@ public class TargetedMSSchema extends UserSchema
         return null;
     }
 
+    private static boolean isLibraryFolder(Container container)
+    {
+        var folderType = TargetedMSService.get().getFolderType(container);
+        return folderType == LibraryProtein || folderType == Library;
+    }
+
     @Override
     protected QuerySettings createQuerySettings(String dataRegionName, String queryName, String viewName)
     {
-        if(TABLE_PRECURSOR.equalsIgnoreCase(queryName)
-           || TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(queryName)
-           || TABLE_LIBRARY_DOC_PRECURSOR.equalsIgnoreCase(queryName)
+        if(TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(queryName)
            || TABLE_TRANSITION.equalsIgnoreCase(queryName))
         {
             return new QuerySettings(dataRegionName)
@@ -1534,6 +1550,41 @@ public class TargetedMSSchema extends UserSchema
         }
 
         return super.createView(context, settings, errors);
+    }
+
+    public List<CustomView> getModuleCustomViews(Container container, QueryDefinition qd)
+    {
+        var customViews = super.getModuleCustomViews(container, qd);
+        String schema = qd.getSchema().getName();
+        String title = qd.getTitle();
+        String name = qd.getName();
+        if (isLibraryFolder(container) || !SCHEMA_NAME.equals(qd.getSchema().getName()))
+        {
+            return customViews;
+        }
+        else
+        {
+            var views = new ArrayList<CustomView>();
+
+            for (CustomView view : customViews)
+            {
+                var queryName = view.getQueryName();
+                boolean skip;
+                switch (queryName)
+                {
+                    case TargetedMSSchema.TABLE_PEPTIDE_GROUP -> skip = "LibraryProteins".equals(view.getName());
+                    case TargetedMSSchema.TABLE_PEPTIDE -> skip = "LibraryPeptides".equals(view.getName());
+                    case TargetedMSSchema.TABLE_MOLECULE -> skip = "LibraryMolecules".equals(view.getName());
+                    case TargetedMSSchema.TABLE_PRECURSOR, TargetedMSSchema.TABLE_MOLECULE_PRECURSOR -> skip = "LibraryPrecursors".equals(view.getName());
+                    default -> skip = false;
+                }
+                if (!skip)
+                {
+                    views.add(view);
+                }
+            }
+            return views;
+        }
     }
 
     private Set<String> getAllTableNames(boolean caseInsensitive)
@@ -1592,9 +1643,6 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_IRT_SCALE);
         hs.add(TABLE_RETENTION_TIME_PREDICTION_SETTINGS);
         hs.add(TABLE_EXPERIMENT_PRECURSOR);
-        hs.add(TABLE_LIBRARY_PRECURSOR);
-        hs.add(TABLE_LIBRARY_MOLECULE_PRECURSOR);
-        hs.add(TABLE_LIBRARY_DOC_PRECURSOR);
         hs.add(TABLE_ISOLATION_SCHEME);
         hs.add(TABLE_ISOLATION_WINDOW);
         hs.add(TABLE_PREDICTOR);

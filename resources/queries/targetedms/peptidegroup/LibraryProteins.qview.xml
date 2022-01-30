@@ -1,16 +1,19 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        label="Library Proteins">
+        label="Library Proteins" canOverride="true">
     <columns>
         <column name="Label" />
         <column name="Reproducibility" />
         <column name="CalibrationCurves" />
-        <column name="RunId/File" />
+        <column name="Accession" />
+        <column name="PreferredName" />
+        <column name="Gene" />
         <column name="Description" />
+        <column name="Species" />
+        <column name="RunId/File" />
         <column name="NoteAnnotations" />
-        <column name="RepresentativeDataState" />
     </columns>
     <filters>
-        <filter column="RepresentativeDataState" operator="eq" value="1"/>
+        <filter column="RepresentivePrecursorCount" operator="gt" value="0"/>
     </filters>
     <sorts>
        <sort column="Label" />
