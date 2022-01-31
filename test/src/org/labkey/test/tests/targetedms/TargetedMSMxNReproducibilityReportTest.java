@@ -151,9 +151,7 @@ public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
         clickAndWait(Locator.linkWithText("Show Details"));
 
         log("Verifying only 3 samples for displayed");
-        checker().verifyEquals("More then 3 samples displayed",
-                "Blank+IS__VIFonly\n" + "Blank+IS__VIFonly (2)\n" + "Cal 1_0_20 ng_mL_VIFonly\n" + "and 22 more",
-                Locator.tagWithId("div", "fom-sampleList").findElement(getDriver()).getText());
+        waitForElementText(Locator.tagWithId("div", "fom-sampleList"), "Blank+IS__VIFonly\n" + "Blank+IS__VIFonly (2)\n" + "Cal 1_0_20 ng_mL_VIFonly\n" + "and 22 more");
 
         log("Verifying the downloaded file");
         File exportedExcel = clickAndWaitForDownload(Locator.linkWithId("targetedms-fom-export"));
