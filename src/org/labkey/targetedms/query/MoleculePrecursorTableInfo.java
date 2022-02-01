@@ -76,6 +76,20 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         setDefaultVisibleColumns(visibleColumns);
     }
 
+    public static class ExperimentMoleculePrecursorTableInfo extends MoleculePrecursorTableInfo
+    {
+        public ExperimentMoleculePrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf)
+        {
+            super(TargetedMSManager.getTableInfoMoleculePrecursor(), TargetedMSSchema.TABLE_EXPERIMENT_MOLECULE_PRECURSOR, schema, cf, false);
+        }
+
+        @Override
+        public String getName()
+        {
+            return TargetedMSSchema.TABLE_EXPERIMENT_MOLECULE_PRECURSOR;
+        }
+    }
+
     @Override
     protected Class<? extends Controller> getDetailsActionClass()
     {

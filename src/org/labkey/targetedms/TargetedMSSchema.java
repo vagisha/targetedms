@@ -62,7 +62,6 @@ import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.query.*;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 import org.labkey.targetedms.view.FontAwesomeLinkColumn;
-import org.labkey.targetedms.view.LibraryQueryViewWebPart;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.mvc.Controller;
 
@@ -115,6 +114,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PEPTIDE_ANNOTATION = "PeptideAnnotation";
     public static final String TABLE_PRECURSOR = "Precursor";
     public static final String TABLE_EXPERIMENT_PRECURSOR = "ExperimentPrecursor";
+    public static final String TABLE_EXPERIMENT_MOLECULE_PRECURSOR = "ExperimentMoleculePrecursor";
     public static final String TABLE_PRECURSOR_ANNOTATION = "PrecursorAnnotation";
     public static final String TABLE_TRANSITION = "Transition";
     public static final String TABLE_MOLECULE_TRANSITION = "MoleculeTransition";
@@ -204,6 +204,17 @@ public class TargetedMSSchema extends UserSchema
 
     /** Prefix for a run-specific table name, customized based on the data present within that run */
     public static final String SAMPLE_FILE_RUN_PREFIX = "samplefile_run";
+
+    // Map of tables that have a library view -> name of the library view
+    public static final CaseInsensitiveHashMap<String> TABLES_LIBRARY_VIEWS = new CaseInsensitiveHashMap<>(Map.of(
+            TargetedMSSchema.TABLE_PEPTIDE_GROUP, "LibraryProteins",
+            TargetedMSSchema.TABLE_PEPTIDE, "LibraryPeptides",
+            TargetedMSSchema.TABLE_MOLECULE, "LibraryMolecules",
+            TargetedMSSchema.TABLE_PRECURSOR, "LibraryPrecursors",
+            TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, "LibraryPrecursors",
+            TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR, "LibraryPrecursors",
+            TargetedMSSchema.TABLE_EXPERIMENT_MOLECULE_PRECURSOR, "LibraryPrecursors"
+    ));
 
     private final ExpSchema _expSchema;
     private Map<String, List<AnnotatedTargetedMSTable.AnnotationSettingForTyping>> _annotations;
@@ -1280,6 +1291,11 @@ public class TargetedMSSchema extends UserSchema
             return new PrecursorTableInfo.ExperimentPrecursorTableInfo(this, cf);
         }
 
+        if (TABLE_EXPERIMENT_MOLECULE_PRECURSOR.equalsIgnoreCase(name))
+        {
+            return new MoleculePrecursorTableInfo.ExperimentMoleculePrecursorTableInfo(this, cf);
+        }
+
         if (TABLE_GENERAL_MOLECULE_ANNOTATION.equalsIgnoreCase(name) || TABLE_PEPTIDE_ANNOTATION.equalsIgnoreCase(name))
         {
             GeneralMoleculeAnnotationTableInfo result = new GeneralMoleculeAnnotationTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_ANNOTATION), this, cf, ContainerJoinType.GeneralMoleculeFK);
@@ -1487,7 +1503,9 @@ public class TargetedMSSchema extends UserSchema
     @Override
     protected QuerySettings createQuerySettings(String dataRegionName, String queryName, String viewName)
     {
-        if(TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(queryName) || TABLE_TRANSITION.equalsIgnoreCase(queryName))
+        if(TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(queryName)
+           || TABLE_EXPERIMENT_MOLECULE_PRECURSOR.equalsIgnoreCase(queryName)
+           || TABLE_TRANSITION.equalsIgnoreCase(queryName))
         {
             return new QuerySettings(dataRegionName)
             {
@@ -1550,13 +1568,15 @@ public class TargetedMSSchema extends UserSchema
         var tableName = qd.getName();
 
         if (!SCHEMA_NAME.equals(qd.getSchema().getName())
-                || !LibraryQueryViewWebPart.TABLES_LIBRARY_VIEWS.containsKey(tableName)
+                || !TABLES_LIBRARY_VIEWS.containsKey(tableName)
                 || TargetedMSManager.isLibraryFolder(container))
         {
             return customViews;
         }
 
-        return customViews.stream().filter(v -> v.getName() == null || !v.getName().equals(LibraryQueryViewWebPart.TABLES_LIBRARY_VIEWS.get(v.getQueryName())))
+        // We are looking at one of the tables that have a library view defined but we are not in a library folder.
+        // Remove the library views from customViews.
+        return customViews.stream().filter(v -> v.getName() == null || !v.getName().equals(TABLES_LIBRARY_VIEWS.get(v.getQueryName())))
                 .collect(Collectors.toList());
     }
 
@@ -1616,6 +1636,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_IRT_SCALE);
         hs.add(TABLE_RETENTION_TIME_PREDICTION_SETTINGS);
         hs.add(TABLE_EXPERIMENT_PRECURSOR);
+        hs.add(TABLE_EXPERIMENT_MOLECULE_PRECURSOR);
         hs.add(TABLE_ISOLATION_SCHEME);
         hs.add(TABLE_ISOLATION_WINDOW);
         hs.add(TABLE_PREDICTOR);

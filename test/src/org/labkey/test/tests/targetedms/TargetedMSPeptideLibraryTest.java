@@ -15,17 +15,17 @@
  */
 package org.labkey.test.tests.targetedms;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.api.util.Pair;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
-import org.labkey.test.Locators;
 import org.labkey.test.categories.Daily;
 import org.labkey.test.components.CustomizeView;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.LogMethod;
-import org.labkey.test.util.PortalHelper;
+import org.labkey.test.util.TextSearcher;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,6 +53,7 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
         verifyRevision2();
         verifyAndResolveConflicts();
         verifyRevision3();
+        verifyDocumentLibraryView();
         deleteSkyFile(SKY_FILE2);
         verifyRevision4();
     }
@@ -104,13 +105,11 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
     {
         log("Verify precursors in the library");
 
-        // The grid in the "Library Precursors" webpart cannot be customized so click the title of the webpart to display the
-        // full, customizable query view.
-        var webpart = new PortalHelper(getDriver()).getBodyWebPart("Library Precursors");
-        webpart.getComponentElement().click();
-        var panelTitleLink = Locators.panelWebpartTitle.withText("Library Precursors").parent("a").withAttribute("href").findElement(getDriver());
-        clickAndWait(panelTitleLink);
-        DataRegionTable precursorTable = new DataRegionTable("query", this);
+        DataRegionTable precursorTable = new DataRegionTable("Precursor",getDriver());
+        // The grid in the "Library Precursors" webpart cannot be customized until the "View All" button is clicked, or the title is clicked.
+        precursorTable.clickHeaderButtonAndWait("View All");
+        // After the button is clicked the "default" view for the grid will be displayed. Switch to the "Library Precursors" view
+        precursorTable.goToView("Library Precursors");
         CustomizeView customizeView = precursorTable.openCustomizeGrid();
         customizeView.addColumn("ModifiedSequence");
         customizeView.applyCustomView();
@@ -133,6 +132,9 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
             assertEquals("Unexpected file name for " + precursor, entry.getValue().first, fileNameAndProtein.get(0));
             assertEquals("Unexpected protein name for " + precursor, entry.getValue().second, fileNameAndProtein.get(1));
         }
+
+        // Revert the changes to the view otherwise the this test will fail the next time this method is called.
+        precursorTable.getCustomizeView().revertUnsavedViewGridClosed();
     }
 
     @LogMethod
@@ -297,5 +299,41 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
         precursorMap.put("ADVTPADFSEWSK",      new Pair(SKY_FILE1, "iRT-C18 Standard Peptides"));
 
         verifyLibraryPrecursors(precursorMap, totalPrecursorCount);
+    }
+
+    private void verifyDocumentLibraryView()
+    {
+        goToDashboard();
+        clickAndWait(Locator.linkContainingText(SKY_FILE1));
+        var precursorTable = new DataRegionTable("precursors_view" ,getDriver());
+        var searcher = getPeptideGroupColumnSearcher(precursorTable);
+        assertTextPresentInThisOrder(searcher,"CTCF", "TAF11", "MAX", "QPrEST_CystC_HPRR5000001", "HPRR1440042",
+                "DifferentProteinSameLabel", "iRT-C18 Standard Peptides");
+
+        // Switch to the library view. We should see only the proteins that are in the current library.
+        precursorTable.goToView("Library Precursors");
+        searcher = getPeptideGroupColumnSearcher(precursorTable);
+        assertTextPresentInThisOrder(searcher, "CTCF", "TAF11", "DifferentProteinSameLabel");
+        assertTextNotPresent(searcher, "MAX", "QPrEST_CystC_HPRR5000001", "HPRR1440042", "iRT-C18 Standard Peptides");
+    }
+
+    @NotNull
+    private TextSearcher getPeptideGroupColumnSearcher (DataRegionTable precursorTable)
+    {
+        // TODO: Delete this method when there is a DataRegionTable for nested grids.
+        // DataRegionTable methods do not work correctly in a nested grid so we will iterate through the rows and get
+        // the text in the "Protein / Label" column of the grid.
+        var gridText = new StringBuilder();
+        int incr = 2;
+        for (var i = 0; i < precursorTable.getDataRowCount(); i+=incr, incr = incr == 2 ? 1 : 2)
+        {
+            // Each protein row has a nested row. Rows with class "labkey-alternate-row" have a nested row with the same class.
+            // However, rows with class "labkey-row" have a nested row without a class attribute (TODO: add class to nested rows)
+            // so they don't get counted in DataRegionTable.getDataRows().
+            // To get the protein names, we have to skip every other nested row. The very first row in the grid has the "labkey-alternate-row" class.
+            gridText.append(precursorTable.getDataAsText(i, 0)).append("\n");
+        }
+        var searcher = new TextSearcher(gridText.toString());
+        return searcher;
     }
 }

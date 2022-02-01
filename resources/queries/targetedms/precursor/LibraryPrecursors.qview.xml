@@ -1,9 +1,9 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             label="Library Precursors" canOverride="true">
     <columns>
-        <column name="PeptideId/PeptideGroupId/RunId/File" />
         <column name="PeptideId/PeptideGroupId/Label" />
-        <column name="ModifiedPrecursorDisplayColumn" /> <!-- Defined in ModifiedSequenceDisplayColumn.java -->
+        <column name="PeptideId/ModifiedPeptideDisplayColumn" />
+        <column name="ModifiedPrecursorDisplayColumn" />
         <column name="Charge" />
         <column name="IsotopeLabelId" />
         <column name="Mz" />
@@ -11,6 +11,7 @@
         <column name="CollisionEnergy" />
         <column name="DeclusteringPotential" />
         <column name="NoteAnnotations" />
+        <column name="PeptideId/PeptideGroupId/RunId/File" />
     </columns>
 
     <filters>

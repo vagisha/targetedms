@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.targetedms;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
@@ -23,6 +24,7 @@ import org.labkey.test.categories.Daily;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.LogMethod;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,6 +52,7 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         verifyRevision2();
         verifyAndResolveConflicts();
         verifyRevision3();
+        verifyDocumentLibraryView();
         deleteSkyFile(SKY_FILE2);
         verifySingleFileLibrary(4);
     }
@@ -155,7 +158,7 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
             String mz = entry.getKey();
             int idx = precursorTable.getRowIndex("Q1 m/z", mz);
             assertTrue("Expected precursor with mz " + mz + " not found in table", idx != -1);
-            List<String> rowValues = precursorTable.getRowDataAsText(idx, "Molecule Name", "File", "Ion Formula");
+            List<String> rowValues = precursorTable.getRowDataAsText(idx, "Molecule", "File", "Ion Formula");
             assertEquals("Wrong data for row", entry.getValue(), rowValues);
         }
     }
@@ -213,5 +216,19 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         precursorMap.put("130.0594", Arrays.asList("NICOTINATE", SKY_FILE1, "[M6.02013+]"));
 
         verifyLibraryPrecursors(precursorMap, 6);
+    }
+
+    private void verifyDocumentLibraryView()
+    {
+        goToDashboard();
+        clickAndWait(Locator.linkContainingText(SKY_FILE1));
+        var precursorTable = new DataRegionTable("small_mol_precursors_view" ,getDriver());
+        // DataRegionTable methods do not work correctly in a nested grid so we will look for the expected molecule lists
+        // and molecules are in the html source.
+        assertTextPresentInThisOrder("Formulas", "C4H9NO3", "C4H9NO3", "NamesAndMzs", "NICOTINATE", "NICOTINATE");
+        // Switch to the library view. We should see only the molecule lists and molecules that are in the current library.
+        precursorTable.goToView("Library Precursors");
+        assertTextPresentInThisOrder("NamesAndMzs", "NICOTINATE", "NICOTINATE");
+        assertTextNotPresent("Formulas", "C4H9NO3", "C4H9NO3");
     }
 }

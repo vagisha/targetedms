@@ -15,107 +15,125 @@
  */
 package org.labkey.targetedms.view;
 
+import org.jetbrains.annotations.NotNull;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ActionButton;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySettings;
-import org.labkey.api.query.QueryUrls;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserSchema;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
+import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 
 import java.util.Map;
 
+import static org.labkey.targetedms.TargetedMSSchema.TABLES_LIBRARY_VIEWS;
+
 public class LibraryQueryViewWebPart extends QueryView
 {
-    public static final Map<String, String> TABLES_LIBRARY_VIEWS = Map.of(
-            TargetedMSSchema.TABLE_PEPTIDE_GROUP, "LibraryProteins",
-            TargetedMSSchema.TABLE_PEPTIDE, "LibraryPeptides",
-            TargetedMSSchema.TABLE_MOLECULE, "LibraryMolecules",
-            TargetedMSSchema.TABLE_PRECURSOR, "LibraryPrecursors",
-            TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, "LibraryPrecursors"
-    );
-
     private final String _tableName;
-    private final String _viewName;
-    private final boolean _allViews;
-    private final boolean _libraryFolder;
+    private final boolean _fixedView;
     private final String DEFAULT_VIEW = "";
 
-    public LibraryQueryViewWebPart(ViewContext viewContext, String tableName, String title)
+    // supported table name -> grid title
+    private static final CaseInsensitiveHashMap<String> SUPPORTED = new CaseInsensitiveHashMap<>(Map.of(
+            TargetedMSSchema.TABLE_PEPTIDE_GROUP, "Proteins",
+            TargetedMSSchema.TABLE_PEPTIDE, "Peptides",
+            TargetedMSSchema.TABLE_PRECURSOR, "Precursors",
+            TargetedMSSchema.TABLE_MOLECULE, "Molecules",
+            TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, "Molecule Precursors"));
+
+    @NotNull
+    private static LibraryQueryViewWebPart forTable(@NotNull String tableName, @NotNull ViewContext viewContext, boolean allViews)
+    {
+        if (!SUPPORTED.containsKey(tableName))
+        {
+            throw new IllegalStateException("Cannot create a view for table: " + tableName);
+        }
+        return new LibraryQueryViewWebPart(viewContext, tableName, SUPPORTED.get(tableName), allViews);
+    }
+
+    @NotNull
+    public static LibraryQueryViewWebPart forTable(@NotNull String tableName, @NotNull ViewContext viewContext)
+    {
+        return forTable(tableName, viewContext, false);
+    }
+
+    @NotNull
+    public static LibraryQueryViewWebPart forTableAllViews(@NotNull String tableName, @NotNull ViewContext viewContext)
+    {
+        return forTable(tableName, viewContext, true);
+    }
+
+    public static boolean isTableSupported(String tableName)
+    {
+        return SUPPORTED.containsKey(tableName);
+    }
+
+    private LibraryQueryViewWebPart(ViewContext viewContext, String tableName, String title, boolean allViews)
     {
         super(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()));
         _tableName = tableName;
-        _allViews = viewContext.getRequest().getParameterMap().containsKey("allViews");
-        _libraryFolder = TargetedMSManager.isLibraryFolder(viewContext.getContainer());
-
-        _viewName = isFixedView() ? TABLES_LIBRARY_VIEWS.getOrDefault(tableName, DEFAULT_VIEW) : DEFAULT_VIEW;
-
-        var settings = createQuerySettings(viewContext, _tableName);
+        var libraryFolder = TargetedMSManager.isLibraryFolder(viewContext.getContainer());
+        var settings = createQuerySettings(viewContext, _tableName, libraryFolder, allViews);
         setSettings(settings);
 
-        ActionURL titleLink = PageFlowUtil.urlProvider(QueryUrls.class).urlExecuteQuery(viewContext.getContainer(), TargetedMSSchema.SCHEMA_NAME, _tableName);
-        titleLink.addParameter("query.viewName", _viewName);
+        ActionURL titleLink = getTitleLink(viewContext);
+        titleLink.addParameter(settings.param(QueryParam.viewName), settings.getViewName());
         setTitleHref(titleLink);
 
-        boolean libraryView = isLibraryViewSelected(getViewContext(), tableName, settings);
-        String webpartTitle = (libraryView ? "Library " : "") + title;
-        setTitle(webpartTitle);
-        String help = title + (libraryView ? " that are in the current library in the folder." : " from all the Skyline documents uploaded to the folder.");
-        setTitlePopupHelp(webpartTitle, help);
-
-        setShowDetailsColumn(false);
-        if (isFixedView())
+        _fixedView = libraryFolder && !allViews && !viewContext.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName));
+        if (!_fixedView)
         {
             setShowFilterDescription(false);
         }
+        setTitleAndHelpPopup(tableName, title, settings);
 
+        setShowDetailsColumn(false);
         setShowBorders(true);
         setShadeAlternatingRows(true);
+        setAllowableContainerFilterTypes();
     }
 
-    private boolean isFixedView()
-    {
-        return _libraryFolder && !_allViews;
-    }
-
-    private boolean isLibraryViewSelected(ViewContext viewContext, String tableName, QuerySettings settings)
-    {
-        var settingsViewName = settings.getViewName();
-        if (_viewName.equals(TABLES_LIBRARY_VIEWS.get(tableName)))
-        {
-            return true;
-        }
-        else if (viewContext.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
-        {
-            var queryParam = viewContext.getRequest().getParameterMap().get(settings.param(QueryParam.viewName))[0];
-            return queryParam != null && queryParam.equals(TABLES_LIBRARY_VIEWS.get(tableName));
-        }
-        return false;
-    }
-
-    private QuerySettings createQuerySettings(ViewContext portalCtx, String dataRegionName)
+    private QuerySettings createQuerySettings(ViewContext portalCtx, String dataRegionName, boolean libraryFolder, boolean allViews)
     {
         UserSchema schema = getSchema();
         QuerySettings settings = schema.getSettings(portalCtx, dataRegionName, _tableName);
-        if (isFixedView() && !portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
+        if (libraryFolder && !allViews && !portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
         {
-            settings.setViewName(_viewName);
+            var viewName = TABLES_LIBRARY_VIEWS.getOrDefault(_tableName, DEFAULT_VIEW);
+            settings.setViewName(viewName);
             settings.setAllowChooseView(false);
         }
         return settings;
+    }
+
+    private void setTitleAndHelpPopup(String tableName, String targetType, QuerySettings settings)
+    {
+        var viewName = settings.getViewName();
+        var isLibraryView = viewName != null && viewName.equals(TABLES_LIBRARY_VIEWS.get(tableName));
+        var webpartTitle = isLibraryView ? "Library " + targetType : targetType;
+        setTitle(webpartTitle);
+        if (isLibraryView)
+        {
+            setTitlePopupHelp(webpartTitle, targetType + " that are in the current library in the folder.");
+        }
+        else if (viewName == null || DEFAULT_VIEW.equals(viewName))
+        {
+            setTitlePopupHelp(webpartTitle, targetType + " from all the Skyline documents uploaded to the folder.");
+        }
     }
 
     @Override
     protected void populateButtonBar(DataView view, ButtonBar bar)
     {
         super.populateButtonBar(view, bar);
-        if (isFixedView())
+        if (_fixedView)
         {
             addViewAllButton(view, bar);
         }
@@ -124,9 +142,16 @@ public class LibraryQueryViewWebPart extends QueryView
     private void addViewAllButton(DataView view, ButtonBar bar)
     {
         ActionButton viewAllButton = new ActionButton("View All");
-        ActionURL url = view.getViewContext().getActionURL().clone();
-        url.replaceParameter("allViews", "true");
+        ActionURL url = getTitleLink(view.getViewContext());
         viewAllButton.setURL(url);
         bar.add(viewAllButton);
+    }
+
+    @NotNull
+    private ActionURL getTitleLink(ViewContext viewContext)
+    {
+        ActionURL url = new ActionURL(TargetedMSController.ShowTargetsGridAction.class, viewContext.getContainer());
+        url.addParameter(QueryParam.queryName, _tableName);
+        return url;
     }
 }
