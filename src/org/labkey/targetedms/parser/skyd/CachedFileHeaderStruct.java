@@ -42,6 +42,8 @@ public class CachedFileHeaderStruct
     float ticArea;
     int lenSampleId;
     int lenSerialNumber;
+    // Version 15 file header addition
+    long importTime;
 
     public CachedFileHeaderStruct(LittleEndianInput dataInputStream)
     {
@@ -57,9 +59,13 @@ public class CachedFileHeaderStruct
         ticArea = Float.intBitsToFloat(dataInputStream.readInt());
         lenSampleId = dataInputStream.readInt();
         lenSerialNumber = dataInputStream.readInt();
+        importTime = dataInputStream.readLong();
     }
 
     public static int getStructSize(CacheFormatVersion formatVersion) {
+        if (formatVersion.compareTo(CacheFormatVersion.Fifteen) >= 0) {
+            return 68;
+        }
         if (formatVersion.compareTo(CacheFormatVersion.Fourteen) >= 0) {
             return 60;
         }

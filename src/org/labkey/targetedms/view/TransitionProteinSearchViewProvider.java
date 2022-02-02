@@ -28,6 +28,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
+import org.labkey.api.query.QueryViewProvider;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSModule;
@@ -44,7 +45,7 @@ import java.util.List;
 * User: jeckels
 * Date: May 10, 2012
 */
-public class TransitionProteinSearchViewProvider implements ProteinService.QueryViewProvider<ProteinService.ProteinSearchForm>
+public class TransitionProteinSearchViewProvider implements QueryViewProvider<ProteinService.ProteinSearchForm>
 {
     @Override
     public String getDataRegionName()
