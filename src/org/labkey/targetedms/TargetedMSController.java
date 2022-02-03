@@ -1408,8 +1408,13 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    /**
+     * Action class to display the targets (proteins / molecule lists, peptides / molecules, precursors / molecule precursors)
+     * in the Skyline documents in a folder. This action is used in {@link LibraryQueryViewWebPart} to display the grid with
+     * customize grid and view chooser menus available.
+     */
     @RequiresPermission(ReadPermission.class)
-    public class ShowTargetsGridAction extends SimpleViewAction<ShowTargetsForm>
+    public class ShowTargetsAction extends SimpleViewAction<ShowTargetsForm>
     {
         private String _pageTitle;
         @Override

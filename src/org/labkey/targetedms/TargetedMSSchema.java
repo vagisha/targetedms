@@ -212,8 +212,8 @@ public class TargetedMSSchema extends UserSchema
             TargetedMSSchema.TABLE_MOLECULE, "LibraryMolecules",
             TargetedMSSchema.TABLE_PRECURSOR, "LibraryPrecursors",
             TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, "LibraryPrecursors",
-            TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR, "LibraryPrecursors",
-            TargetedMSSchema.TABLE_EXPERIMENT_MOLECULE_PRECURSOR, "LibraryPrecursors"
+            TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR, "LibraryMembers",
+            TargetedMSSchema.TABLE_EXPERIMENT_MOLECULE_PRECURSOR, "LibraryMembers"
     ));
 
     private final ExpSchema _expSchema;
@@ -1510,7 +1510,7 @@ public class TargetedMSSchema extends UserSchema
             return new QuerySettings(dataRegionName)
             {
                 {
-                    setMaxRows(10); // Show upto 10 protein rows in the nested document view
+                    setMaxRows(10); // Show upto 10 protein rows in the nested grid view for a document
                 }
             };
         }
@@ -1574,7 +1574,7 @@ public class TargetedMSSchema extends UserSchema
             return customViews;
         }
 
-        // We are looking at one of the tables that have a library view defined but we are not in a library folder.
+        // We are looking at one of the tables that has a library view defined but we are not in a library folder.
         // Remove the library views from customViews.
         return customViews.stream().filter(v -> v.getName() == null || !v.getName().equals(TABLES_LIBRARY_VIEWS.get(v.getQueryName())))
                 .collect(Collectors.toList());

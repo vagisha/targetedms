@@ -1,0 +1,11 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            label="Library Members">
+    <!--
+    The experimentmoleculeprecursor query is used for displaying the nested grid view for a Skyline document.
+    If the document is in a library folder, this view will be available in the view chooser menu of the grid.
+    Selecting this view will display only those targets from the document that are in the current library in the folder.
+     -->
+    <filters>
+        <filter column="RepresentativeDataState" operator="eq" value="1"/>
+    </filters>
+</customView>

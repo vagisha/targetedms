@@ -15,7 +15,6 @@
  */
 package org.labkey.test.tests.targetedms;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
@@ -24,7 +23,6 @@ import org.labkey.test.categories.Daily;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.LogMethod;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -81,7 +79,7 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         precursorMap.put("124.0789", Arrays.asList("C4H9NO3", SKY_FILE1, "C4H9NO3[M4C13+H]"));
         precursorMap.put("124.0393", Arrays.asList("NICOTINATE", SKY_FILE1, "[M+]"));
 
-        verifyLibraryPrecursors(precursorMap, 4);
+        verifyLibraryPrecursors(precursorMap, 4, 4);
     }
 
     private void verifyLibraryMoleculeCount(int count)
@@ -138,20 +136,20 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         // Only in SKY_FILE1
         precursorMap.put("124.0393", Arrays.asList("NICOTINATE", SKY_FILE1, "[M+]"));
 
-        verifyLibraryPrecursors(precursorMap, 6);
+        verifyLibraryPrecursors(precursorMap, 6, 8);
     }
 
-    private void verifyLibraryPrecursors(Map<String, List<String>> precursorMap, int totalPrecursorCount)
+    private void verifyLibraryPrecursors(Map<String, List<String>> precursorMap, int libraryPrecursorCount, int totalPrecursorCount)
     {
         log("Verify precursors in the library");
 
         DataRegionTable precursorTable = new DataRegionTable("MoleculePrecursor" ,getDriver());
-        if(totalPrecursorCount > 100)
+        if(libraryPrecursorCount > 100)
         {
             precursorTable.getPagingWidget().setPageSize(250, true);
         }
 
-        assertEquals("Unexpected number of rows in precursors table", totalPrecursorCount, precursorTable.getDataRowCount());
+        assertEquals("Unexpected number of rows in precursors table", libraryPrecursorCount, precursorTable.getDataRowCount());
 
         for(Map.Entry<String, List<String>> entry: precursorMap.entrySet())
         {
@@ -161,6 +159,15 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
             List<String> rowValues = precursorTable.getRowDataAsText(idx, "Molecule", "File", "Ion Formula");
             assertEquals("Wrong data for row", entry.getValue(), rowValues);
         }
+
+        // Click the "View All" button to display the default view of the grid, and check the total precursor count displayed.
+        // This will include all the precursors from all the documents in the folder.
+        precursorTable.clickHeaderButtonAndWait("View All");
+        if (precursorTable.getPagingWidget().hasPagingButton(false))
+        {
+            precursorTable.getPagingWidget().clickShowAll();
+        }
+        assertEquals("Unexpected number of rows in precursors table (default view)", totalPrecursorCount, precursorTable.getDataRowCount());
     }
 
 
@@ -215,7 +222,7 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         precursorMap.put("125.0371", Arrays.asList("CYSTEINE", SKY_FILE2, "[M3.01007+]"));
         precursorMap.put("130.0594", Arrays.asList("NICOTINATE", SKY_FILE1, "[M6.02013+]"));
 
-        verifyLibraryPrecursors(precursorMap, 6);
+        verifyLibraryPrecursors(precursorMap, 6, 8);
     }
 
     private void verifyDocumentLibraryView()
@@ -227,7 +234,7 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         // and molecules are in the html source.
         assertTextPresentInThisOrder("Formulas", "C4H9NO3", "C4H9NO3", "NamesAndMzs", "NICOTINATE", "NICOTINATE");
         // Switch to the library view. We should see only the molecule lists and molecules that are in the current library.
-        precursorTable.goToView("Library Precursors");
+        precursorTable.goToView("Library Members");
         assertTextPresentInThisOrder("NamesAndMzs", "NICOTINATE", "NICOTINATE");
         assertTextNotPresent("Formulas", "C4H9NO3", "C4H9NO3");
     }

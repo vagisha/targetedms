@@ -15,14 +15,16 @@
  */
 package org.labkey.targetedms.view;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ActionButton;
 import org.labkey.api.data.ButtonBar;
+import org.labkey.api.data.Container;
+import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
-import org.labkey.api.query.UserSchema;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
@@ -34,6 +36,21 @@ import java.util.Map;
 
 import static org.labkey.targetedms.TargetedMSSchema.TABLES_LIBRARY_VIEWS;
 
+/**
+ * View for displaying the targets (proteins / molecule lists, peptides / molecules, precursors / molecule precursors)
+ * in the Skyline documents in a folder.
+ *
+ * In a library folder:
+ * If the view is initialized with allViews set to true, then the grid will display the "library" view for the given table.
+ * The library view displays only the versions of the targets that are in the current library in the folder. In this state
+ * the view chooser and customize grid menus are hidden. Clicking the "View All" button in the button bar, or the
+ * webpart title will link to {@link org.labkey.targetedms.TargetedMSController.ShowTargetsAction}. This will display
+ * the view with allViews set to false. In this state, the view chooser and customize grid menus are available.
+ *
+ * In other folder types:
+ * The default view is displayed, and the view chooser and customize grid menus are available. "library" views are not
+ * listed in the view chooser menu in other folder types {@link TargetedMSSchema#getModuleCustomViews(Container, QueryDefinition)}
+ */
 public class LibraryQueryViewWebPart extends QueryView
 {
     private final String _tableName;
@@ -49,25 +66,15 @@ public class LibraryQueryViewWebPart extends QueryView
             TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, "Molecule Precursors"));
 
     @NotNull
-    private static LibraryQueryViewWebPart forTable(@NotNull String tableName, @NotNull ViewContext viewContext, boolean allViews)
-    {
-        if (!SUPPORTED.containsKey(tableName))
-        {
-            throw new IllegalStateException("Cannot create a view for table: " + tableName);
-        }
-        return new LibraryQueryViewWebPart(viewContext, tableName, SUPPORTED.get(tableName), allViews);
-    }
-
-    @NotNull
     public static LibraryQueryViewWebPart forTable(@NotNull String tableName, @NotNull ViewContext viewContext)
     {
-        return forTable(tableName, viewContext, false);
+        return new LibraryQueryViewWebPart(viewContext, tableName, SUPPORTED.get(tableName), false);
     }
 
     @NotNull
     public static LibraryQueryViewWebPart forTableAllViews(@NotNull String tableName, @NotNull ViewContext viewContext)
     {
-        return forTable(tableName, viewContext, true);
+        return new LibraryQueryViewWebPart(viewContext, tableName, SUPPORTED.get(tableName), true);
     }
 
     public static boolean isTableSupported(String tableName)
@@ -78,39 +85,46 @@ public class LibraryQueryViewWebPart extends QueryView
     private LibraryQueryViewWebPart(ViewContext viewContext, String tableName, String title, boolean allViews)
     {
         super(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()));
+
+        if (!isTableSupported(tableName))
+        {
+            throw new IllegalStateException("Cannot create a view for table: " + tableName);
+        }
+
         _tableName = tableName;
         var libraryFolder = TargetedMSManager.isLibraryFolder(viewContext.getContainer());
-        var settings = createQuerySettings(viewContext, _tableName, libraryFolder, allViews);
+
+        QuerySettings settings = getSchema().getSettings(viewContext, _tableName, _tableName);
+        _fixedView = libraryFolder && !allViews && !viewContext.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName));
+        if (_fixedView)
+        {
+            setDesiredView(settings);
+        }
         setSettings(settings);
 
         ActionURL titleLink = getTitleLink(viewContext);
-        titleLink.addParameter(settings.param(QueryParam.viewName), settings.getViewName());
+        if (!StringUtils.isBlank(settings.getViewName()))
+        {
+            titleLink.addParameter(settings.param(QueryParam.viewName), settings.getViewName());
+        }
         setTitleHref(titleLink);
 
-        _fixedView = libraryFolder && !allViews && !viewContext.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName));
         if (!_fixedView)
         {
             setShowFilterDescription(false);
         }
         setTitleAndHelpPopup(tableName, title, settings);
-
         setShowDetailsColumn(false);
         setShowBorders(true);
         setShadeAlternatingRows(true);
         setAllowableContainerFilterTypes();
     }
 
-    private QuerySettings createQuerySettings(ViewContext portalCtx, String dataRegionName, boolean libraryFolder, boolean allViews)
+    private void setDesiredView(QuerySettings settings)
     {
-        UserSchema schema = getSchema();
-        QuerySettings settings = schema.getSettings(portalCtx, dataRegionName, _tableName);
-        if (libraryFolder && !allViews && !portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
-        {
-            var viewName = TABLES_LIBRARY_VIEWS.getOrDefault(_tableName, DEFAULT_VIEW);
-            settings.setViewName(viewName);
-            settings.setAllowChooseView(false);
-        }
-        return settings;
+        var viewName = TABLES_LIBRARY_VIEWS.getOrDefault(_tableName, DEFAULT_VIEW);
+        settings.setViewName(viewName);
+        settings.setAllowChooseView(false);
     }
 
     private void setTitleAndHelpPopup(String tableName, String targetType, QuerySettings settings)
@@ -150,7 +164,7 @@ public class LibraryQueryViewWebPart extends QueryView
     @NotNull
     private ActionURL getTitleLink(ViewContext viewContext)
     {
-        ActionURL url = new ActionURL(TargetedMSController.ShowTargetsGridAction.class, viewContext.getContainer());
+        ActionURL url = new ActionURL(TargetedMSController.ShowTargetsAction.class, viewContext.getContainer());
         url.addParameter(QueryParam.queryName, _tableName);
         return url;
     }

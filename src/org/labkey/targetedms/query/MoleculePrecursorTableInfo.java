@@ -76,6 +76,12 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         setDefaultVisibleColumns(visibleColumns);
     }
 
+    @Override
+    protected Class<? extends Controller> getDetailsActionClass()
+    {
+        return TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class;
+    }
+
     public static class ExperimentMoleculePrecursorTableInfo extends MoleculePrecursorTableInfo
     {
         public ExperimentMoleculePrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf)
@@ -88,11 +94,5 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         {
             return TargetedMSSchema.TABLE_EXPERIMENT_MOLECULE_PRECURSOR;
         }
-    }
-
-    @Override
-    protected Class<? extends Controller> getDetailsActionClass()
-    {
-        return TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class;
     }
 }
