@@ -82,6 +82,9 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         return TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class;
     }
 
+    /**
+     * Used with {@link org.labkey.targetedms.view.SmallMoleculePrecursorsView} to display the nested grid for a single document.
+     */
     public static class ExperimentMoleculePrecursorTableInfo extends MoleculePrecursorTableInfo
     {
         public ExperimentMoleculePrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf)

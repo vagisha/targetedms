@@ -96,6 +96,9 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
         setDefaultVisibleColumns(visibleColumns);
     }
 
+    /**
+     * Used with {@link org.labkey.targetedms.view.PeptidePrecursorsView} to display the nested grid for a single document.
+     */
     public static class ExperimentPrecursorTableInfo extends PrecursorTableInfo
     {
         public ExperimentPrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf)

@@ -113,8 +113,8 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_GENERAL_MOLECULE_ANNOTATION = "GeneralMoleculeAnnotation";
     public static final String TABLE_PEPTIDE_ANNOTATION = "PeptideAnnotation";
     public static final String TABLE_PRECURSOR = "Precursor";
-    public static final String TABLE_EXPERIMENT_PRECURSOR = "ExperimentPrecursor";
-    public static final String TABLE_EXPERIMENT_MOLECULE_PRECURSOR = "ExperimentMoleculePrecursor";
+    public static final String TABLE_EXPERIMENT_PRECURSOR = "ExperimentPrecursor"; // Used to display the nested grid for a single document
+    public static final String TABLE_EXPERIMENT_MOLECULE_PRECURSOR = "ExperimentMoleculePrecursor"; // Used to display the nested grid for a single document
     public static final String TABLE_PRECURSOR_ANNOTATION = "PrecursorAnnotation";
     public static final String TABLE_TRANSITION = "Transition";
     public static final String TABLE_MOLECULE_TRANSITION = "MoleculeTransition";
@@ -212,8 +212,8 @@ public class TargetedMSSchema extends UserSchema
             TargetedMSSchema.TABLE_MOLECULE, "LibraryMolecules",
             TargetedMSSchema.TABLE_PRECURSOR, "LibraryPrecursors",
             TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, "LibraryPrecursors",
-            TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR, "LibraryMembers",
-            TargetedMSSchema.TABLE_EXPERIMENT_MOLECULE_PRECURSOR, "LibraryMembers"
+            TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR, "LibraryMembers", // Library members in a single document
+            TargetedMSSchema.TABLE_EXPERIMENT_MOLECULE_PRECURSOR, "LibraryMembers" // Library members in a single document
     ));
 
     private final ExpSchema _expSchema;

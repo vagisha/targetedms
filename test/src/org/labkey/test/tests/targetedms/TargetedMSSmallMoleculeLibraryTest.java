@@ -231,9 +231,10 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText(SKY_FILE1));
         var precursorTable = new DataRegionTable("small_mol_precursors_view" ,getDriver());
         // DataRegionTable methods do not work correctly in a nested grid so we will look for the expected molecule lists
-        // and molecules are in the html source.
+        // and molecules in the html source.
         assertTextPresentInThisOrder("Formulas", "C4H9NO3", "C4H9NO3", "NamesAndMzs", "NICOTINATE", "NICOTINATE");
-        // Switch to the library view. We should see only the molecule lists and molecules that are in the current library.
+        // Switch to the library view. We should see only the molecule lists and molecules from this document that are
+        // in the current library.
         precursorTable.goToView("Library Members");
         assertTextPresentInThisOrder("NamesAndMzs", "NICOTINATE", "NICOTINATE");
         assertTextNotPresent("Formulas", "C4H9NO3", "C4H9NO3");

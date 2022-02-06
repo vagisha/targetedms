@@ -112,10 +112,10 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
         {
             precursorTable.getPagingWidget().clickShowAll();
         }
-        // The grid is displaying the library view so number of rows should be equal to the library precursor count.
+        // The library view is displayed, so the number of rows should be equal to the library precursor count.
         assertEquals("Unexpected number of rows in the precursors table (library view)", libraryPrecursorCount, precursorTable.getDataRowCount());
 
-        // The grid in the "Library Precursors" webpart cannot be customized until the "View All" button is clicked, or the title is clicked.
+        // The grid cannot be customized until the "View All" button is clicked, or the title is clicked.
         precursorTable.clickHeaderButtonAndWait("View All");
         // After the button is clicked the "default" view for the grid will be displayed.
         if (precursorTable.getPagingWidget().hasPagingButton(false))
