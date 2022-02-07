@@ -113,7 +113,7 @@ public class GuideSet extends Entity
 
         for (RawMetricDataSet dataRow : dataRows)
         {
-            if (dataRow.getGuideSetId() == getRowId())
+            if (dataRow.getSampleFile().getGuideSetId() == getRowId())
             {
                 String metricLabel = OutlierGenerator.get().getMetricLabel(metrics, dataRow);
 

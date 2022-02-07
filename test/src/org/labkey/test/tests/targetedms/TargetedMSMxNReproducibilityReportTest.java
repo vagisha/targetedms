@@ -10,7 +10,6 @@ import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.Daily;
-import org.labkey.test.categories.MS2;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.targetedms.ConnectionSource;
 
@@ -23,7 +22,7 @@ import java.sql.SQLException;
 
 import static org.labkey.test.Locator.tag;
 
-@Category({Daily.class, MS2.class})
+@Category({Daily.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 6)
 public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
 {
@@ -152,7 +151,8 @@ public class TargetedMSMxNReproducibilityReportTest extends TargetedMSTest
         clickAndWait(Locator.linkWithText("Show Details"));
 
         log("Verifying only 3 samples for displayed");
-        checker().verifyEquals("More then 3 samples displayed",
+        waitForText("Blank+IS__VIFonly");
+        checker().verifyEquals("More than 3 samples displayed",
                 "Blank+IS__VIFonly\n" + "Blank+IS__VIFonly (2)\n" + "Cal 1_0_20 ng_mL_VIFonly\n" + "and 22 more",
                 Locator.tagWithId("div", "fom-sampleList").findElement(getDriver()).getText());
 

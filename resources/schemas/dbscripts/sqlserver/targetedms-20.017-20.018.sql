@@ -1,1 +1,0 @@
-ALTER TABLE targetedms.PrecursorChromInfo ADD BestMassErrorPPM Real;

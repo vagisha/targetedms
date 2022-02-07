@@ -98,9 +98,9 @@ public class GuideSetStats
         {
             throw new IllegalStateException("Stats have already been locked");
         }
-        if (!row.isIgnoreInQC() && null != row.getAcquiredTime() &&
-                _guideSet.getTrainingStart().compareTo(row.getAcquiredTime()) <= 0 &&
-                (_guideSet.getTrainingEnd() == null || _guideSet.getTrainingEnd().compareTo(row.getAcquiredTime()) >= 0))
+        if (!row.getSampleFile().isIgnoreInQC(row.getMetricId()) && null != row.getSampleFile().getAcquiredTime() &&
+                _guideSet.getTrainingStart().compareTo(row.getSampleFile().getAcquiredTime()) <= 0 &&
+                (_guideSet.getTrainingEnd() == null || _guideSet.getTrainingEnd().compareTo(row.getSampleFile().getAcquiredTime()) >= 0))
         {
             _trainingRows.add(row);
         }
@@ -140,7 +140,7 @@ public class GuideSetStats
     {
         _locked = true;
 
-        List<RawMetricDataSet> includedTrainingRows = _trainingRows.stream().filter(x -> !x.isIgnoreInQC()).collect(Collectors.toList());
+        List<RawMetricDataSet> includedTrainingRows = _trainingRows.stream().filter(x -> !x.getSampleFile().isIgnoreInQC(x.getMetricId())).collect(Collectors.toList());
         Double[] trainingValues = getValues(includedTrainingRows, false, false);
 
         _average = Stats.getMean(trainingValues);
@@ -154,7 +154,7 @@ public class GuideSetStats
         allRows.addAll(_trainingRows);
         allRows.addAll(_referenceRows);
 
-        List<RawMetricDataSet> includedRows = allRows.stream().filter(x -> !x.isIgnoreInQC()).collect(Collectors.toList());
+        List<RawMetricDataSet> includedRows = allRows.stream().filter(x -> !x.getSampleFile().isIgnoreInQC(x.getMetricId())).collect(Collectors.toList());
 
         Double[] metricVals = getValues(includedRows, true, true);
 

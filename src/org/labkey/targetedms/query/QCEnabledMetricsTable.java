@@ -20,8 +20,12 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.query.DefaultQueryUpdateService;
+import org.labkey.api.query.DuplicateKeyException;
 import org.labkey.api.query.FilteredTable;
+import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryUpdateService;
+import org.labkey.api.query.QueryUpdateServiceException;
+import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -29,6 +33,9 @@ import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+
+import java.sql.SQLException;
+import java.util.Map;
 
 public class QCEnabledMetricsTable extends FilteredTable<TargetedMSSchema>
 {
@@ -64,6 +71,28 @@ public class QCEnabledMetricsTable extends FilteredTable<TargetedMSSchema>
     @Override
     public QueryUpdateService getUpdateService()
     {
-        return new DefaultQueryUpdateService(this, getRealTable());
+        return new DefaultQueryUpdateService(this, getRealTable())
+        {
+            @Override
+            protected Map<String, Object> _insert(User user, Container c, Map<String, Object> row) throws SQLException, ValidationException
+            {
+                TargetedMSManager.get().clearCachedEnabledQCMetrics(c);
+                return super._insert(user, c, row);
+            }
+
+            @Override
+            protected Map<String, Object> _update(User user, Container c, Map<String, Object> row, Map<String, Object> oldRow, Object[] keys) throws SQLException, ValidationException
+            {
+                TargetedMSManager.get().clearCachedEnabledQCMetrics(c);
+                return super._update(user, c, row, oldRow, keys);
+            }
+
+            @Override
+            protected void _delete(Container c, Map<String, Object> row) throws InvalidKeyException
+            {
+                TargetedMSManager.get().clearCachedEnabledQCMetrics(c);
+                super._delete(c, row);
+            }
+        };
     }
 }

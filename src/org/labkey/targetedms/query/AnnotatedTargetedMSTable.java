@@ -129,7 +129,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         addColumn(annotationsColumn);
 
         //get list of annotations the relevant type in this container
-        List<AnnotationSettingForTyping> annotationSettingForTypings = getAnnotationSettings(annotationTarget, getUserSchema(), getContainerFilter());
+        List<AnnotationSettingForTyping> annotationSettingForTypings = getUserSchema().getAnnotationSettings(annotationTarget, getContainerFilter());
         //iterate over list of annotations settings
         for (AnnotationSettingForTyping annotationSetting : annotationSettingForTypings)
         {
@@ -229,61 +229,11 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         return DataSettings.AnnotationType.text;
     }
 
-    public static List<AnnotationSettingForTyping> getAnnotationSettings(String annotationTarget, TargetedMSSchema schema, ContainerFilter containerFilter)
-    {
-        SQLFragment annoSettingsSql = new SQLFragment();
-        TableInfo annotationSettingsTI = TargetedMSManager.getTableInfoAnnotationSettings();
-        // We query for the min and max values to determine both what they're set to, and if they're all the same.
-        // If we have at least one value that's different in the column, the min and max will be different.
-        annoSettingsSql.append("SELECT name," +
-                "max(Type) maxType, " +
-                "min(Type) minType, " +
-                "max(Lookup) maxLookup, " +
-                "min(Lookup) minLookup" +
-                "  FROM ");
-        annoSettingsSql.append(annotationSettingsTI, " annoSettings ");
-        annoSettingsSql.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), " runs ON runs.Id = annoSettings.RunId");
-        annoSettingsSql.append(" WHERE ");
-        annoSettingsSql.append(containerFilter.getSQLFragment(schema.getDbSchema(), new SQLFragment("runs.Container"), schema.getContainer()));
-        // AnnotationSettings table has a "Targets" column that determines which targets
-        // (protein, peptide, precursor, transition, precursor/transition results) an annotation applies to.
-        // Filter annotations to the target that is relevant to this table.
-        annoSettingsSql.append(" AND ");
-        annoSettingsSql.append(" annoSettings.Targets=?").add(annotationTarget);
-        annoSettingsSql.append(" GROUP BY name");
-        annoSettingsSql.append(" ORDER BY name");
-
-        SqlSelector annotationSettingsSelector = new SqlSelector(schema.getDbSchema(), annoSettingsSql);
-        List<AnnotationSettingForTyping> annotationSettingForTypings = new ArrayList<>();
-        try(TableResultSet rs = annotationSettingsSelector.getResultSet())
-        {
-            while (rs.next())
-            {
-                annotationSettingForTypings.add(new AnnotationSettingForTyping(
-                        rs.getString("name"),
-                        rs.getString("maxType"),
-                        rs.getString("minType"),
-                        rs.getString("maxLookup"),
-                        rs.getString("minLookup"))
-                );
-            }
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
-        }
-
-        // Do a case-insensitive sort since different DBs have different default collations
-        annotationSettingForTypings.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
-
-        return annotationSettingForTypings;
-    }
-
     /**
      * Wraps an int column in the real SQL query.
      * Shows the name/value pairs for annotations if the underlying value is non-zero
      */
-    public class AnnotationsDisplayColumn extends DataColumn
+    public static class AnnotationsDisplayColumn extends DataColumn
     {
         private final FieldKey _idFieldKey;
 

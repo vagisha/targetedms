@@ -19,7 +19,6 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
@@ -30,14 +29,9 @@ import org.labkey.targetedms.TargetedMSSchema;
 
 public class PrecursorChromInfoTable extends AnnotatedTargetedMSTable
 {
-    public PrecursorChromInfoTable(final TargetedMSSchema schema, ContainerFilter cf)
+    public PrecursorChromInfoTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        this(TargetedMSManager.getTableInfoPrecursorChromInfo(), schema, cf);
-    }
-
-    public PrecursorChromInfoTable(TableInfo table, TargetedMSSchema schema, ContainerFilter cf)
-    {
-        super(table, schema, cf, null, new SQLFragment("Container"),
+        super(TargetedMSManager.getTableInfoPrecursorChromInfo(), schema, cf, null, new SQLFragment("Container"),
                 TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), "PrecursorChromInfoId", "Precursor Result Annotations", "precursor_result", false);
         var precursorId = getMutableColumn("PrecursorId");
         precursorId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR, cf));

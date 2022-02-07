@@ -28,4 +28,9 @@ public class PanoramaBadDataException extends RuntimeException implements SkipMo
     {
         super(message);
     }
+
+    public PanoramaBadDataException(@NonNls String message, Throwable t)
+    {
+        super(message, t);
+    }
 }

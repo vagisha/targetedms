@@ -120,7 +120,7 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
             sql.append(_joinType != null ? _joinType.getSQL() : "");
 
             sql.append(" WHERE ");
-            sql.append(getContainerFilter().getSQLFragment(getSchema(), _containerSQL, getContainer()));
+            sql.append(getContainerFilter().getSQLFragment(getSchema(), _containerSQL));
 
             if(_containerTableFilter != null)
             {

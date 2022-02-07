@@ -1479,6 +1479,7 @@ public abstract class ChromatogramDataset
             _context = context;
             _syncIntensity = syncIntensity;
             _syncRt = syncRt;
+            _run = TargetedMSManager.getRun(_group.getRunId());
         }
 
         @Override

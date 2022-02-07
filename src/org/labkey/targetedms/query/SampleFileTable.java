@@ -40,6 +40,7 @@ import org.labkey.api.exp.api.ExperimentUrls;
 import org.labkey.api.exp.api.SampleTypeService;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.exp.query.SamplesSchema;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
@@ -161,7 +162,7 @@ public class SampleFileTable extends TargetedMSTable
                 }
             }
             return null;
-        }));
+        }, false));
 
         ActionURL url = new ActionURL(TargetedMSController.ShowSampleFileAction.class, getContainer());
         Map<String, String> urlParams = new HashMap<>();
@@ -221,7 +222,7 @@ public class SampleFileTable extends TargetedMSTable
             aggregates.add(new Aggregate(FieldKey.fromParts("InstrumentId"), Aggregate.BaseType.MAX));
 
             // Also search for values for any replicate annotations being used in this container
-            for (AnnotatedTargetedMSTable.AnnotationSettingForTyping annotation : AnnotatedTargetedMSTable.getAnnotationSettings("replicate", getUserSchema(), ContainerFilter.current(getUserSchema().getContainer())))
+            for (AnnotatedTargetedMSTable.AnnotationSettingForTyping annotation : getUserSchema().getAnnotationSettings("replicate", ContainerFilter.current(getUserSchema().getContainer())))
             {
                 aggregates.add(new Aggregate(FieldKey.fromParts("ReplicateId", annotation.getName()), Aggregate.BaseType.MAX));
             }
@@ -328,7 +329,7 @@ public class SampleFileTable extends TargetedMSTable
                         Long dataSize = downloadInfo.getSize();
                         String size = dataSize != null ? FileUtils.byteCountToDisplaySize(dataSize) : "";
                         ExpData expData = downloadInfo.getExpData();
-                        String url = expData.getWebDavURL(ExpData.PathType.full);
+                        String url = expData.getWebDavURL(FileContentService.PathType.full);
                         if(!downloadInfo.isFile())
                         {
                             int idx = url.lastIndexOf('/');

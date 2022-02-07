@@ -16,13 +16,17 @@
 package org.labkey.targetedms.outliers;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.Sort;
+import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.targetedms.model.SampleFileInfo;
+import org.labkey.api.util.Pair;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ColorGenerator;
@@ -32,6 +36,7 @@ import org.labkey.targetedms.model.GuideSetStats;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.model.QCPlotFragment;
 import org.labkey.targetedms.model.RawMetricDataSet;
+import org.labkey.targetedms.model.SampleFileQCMetadata;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralPrecursor;
 import org.labkey.targetedms.parser.SampleFile;
@@ -41,6 +46,9 @@ import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
 
 import java.awt.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -85,7 +93,7 @@ public class OutlierGenerator
         // handle trace metrics
         if (configuration.getTraceName() != null)
         {
-            sql.append("(SELECT 0 AS PrecursorChromInfoId, SampleFileId, SampleFileId.FilePath, SampleFileId.ReplicateId.Id AS ReplicateId ,");
+            sql.append("(SELECT 0 AS PrecursorChromInfoId, SampleFileId, ");
             sql.append(" metric.Name AS SeriesLabel, ");
             sql.append("\nvalue as MetricValue, metric, ").append(seriesIndex).append(" AS MetricSeriesIndex, ").append(configuration.getId()).append(" AS MetricId");
             sql.append("\n FROM ").append(schemaName).append('.').append(TargetedMSManager.getTableQCTraceMetricValues().getName());
@@ -94,10 +102,12 @@ public class OutlierGenerator
         }
         else
         {
-            sql.append("(SELECT PrecursorChromInfoId, SampleFileId, SampleFileId.FilePath, SampleFileId.ReplicateId.Id AS ReplicateId ,");
+            sql.append("(SELECT PrecursorChromInfoId, SampleFileId, ");
             sql.append(" CAST(IFDEFINED(SeriesLabel) AS VARCHAR) AS SeriesLabel, ");
             sql.append("\nMetricValue, 0 as metric, ").append(seriesIndex).append(" AS MetricSeriesIndex, ").append(configuration.getId()).append(" AS MetricId");
+
             sql.append("\n FROM ").append(schemaName).append('.').append(queryName);
+
             if (!annotationGroups.isEmpty())
             {
                 sql.append(" WHERE ");
@@ -116,7 +126,7 @@ public class OutlierGenerator
                     var annotationValues = annotation.getValues();
                     if (!annotationValues.isEmpty())
                     {
-                        var quoteEscapedVals = annotationValues.stream().map(s -> s.replace("'", "''")).collect(Collectors.toList());
+                        var quoteEscapedVals = annotationValues.stream().map(s -> s.replace("'", "''")).toList( );
                         var vals = "'" + StringUtils.join(quoteEscapedVals, "','") + "'";
                         filterClause.append(" AND  Value IN (").append(vals).append(" )");
                     }
@@ -135,8 +145,13 @@ public class OutlierGenerator
         return sql.toString();
     }
 
-    private String queryContainerSampleFileRawData(List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups, boolean showExcluded)
+    /** @return LabKey SQL to fetch all the values for the specified metrics */
+    private String queryContainerSampleFileRawData(List<QCMetricConfiguration> configurations, Date startDate,
+                                                   Date endDate, List<AnnotationGroup> annotationGroups,
+                                                   boolean showExcluded)
     {
+        // Copy so that we can use our preferred sort
+        configurations = new ArrayList<>(configurations);
         // Sort to make sure we have deterministic behavior in a given container
         configurations.sort(Comparator.comparingInt(QCMetricConfiguration::getId));
 
@@ -155,49 +170,29 @@ public class OutlierGenerator
         
         StringBuilder sql = new StringBuilder();
 
-        sql.append("SELECT X.MetricSeriesIndex, X.MetricId, X.SampleFileId, ");
+        sql.append("SELECT X.* FROM (\n");
 
-        sql.append(" X.FilePath, X.ReplicateId, ");
-
-        sql.append("\nCOALESCE(pci.PrecursorId.Id, pci.MoleculePrecursorId.Id) AS PrecursorId,");
-
-        sql.append("\nX.SeriesLabel,");
-
-        sql.append("\npci.PrecursorId.ModifiedSequence,");
-        sql.append("\npci.MoleculePrecursorId.CustomIonName,");
-        sql.append("\npci.MoleculePrecursorId.IonFormula,");
-
-        sql.append("\npci.MoleculePrecursorId.massMonoisotopic,");
-        sql.append("\npci.MoleculePrecursorId.massAverage,");
-        sql.append("\n(CASE WHEN COALESCE(pci.PrecursorId.Charge, pci.MoleculePrecursorId.Charge) > 0 THEN ' +' ELSE ' ' END)");
-        sql.append("\n    || CAST(COALESCE(pci.PrecursorId.Charge, pci.MoleculePrecursorId.Charge) AS VARCHAR) AS PrecursorCharge,");
-
-        sql.append("\nCASE WHEN pci.PrecursorId.Id IS NOT NULL THEN 'Peptide' WHEN pci.MoleculePrecursorId.Id IS NOT NULL THEN 'Fragment' ELSE 'Other' END AS DataType,");
-        sql.append("\nCOALESCE(pci.PrecursorId.Mz, pci.MoleculePrecursorId.Mz) AS MZ,");
-
-        sql.append("\nX.PrecursorChromInfoId, sf.AcquiredTime, X.MetricValue, COALESCE(gs.RowId, 0) AS GuideSetId,");
-        sql.append("\nCASE WHEN (exclusion.ReplicateId IS NOT NULL) THEN TRUE ELSE FALSE END AS IgnoreInQC,");
-        sql.append("\nCASE WHEN (sf.AcquiredTime >= gs.TrainingStart AND sf.AcquiredTime <= gs.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange");
-        sql.append("\nFROM (");
+        Set<Pair<Integer, Integer>> alreadyAdded = new HashSet<>();
 
         String sep = "";
         for (QCMetricConfiguration configuration : preferredConfigs.values())
         {
-            sql.append(sep).append(getEachSeriesTypePlotDataSql(1, configuration, annotationGroups));
-            sep = "\nUNION\n";
+            if (alreadyAdded.add(Pair.of(configuration.getId(), 1)))
+            {
+                sql.append(sep).append(getEachSeriesTypePlotDataSql(1, configuration, annotationGroups));
+            }
+            sep = "\nUNION ALL\n";
             if (configuration.getSeries2SchemaName() != null && configuration.getSeries2QueryName() != null)
             {
-                sql.append(sep).append(getEachSeriesTypePlotDataSql(2, configuration, annotationGroups));
+                if (alreadyAdded.add(Pair.of(configuration.getId(), 2)))
+                {
+                    sql.append(sep).append(getEachSeriesTypePlotDataSql(2, configuration, annotationGroups));
+                }
             }
         }
 
         sql.append(") X");
         sql.append("\nINNER JOIN SampleFile sf ON X.SampleFileId = sf.Id");
-        sql.append("\nLEFT JOIN PrecursorChromInfo pci ON pci.Id = X.PrecursorChromInfoId");
-        sql.append("\nLEFT JOIN QCMetricExclusion exclusion");
-        sql.append("\nON sf.ReplicateId = exclusion.ReplicateId AND (exclusion.MetricId IS NULL OR exclusion.MetricId = x.MetricId)");
-        sql.append("\nLEFT JOIN GuideSetForOutliers gs");
-        sql.append("\nON ((sf.AcquiredTime >= gs.TrainingStart AND sf.AcquiredTime < gs.ReferenceEnd) OR (sf.AcquiredTime >= gs.TrainingStart AND gs.ReferenceEnd IS NULL))");
         if (null != startDate || null != endDate)
         {
             var sqlSeparator = "WHERE";
@@ -243,14 +238,134 @@ public class OutlierGenerator
 
     public List<RawMetricDataSet> getRawMetricDataSets(Container container, User user, List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups, boolean showExcluded)
     {
+        List<RawMetricDataSet> result = new ArrayList<>();
+
+        TargetedMSSchema schema = new TargetedMSSchema(user, container);
+        TableInfo sampleFileForQC = schema.getTable("SampleFileForQC");
+        List<SampleFileQCMetadata> sfs = new TableSelector(sampleFileForQC).getArrayList(SampleFileQCMetadata.class);
+
+        Map<Long, SampleFileQCMetadata> sampleFiles = new HashMap<>();
+        for (SampleFileQCMetadata sf : sfs)
+        {
+            sampleFiles.put(sf.getId(), sf);
+        }
+
         String labkeySQL = queryContainerSampleFileRawData(configurations, startDate, endDate, annotationGroups, showExcluded);
 
-        return QueryService.get().selector(
-                new TargetedMSSchema(user, container),
-                labkeySQL,
-                TableSelector.ALL_COLUMNS,
-                null,
-                new Sort("MetricSeriesIndex,seriesLabel,acquiredTime")).getArrayList(RawMetricDataSet.class);
+        // Use strictColumnList = false to avoid a potentially expensive injected join for the Container via lookups
+        TableInfo ti = QueryService.get().createTable(schema, labkeySQL, null, true);
+
+        SQLFragment sql = new SQLFragment("SELECT lk.*, pci.PrecursorId ");
+        sql.append(" FROM ");
+        sql.append(ti, "lk");
+        sql.append(" LEFT OUTER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(" ON lk.PrecursorChromInfoId = pci.Id ");
+
+        try
+        {
+            Map<Long, RawMetricDataSet.PrecursorInfo> precursors = loadPrecursors(schema);
+
+            try (ResultSet rs = new SqlSelector(TargetedMSManager.getSchema(), sql).getResultSet(false))
+            {
+                while (rs.next())
+                {
+                    long sampleFileId = rs.getLong("SampleFileId");
+                    Long precursorId = getLong(rs, "PrecursorId");
+
+                    // Sample-scoped metrics won't have an associated precursor
+                    RawMetricDataSet.PrecursorInfo precursor = null;
+                    if (precursorId != null)
+                    {
+                        precursor = precursors.get(precursorId);
+                        if (precursor == null)
+                        {
+                            throw new IllegalStateException("Could not find Precursor with Id " + precursorId);
+                        }
+                    }
+
+                    RawMetricDataSet row = new RawMetricDataSet(sampleFiles.get(sampleFileId), precursor);
+
+                    row.setMetricSeriesIndex(rs.getInt("MetricSeriesIndex"));
+                    row.setMetricId(rs.getInt("MetricId"));
+                    row.setSeriesLabel(rs.getString("SeriesLabel"));
+                    row.setPrecursorChromInfoId(getLong(rs, "PrecursorChromInfoId"));
+                    row.setMetricValue(getDouble(rs, "MetricValue"));
+                    result.add(row);
+                }
+            }
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+
+        result.sort(Comparator.comparing(RawMetricDataSet::getMetricSeriesIndex).
+                thenComparing(RawMetricDataSet::getSeriesLabel).
+                thenComparing(x -> x.getSampleFile().getAcquiredTime()));
+
+        return result;
+    }
+
+    /**
+     * Fetch all the precursors in this folder. Loaded separately from the metric values because a given precursor will
+     * have many metrics, so for DB query and Java memory use it's more efficient to not flatten them into a single
+     * set of results.
+     */
+    @NotNull
+    private Map<Long, RawMetricDataSet.PrecursorInfo> loadPrecursors(TargetedMSSchema schema) throws SQLException
+    {
+        Map<Long, RawMetricDataSet.PrecursorInfo> precursors = new HashMap<>();
+
+        DecimalFormat format = new DecimalFormat();
+        format.setMinimumFractionDigits(4);
+
+        // First the proteomics side
+        try (ResultSet rs = new TableSelector(schema.getTable(TargetedMSSchema.TABLE_PRECURSOR)).getResultSet(false))
+        {
+            while (rs.next())
+            {
+                RawMetricDataSet.PrecursorInfo p = createPrecursor(format, rs, precursors);
+                p.setModifiedSequence(rs.getString("ModifiedSequence"));
+            }
+        }
+
+        // And now the small molecules
+        try (ResultSet rs = new TableSelector(schema.getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR)).getResultSet(false))
+        {
+            while (rs.next())
+            {
+                RawMetricDataSet.PrecursorInfo p = createPrecursor(format, rs, precursors);
+                p.setCustomIonName(rs.getString("CustomIonName"));
+                p.setIonFormula(rs.getString("IonFormula"));
+                p.setMassMonoisotopic(getDouble(rs, "massMonoisotopic"));
+                p.setMassAverage(getDouble(rs, "massAverage"));
+            }
+        }
+        return precursors;
+    }
+
+    @NotNull
+    private RawMetricDataSet.PrecursorInfo createPrecursor(DecimalFormat format, ResultSet rs, Map<Long, RawMetricDataSet.PrecursorInfo> precursors) throws SQLException
+    {
+        RawMetricDataSet.PrecursorInfo p = new RawMetricDataSet.PrecursorInfo(format);
+        p.setPrecursorId(rs.getLong("Id"));
+        p.setMz(rs.getDouble("MZ"));
+        p.setPrecursorCharge(rs.getInt("Charge"));
+        precursors.put(p.getPrecursorId(), p);
+        return p;
+    }
+
+    private Long getLong(ResultSet rs, String columnName) throws SQLException
+    {
+        long result = rs.getLong(columnName);
+        return result == 0L && rs.wasNull() ? null : result;
+    }
+
+    private Double getDouble(ResultSet rs, String columnName) throws SQLException
+    {
+        double result = rs.getDouble(columnName);
+        return result == 0.0 && rs.wasNull() ? null : result;
     }
 
     /**
@@ -264,7 +379,7 @@ public class OutlierGenerator
         for (RawMetricDataSet row : rawMetricData)
         {
             GuideSetKey key = row.getGuideSetKey();
-            GuideSetStats stats = result.computeIfAbsent(row.getGuideSetKey(), x -> new GuideSetStats(key, guideSets.get(key.getGuideSetId())));
+            GuideSetStats stats = result.computeIfAbsent(key, x -> new GuideSetStats(key, guideSets.get(key.getGuideSetId())));
             stats.addRow(row);
         }
 
@@ -281,7 +396,7 @@ public class OutlierGenerator
 
         for (RawMetricDataSet dataRow : dataRows)
         {
-            SampleFileInfo sampleFile = sampleFiles.get(dataRow.getSampleFileId());
+            SampleFileInfo sampleFile = sampleFiles.get(dataRow.getSampleFile().getId());
             GuideSetStats stats = allStats.get(dataRow.getGuideSetKey());
 
             // If data was deleted after the full metric data was queried, but before we got here, the sample file
@@ -331,7 +446,7 @@ public class OutlierGenerator
         }
 
         // Track all of the precursors that need to be assigned a color
-        Map<Integer, QCPlotFragment> fragmentsByPrecursorId = new TreeMap<>();
+        Map<Long, QCPlotFragment> fragmentsByPrecursorId = new TreeMap<>();
 
         for (Map.Entry<String, List<RawMetricDataSet>> entry : rawMetricDataSetMapByLabel.entrySet())
         {
@@ -367,9 +482,9 @@ public class OutlierGenerator
         // Now that we have all the precursor IDs, in order (important so that we de-dupe the colors in a stable order),
         // run through them and choose a color
         Set<Color> seriesColors = new HashSet<>();
-        for (Map.Entry<Integer, QCPlotFragment> entry : fragmentsByPrecursorId.entrySet())
+        for (Map.Entry<Long, QCPlotFragment> entry : fragmentsByPrecursorId.entrySet())
         {
-            int precursorId = entry.getKey();
+            long precursorId = entry.getKey();
             // It could be either a small molecule or a peptide, so look up both options
             GeneralMolecule molecule;
             GeneralPrecursor<?> precursor = PrecursorManager.getPrecursor(c, precursorId, u);

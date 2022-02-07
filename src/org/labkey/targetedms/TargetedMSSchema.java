@@ -20,25 +20,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
-import org.labkey.api.data.AJAXDetailsDisplayColumn;
-import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerFilter;
-import org.labkey.api.data.ContainerForeignKey;
-import org.labkey.api.data.DataColumn;
-import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbSchemaType;
-import org.labkey.api.data.DisplayColumn;
-import org.labkey.api.data.DisplayColumnFactory;
-import org.labkey.api.data.EnumTableInfo;
-import org.labkey.api.data.JdbcType;
-import org.labkey.api.data.RenderContext;
-import org.labkey.api.data.RuntimeSQLException;
-import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.UpdateColumn;
-import org.labkey.api.data.WrappedColumn;
+import org.labkey.api.data.*;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
@@ -221,6 +205,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String SAMPLE_FILE_RUN_PREFIX = "samplefile_run";
 
     private final ExpSchema _expSchema;
+    private Map<String, List<AnnotatedTargetedMSTable.AnnotationSettingForTyping>> _annotations;
 
     static public void register(Module module)
     {
@@ -248,14 +233,9 @@ public class TargetedMSSchema extends UserSchema
 
     private static SQLFragment getJoinToRunsTable(String tableAlias)
     {
-        return getJoinToRunsTable(tableAlias, "RunId");
-    }
-
-    private static SQLFragment getJoinToRunsTable(String tableAlias, String columnName)
-    {
         tableAlias = tableAlias == null ? "" : tableAlias + ".";
         return makeInnerJoin(TargetedMSManager.getTableInfoRuns(),
-                TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, tableAlias + columnName);
+                TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, tableAlias + "RunId");
     }
 
     private static SQLFragment makeInnerJoin(TableInfo table, String alias, String colRight)
@@ -423,7 +403,7 @@ public class TargetedMSSchema extends UserSchema
             {
                 SQLFragment sql = new SQLFragment();
                 sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSkylineAuditLog(), "e", "X.EntryId", "EntryId"));
-                sql.append(getJoinToRunsTable("e", "RunId"));
+                sql.append(getJoinToRunsTable("e"));
                 return sql;
             }
             @Override
@@ -615,6 +595,55 @@ public class TargetedMSSchema extends UserSchema
 
         public abstract SQLFragment getSQL();
         public abstract FieldKey getContainerFieldKey();
+    }
+
+    @NotNull
+    public List<AnnotatedTargetedMSTable.AnnotationSettingForTyping> getAnnotationSettings(String annotationTarget, ContainerFilter containerFilter)
+    {
+        // Cached at the schema level to make them easy to reuse across different tables
+        if (_annotations == null)
+        {
+            _annotations = new CaseInsensitiveHashMap<>();
+            SQLFragment annoSettingsSql = new SQLFragment();
+            TableInfo annotationSettingsTI = TargetedMSManager.getTableInfoAnnotationSettings();
+            // We query for the min and max values to determine both what they're set to, and if they're all the same.
+            // If we have at least one value that's different in the column, the min and max will be different.
+            annoSettingsSql.append("SELECT name," +
+                    "max(Type) maxType, " +
+                    "min(Type) minType, " +
+                    "max(Lookup) maxLookup, " +
+                    "min(Lookup) minLookup, " +
+                    "Targets " +
+                    "  FROM ");
+            annoSettingsSql.append(annotationSettingsTI, " annoSettings ");
+            annoSettingsSql.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), " runs ON runs.Id = annoSettings.RunId");
+            annoSettingsSql.append(" WHERE ");
+            annoSettingsSql.append(containerFilter.getSQLFragment(getDbSchema(), new SQLFragment("runs.Container")));
+            // AnnotationSettings table has a "Targets" column that determines which targets
+            // (protein, peptide, precursor, transition, precursor/transition results) an annotation applies to.
+            // Fetch them all at once for efficiency purposes
+            annoSettingsSql.append(" GROUP BY name, Targets");
+
+            new SqlSelector(getDbSchema(), annoSettingsSql).forEach(rs ->
+            {
+                List<AnnotatedTargetedMSTable.AnnotationSettingForTyping> annotationsForTarget =
+                        _annotations.computeIfAbsent(rs.getString("Targets"), x -> new ArrayList<>());
+
+                annotationsForTarget.add(new AnnotatedTargetedMSTable.AnnotationSettingForTyping(
+                        rs.getString("name"),
+                        rs.getString("maxType"),
+                        rs.getString("minType"),
+                        rs.getString("maxLookup"),
+                        rs.getString("minLookup"))
+                );
+            });
+
+            // Do a case-insensitive sort since different DBs have different default collations
+            _annotations.values().forEach(x -> x.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName())));
+        }
+
+        List<AnnotatedTargetedMSTable.AnnotationSettingForTyping> result = _annotations.get(annotationTarget);
+        return result == null ? Collections.emptyList() : Collections.unmodifiableList(result);
     }
 
     public ExpRunTable getTargetedMSRunsTable(ContainerFilter cf)
@@ -939,15 +968,18 @@ public class TargetedMSSchema extends UserSchema
             return result;
         }
 
-        if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
+        // Issue 44713: Disconnect on table name in metadata for targetedms.RepresentativeDataState_Run/RunRepresentativeDataState
+        if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name) || RunRepresentativeDataState.class.getSimpleName().equalsIgnoreCase(name))
         {
-            return new EnumTableInfo<>(
+            EnumTableInfo result = new EnumTableInfo<>(
                     RunRepresentativeDataState.class,
                     this,
                     RunRepresentativeDataState::getLabel,
                     true,
                     "Possible states a run might be in for resolving representative data after upload"
                     );
+            result.setName(TABLE_REPRESENTATIVE_DATA_STATE_RUN);
+            return result;
         }
         if (TABLE_REPRESENTATIVE_DATA_STATE.equalsIgnoreCase(name))
         {
@@ -1257,7 +1289,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.precursor
         if (TABLE_PRECURSOR_CHROM_INFO.equalsIgnoreCase(name))
         {
-            return new PrecursorChromInfoTable(getSchema().getTable(name), this, cf);
+            return new PrecursorChromInfoTable(this, cf);
         }
         if (TABLE_TRANSITION.equalsIgnoreCase(name))
         {

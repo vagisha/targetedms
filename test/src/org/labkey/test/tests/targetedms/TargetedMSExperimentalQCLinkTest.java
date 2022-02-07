@@ -8,7 +8,6 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.Daily;
-import org.labkey.test.categories.MS2;
 import org.labkey.test.components.CustomizeView;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.QCPlotsWebPart;
@@ -19,7 +18,7 @@ import org.labkey.test.util.DataRegionTable;
 import java.util.Arrays;
 import java.util.List;
 
-@Category({Daily.class, MS2.class})
+@Category({Daily.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 4)
 public class TargetedMSExperimentalQCLinkTest extends TargetedMSTest
 {
@@ -149,8 +148,10 @@ public class TargetedMSExperimentalQCLinkTest extends TargetedMSTest
         qcDashboard = new PanoramaDashboard(this);
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
 
+
         checker().verifyEquals("Incorrect expRange information", expRange, qcPlotsWebPart.getExperimentRangeRectTitle());
         checker().verifyEquals("Incorrect guideSet information", guideSetTitle, qcPlotsWebPart.getGuideSetTrainingRectTitle(2));
+        checker().screenShotIfNewError("InitialRangeFiltering");
 
         String testStartDate = "2013-08-19";
         String testEndDate = "2013-08-27";

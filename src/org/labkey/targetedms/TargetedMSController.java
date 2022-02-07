@@ -983,7 +983,7 @@ public class TargetedMSController extends SpringActionController
             List<JSONObject> result = new ArrayList<>();
             for (QCMetricConfiguration configuration : enabledQCMetricConfigurations)
             {
-                   result.add(configuration.toJSON());
+                result.add(configuration.toJSON());
             }
             response.put("configurations", result);
             return response;
@@ -1292,13 +1292,13 @@ public class TargetedMSController extends SpringActionController
             if (zoomedRange)
             {
                 // filter the stats for targeted range
-                Predicate<RawMetricDataSet> withInDateRange = rawMetricDataSet -> rawMetricDataSet.getAcquiredTime() != null &&
+                Predicate<RawMetricDataSet> withInDateRange = rawMetricDataSet -> rawMetricDataSet.getSampleFile().getAcquiredTime() != null &&
                         (qcStartDate != null &&
-                        (rawMetricDataSet.getAcquiredTime().after(qcStartDate)
-                                || DateUtil.getDateOnly(rawMetricDataSet.getAcquiredTime()).compareTo(qcStartDate) == 0)) &&
+                        (rawMetricDataSet.getSampleFile().getAcquiredTime().after(qcStartDate)
+                                || DateUtil.getDateOnly(rawMetricDataSet.getSampleFile().getAcquiredTime()).compareTo(qcStartDate) == 0)) &&
                         (form.getEndDate() != null &&
-                        (rawMetricDataSet.getAcquiredTime().before(form.getEndDate())
-                                || DateUtil.getDateOnly(rawMetricDataSet.getAcquiredTime()).compareTo(form.getEndDate()) == 0));
+                        (rawMetricDataSet.getSampleFile().getAcquiredTime().before(form.getEndDate())
+                                || DateUtil.getDateOnly(rawMetricDataSet.getSampleFile().getAcquiredTime()).compareTo(form.getEndDate()) == 0));
                 rawMetricDataSets = rawMetricDataSets
                         .stream()
                         .filter(withInDateRange)
@@ -2990,6 +2990,11 @@ public class TargetedMSController extends SpringActionController
             validatePeptideGroup(form);
             validatePeptide(form);
             validateMolecule(form);
+
+            if (_molecule == null && _peptide == null && _peptideGrp == null)
+            {
+                throw new NotFoundException();
+            }
         }
 
         @Override
@@ -5653,7 +5658,7 @@ public class TargetedMSController extends SpringActionController
 
             if ("skyp".equalsIgnoreCase(form.getView()))
             {
-                String url = data.getWebDavURL(ExpData.PathType.full);
+                String url = data.getWebDavURL(FileContentService.PathType.full);
                 if (url != null)
                 {
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(url.getBytes(StringUtilsLabKey.DEFAULT_CHARSET));

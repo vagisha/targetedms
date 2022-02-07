@@ -367,7 +367,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public String getExperimentRangeRectTitle()
     {
-        return elementCache().experimentRangeRect.findElement(getDriver()).getText();
+        return elementCache().experimentRangeRect.waitForElement(getDriver(), WAIT_FOR_JAVASCRIPT).getText();
     }
 
     public int getGuideSetErrorBarPathCount(String cls)

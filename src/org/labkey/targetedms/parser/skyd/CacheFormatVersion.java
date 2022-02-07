@@ -34,6 +34,7 @@ public enum CacheFormatVersion
     Twelve,// Adds structure sizes to CacheHeaderStruct
     Thirteen, // Adds total ion current to CachedFileHeaderStruct
     Fourteen, // Adds sample id to CachedFileHeaderStruct
+    Fifteen, // Add import time to CachedFileHeaderStruct
     UnknownFutureVersion;
     public static CacheFormatVersion fromInteger(int i) {
         if (i <= Zero.ordinal()) {
@@ -44,5 +45,5 @@ public enum CacheFormatVersion
         }
         return values()[i];
     }
-    public static final CacheFormatVersion CURRENT = Fourteen;
+    public static final CacheFormatVersion CURRENT = Fifteen;
 }
