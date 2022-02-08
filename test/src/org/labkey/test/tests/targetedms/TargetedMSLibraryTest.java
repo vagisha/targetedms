@@ -113,18 +113,18 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         {
             files.add(SKY_FILE1); // All proteins are from the same file in version 1.
         }
-        verifyLibraryProteins(proteins, files);
+        verifyLibraryProteins(proteins, files, 7);
 
         // Verify protein details page
         verifyProteinDetailsPage();
     }
 
-    private void verifyLibraryProteins(List<String> proteins, List<String> files)
+    private void verifyLibraryProteins(List<String> proteins, List<String> files, int totalProteinCount)
     {
         log("Verify proteins in the library");
 
         DataRegionTable proteinsTable = new DataRegionTable("PeptideGroup",getDriver());
-        assertEquals("Unexpected number of rows in table", proteins.size(), proteinsTable.getDataRowCount());
+        assertEquals("Unexpected number of rows in proteins table (library view)", proteins.size(), proteinsTable.getDataRowCount());
 
         int i = 0;
         for(String protein: proteins)
@@ -136,6 +136,9 @@ public class TargetedMSLibraryTest extends TargetedMSTest
             assertEquals("Unexpected file name for " + protein, files.get(i), fileName.get(0));
             i++;
         }
+
+        proteinsTable.clickHeaderButtonAndWait("View All");
+        assertEquals("Unexpected number of rows in proteins table (default view)", totalProteinCount, proteinsTable.getDataRowCount());
     }
 
     @LogMethod
@@ -170,10 +173,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
                                            SKY_FILE2, SKY_FILE2, SKY_FILE2,
                                            SKY_FILE2);
 
-        DataRegionTable table = new DataRegionTable("PeptideGroup", this);
-        table.setFilter("RepresentativeDataState", "Equals", "Current");
-
-        verifyLibraryProteins(proteins, files);
+        verifyLibraryProteins(proteins, files, 15);
     }
 
     private void verifyChromatogramLibraryDownloadWebPart(int proteinCount, int peptideCount, int transitionCount, int revision)
@@ -346,6 +346,6 @@ public class TargetedMSLibraryTest extends TargetedMSTest
                 SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2, SKY_FILE2,
                 SKY_FILE2);
 
-        verifyLibraryProteins(proteins, files);
+        verifyLibraryProteins(proteins, files, 15);
     }
 }

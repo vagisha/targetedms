@@ -50,6 +50,7 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         verifyRevision2();
         verifyAndResolveConflicts();
         verifyRevision3();
+        verifyDocumentLibraryView();
         deleteSkyFile(SKY_FILE2);
         verifySingleFileLibrary(4);
     }
@@ -78,7 +79,7 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         precursorMap.put("124.0789", Arrays.asList("C4H9NO3", SKY_FILE1, "C4H9NO3[M4C13+H]"));
         precursorMap.put("124.0393", Arrays.asList("NICOTINATE", SKY_FILE1, "[M+]"));
 
-        verifyLibraryPrecursors(precursorMap, 4);
+        verifyLibraryPrecursors(precursorMap, 4, 4);
     }
 
     private void verifyLibraryMoleculeCount(int count)
@@ -135,29 +136,38 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         // Only in SKY_FILE1
         precursorMap.put("124.0393", Arrays.asList("NICOTINATE", SKY_FILE1, "[M+]"));
 
-        verifyLibraryPrecursors(precursorMap, 6);
+        verifyLibraryPrecursors(precursorMap, 6, 8);
     }
 
-    private void verifyLibraryPrecursors(Map<String, List<String>> precursorMap, int totalPrecursorCount)
+    private void verifyLibraryPrecursors(Map<String, List<String>> precursorMap, int libraryPrecursorCount, int totalPrecursorCount)
     {
         log("Verify precursors in the library");
 
-        DataRegionTable precursorTable = new DataRegionTable("LibraryMoleculePrecursor" ,getDriver());
-        if(totalPrecursorCount > 100)
+        DataRegionTable precursorTable = new DataRegionTable("MoleculePrecursor" ,getDriver());
+        if(libraryPrecursorCount > 100)
         {
             precursorTable.getPagingWidget().setPageSize(250, true);
         }
 
-        assertEquals("Unexpected number of rows in precursors table", totalPrecursorCount, precursorTable.getDataRowCount());
+        assertEquals("Unexpected number of rows in precursors table", libraryPrecursorCount, precursorTable.getDataRowCount());
 
         for(Map.Entry<String, List<String>> entry: precursorMap.entrySet())
         {
             String mz = entry.getKey();
             int idx = precursorTable.getRowIndex("Q1 m/z", mz);
             assertTrue("Expected precursor with mz " + mz + " not found in table", idx != -1);
-            List<String> rowValues = precursorTable.getRowDataAsText(idx, "Molecule Name", "File", "Ion Formula");
+            List<String> rowValues = precursorTable.getRowDataAsText(idx, "Molecule", "File", "Ion Formula");
             assertEquals("Wrong data for row", entry.getValue(), rowValues);
         }
+
+        // Click the "View All" button to display the default view of the grid, and check the total precursor count displayed.
+        // This will include all the precursors from all the documents in the folder.
+        precursorTable.clickHeaderButtonAndWait("View All");
+        if (precursorTable.getPagingWidget().hasPagingButton(false))
+        {
+            precursorTable.getPagingWidget().clickShowAll();
+        }
+        assertEquals("Unexpected number of rows in precursors table (default view)", totalPrecursorCount, precursorTable.getDataRowCount());
     }
 
 
@@ -212,6 +222,21 @@ public class TargetedMSSmallMoleculeLibraryTest extends TargetedMSTest
         precursorMap.put("125.0371", Arrays.asList("CYSTEINE", SKY_FILE2, "[M3.01007+]"));
         precursorMap.put("130.0594", Arrays.asList("NICOTINATE", SKY_FILE1, "[M6.02013+]"));
 
-        verifyLibraryPrecursors(precursorMap, 6);
+        verifyLibraryPrecursors(precursorMap, 6, 8);
+    }
+
+    private void verifyDocumentLibraryView()
+    {
+        goToDashboard();
+        clickAndWait(Locator.linkContainingText(SKY_FILE1));
+        var precursorTable = new DataRegionTable("small_mol_precursors_view" ,getDriver());
+        // DataRegionTable methods do not work correctly in a nested grid so we will look for the expected molecule lists
+        // and molecules in the html source.
+        assertTextPresentInThisOrder("Formulas", "C4H9NO3", "C4H9NO3", "NamesAndMzs", "NICOTINATE", "NICOTINATE");
+        // Switch to the library view. We should see only the molecule lists and molecules from this document that are
+        // in the current library.
+        precursorTable.goToView("Library Members");
+        assertTextPresentInThisOrder("NamesAndMzs", "NICOTINATE", "NICOTINATE");
+        assertTextNotPresent("Formulas", "C4H9NO3", "C4H9NO3");
     }
 }

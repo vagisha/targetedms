@@ -1,7 +1,7 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         label="Library Molecules" canOverride="true">
     <columns>
-        <column name="PeptideGroupId/RunId/File" />
+        <column name="PeptideGroupId/Label" />
         <column name="Molecule" />
         <column name="IonFormula" />
         <column name="CustomIonName" />
@@ -11,6 +11,7 @@
         <column name="PredictedRetentionTime" />
         <column name="AvgMeasuredRetentionTime" />
         <column name="NoteAnnotations" />
+        <column name="PeptideGroupId/RunId/File" />
     </columns>
     <filters>
         <filter column="RepresentivePrecursorCount" operator="gt" value="0"/>

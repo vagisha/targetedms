@@ -19,14 +19,12 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
-import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.api.targetedms.RepresentativeDataState;
 import org.springframework.web.servlet.mvc.Controller;
 
 import java.util.ArrayList;
@@ -98,6 +96,9 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
         setDefaultVisibleColumns(visibleColumns);
     }
 
+    /**
+     * Used with {@link org.labkey.targetedms.view.PeptidePrecursorsView} to display the nested grid for a single document.
+     */
     public static class ExperimentPrecursorTableInfo extends PrecursorTableInfo
     {
         public ExperimentPrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf)
@@ -109,30 +110,6 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
         public String getName()
         {
             return TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR;
-        }
-
-
-    }
-
-    public static class LibraryPrecursorTableInfo extends PrecursorTableInfo
-    {
-        public LibraryPrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf)
-        {
-            super(TargetedMSManager.getTableInfoPrecursor(), cf, TargetedMSSchema.TABLE_LIBRARY_PRECURSOR, schema, false);
-        }
-
-        public void selectRepresentative()
-        {
-            SQLFragment sql = new SQLFragment();
-            sql.append("RepresentativeDataState = ? ");
-            sql.add(RepresentativeDataState.Representative.ordinal());
-            addCondition(sql);
-        }
-
-        @Override
-        public String getName()
-        {
-            return TargetedMSSchema.TABLE_LIBRARY_PRECURSOR;
         }
     }
 
