@@ -303,9 +303,9 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public List<SampleFilePath> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData)
+    public List<SampleFilePath> getSampleFilePaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData)
     {
-        return MsDataSourceUtil.getInstance().getSampleFilesPaths(sampleFiles, container, lookupExpData);
+        return MsDataSourceUtil.getInstance().getSampleFilePaths(sampleFiles, container, lookupExpData);
     }
 
     @Override

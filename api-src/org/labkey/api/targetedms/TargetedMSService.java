@@ -129,7 +129,7 @@ public interface TargetedMSService
      * @param lookupExpData if true, look for a matching row in exp.data before looking on the filesystem
      * @return List of {@link SampleFilePath} objects encapsulating an ISampleFile and its path on the server.
      */
-    List<SampleFilePath> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData);
+    List<SampleFilePath> getSampleFilePaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData);
 
     /**
      * Returns the name of a chromatogram library file according to the naming pattern used for creating

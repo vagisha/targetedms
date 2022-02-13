@@ -243,16 +243,16 @@ public class MsDataSourceUtil
      * @return List of {@link SampleFilePath} objects encapsulating an ISampleFile and its path on the server.
      */
     @NotNull
-    public List<SampleFilePath> getSampleFilesPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, boolean lookupExpData)
+    public List<SampleFilePath> getSampleFilePaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, boolean lookupExpData)
     {
         FileContentService fcs = FileContentService.get();
         boolean lookupFs = fcs != null && !fcs.isCloudRoot(container);
         ExperimentService expSvc = lookupExpData ? ExperimentService.get() : null;
-        return getSampleFilesPaths(sampleFiles, container, expSvc, lookupFs);
+        return getSampleFilePaths(sampleFiles, container, expSvc, lookupFs);
     }
 
     @NotNull
-    private List<SampleFilePath> getSampleFilesPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, @Nullable ExperimentService expSvc, boolean lookupFs)
+    private List<SampleFilePath> getSampleFilePaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, @Nullable ExperimentService expSvc, boolean lookupFs)
     {
         List<SampleFilePath> sampleFilePaths = new ArrayList<>();
         sampleFiles.stream().forEach(s -> sampleFilePaths.add(new SampleFilePath(s)));
