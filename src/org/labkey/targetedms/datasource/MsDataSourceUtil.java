@@ -243,27 +243,27 @@ public class MsDataSourceUtil
      * @return List of {@link SampleFilePath} objects encapsulating an ISampleFile and its path on the server.
      */
     @NotNull
-    public List<SampleFilePath> getDataPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, boolean lookupExpData)
+    public List<SampleFilePath> getSampleFilesPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, boolean lookupExpData)
     {
         FileContentService fcs = FileContentService.get();
         boolean lookupFs = fcs != null && !fcs.isCloudRoot(container);
         ExperimentService expSvc = lookupExpData ? ExperimentService.get() : null;
-        return getDataPaths(sampleFiles, container, expSvc, lookupFs);
+        return getSampleFilesPaths(sampleFiles, container, expSvc, lookupFs);
     }
 
     @NotNull
-    private List<SampleFilePath> getDataPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, @Nullable ExperimentService expSvc, boolean lookupFs)
+    private List<SampleFilePath> getSampleFilesPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, @Nullable ExperimentService expSvc, boolean lookupFs)
     {
-        List<SampleFilePath> dataPaths = new ArrayList<>();
-        sampleFiles.stream().forEach(s -> dataPaths.add(new SampleFilePath(s)));
+        List<SampleFilePath> sampleFilePaths = new ArrayList<>();
+        sampleFiles.stream().forEach(s -> sampleFilePaths.add(new SampleFilePath(s)));
 
         Path rawFilesDir = getRawFilesDir(container);
         if (rawFilesDir == null || !Files.exists(rawFilesDir))
         {
-            return dataPaths;
+            return sampleFilePaths;
         }
 
-        for(SampleFilePath sampleFilePath: dataPaths)
+        for(SampleFilePath sampleFilePath: sampleFilePaths)
         {
             ISampleFile sampleFile = sampleFilePath.getSampleFile();
             MsDataSource dataSource = getMsDataSource(sampleFile);
@@ -273,7 +273,7 @@ public class MsDataSourceUtil
             sampleFilePath.setPath(path);
         }
 
-        return dataPaths;
+        return sampleFilePaths;
     }
 
     private Path getDataPath(String fileName, MsDataSource dataSource, Container container, Path rawFilesDir, ExperimentService expSvc, boolean lookupFs)
