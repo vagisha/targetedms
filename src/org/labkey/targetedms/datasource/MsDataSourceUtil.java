@@ -24,6 +24,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.targetedms.ISampleFile;
 import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.api.targetedms.model.SampleFilePath;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.JunitUtil;
 import org.labkey.api.util.TestContext;
@@ -40,7 +41,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -237,13 +237,13 @@ public class MsDataSourceUtil
     }
 
     /**
-     *
-     * @param sampleFiles list of sample files for which we should check if data exists
-     * @param container container where we should look for data
-     * @return Map of sample file names to the path on the filesystem
+     * @param sampleFiles list of sample files for which we should do a path lookup on the server
+     * @param container container where we should look for the files
+     * @param lookupExpData if true, look for a matching row in exp.data before looking on the filesystem
+     * @return List of {@link SampleFilePath} objects encapsulating an ISampleFile and its path on the server.
      */
     @NotNull
-    public Map<String, Path> getDataPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, boolean lookupExpData)
+    public List<SampleFilePath> getDataPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, boolean lookupExpData)
     {
         FileContentService fcs = FileContentService.get();
         boolean lookupFs = fcs != null && !fcs.isCloudRoot(container);
@@ -252,10 +252,10 @@ public class MsDataSourceUtil
     }
 
     @NotNull
-    private Map<String, Path> getDataPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, @Nullable ExperimentService expSvc, boolean lookupFs)
+    private List<SampleFilePath> getDataPaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, @Nullable ExperimentService expSvc, boolean lookupFs)
     {
-        Map<String, Path> dataPaths = new HashMap<>();
-        sampleFiles.stream().forEach(s -> dataPaths.put(s.getFileName(), null));
+        List<SampleFilePath> dataPaths = new ArrayList<>();
+        sampleFiles.stream().forEach(s -> dataPaths.add(new SampleFilePath(s)));
 
         Path rawFilesDir = getRawFilesDir(container);
         if (rawFilesDir == null || !Files.exists(rawFilesDir))
@@ -263,14 +263,15 @@ public class MsDataSourceUtil
             return dataPaths;
         }
 
-        for(ISampleFile sampleFile: sampleFiles)
+        for(SampleFilePath sampleFilePath: dataPaths)
         {
+            ISampleFile sampleFile = sampleFilePath.getSampleFile();
             MsDataSource dataSource = getMsDataSource(sampleFile);
 
             String fileName = sampleFile.getFileName();
             Path path = getDataPath(fileName, dataSource, container, rawFilesDir, expSvc, lookupFs);
-            dataPaths.put(fileName, path);
-            }
+            sampleFilePath.setPath(path);
+        }
 
         return dataPaths;
     }
@@ -278,22 +279,23 @@ public class MsDataSourceUtil
     private Path getDataPath(String fileName, MsDataSource dataSource, Container container, Path rawFilesDir, ExperimentService expSvc, boolean lookupFs)
     {
         if (expSvc != null)
-    {
-        List<? extends ExpData> expDatas = getExpData(fileName, container, rawFilesDir, expSvc);
-        if(expDatas.size() > 0)
         {
-            for (ExpData data : expDatas)
+            List<? extends ExpData> expDatas = getExpData(fileName, container, rawFilesDir, expSvc);
+
+            if (expDatas.size() > 0)
             {
-                if (dataSource.isValidNameAndData(data, expSvc))
+                for (ExpData data : expDatas)
                 {
+                    if (dataSource.isValidNameAndData(data, expSvc))
+                    {
                         return data.getFilePath();
+                    }
                 }
             }
         }
-        }
         if (lookupFs)
         {
-            // We did not lookup exp.data or no matches found in exp.data. Look on the filesystems
+            // We did not lookup exp.data or no matches found in exp.data. Look on the filesystem.
             return getDataPath(fileName, dataSource, rawFilesDir);
         }
         return null;
@@ -302,9 +304,9 @@ public class MsDataSourceUtil
     private Path getDataPath(String fileName, MsDataSource sourceType, Path rawFilesDir)
         {
         try
-            {
+        {
             return Files.walk(rawFilesDir).filter(p -> isSourceMatch(p, fileName, sourceType)).findFirst().orElse(null);
-            }
+        }
         catch (IOException e)
         {
             throw UnexpectedException.wrap(e,"Error checking for data in sub-directories of " + rawFilesDir);
@@ -313,14 +315,7 @@ public class MsDataSourceUtil
 
     private boolean dataExists(String fileName, MsDataSource sourceType, Path rawFilesDir)
     {
-        try
-        {
-            return Files.walk(rawFilesDir).anyMatch(p -> isSourceMatch(p, fileName, sourceType));
-        }
-        catch (IOException e)
-        {
-            throw UnexpectedException.wrap(e,"Error checking for data in sub-directories of " + rawFilesDir);
-        }
+        return getDataPath(fileName, sourceType, rawFilesDir) != null;
     }
 
     private boolean isSourceMatch(Path path, String fileName, MsDataSource sourceType)
@@ -663,6 +658,10 @@ public class MsDataSourceUtil
             sampleFile.setFilePath("C:\\RawData\\file.mzXML");
             assertEquals(MsDataSourceTypes.CONVERTED_DATA_SOURCE, dataSourceUtil.getMsDataSource(sampleFile));
             sampleFile.setFilePath("C:\\RawData\\Site54_190909_Study9S_PHASE-1.wiff|Site54_STUDY9S_PHASE1_6ProtMix_QC_03|2");
+            assertEquals(MsDataSourceTypes.SCIEX, dataSourceUtil.getMsDataSource(sampleFile));
+            sampleFile.setFilePath("C:\\RawData\\Site54_190909_Study9S_PHASE-1.wiff.scan|Site54_STUDY9S_PHASE1_6ProtMix_QC_03|2");
+            assertEquals(MsDataSourceTypes.SCIEX, dataSourceUtil.getMsDataSource(sampleFile));
+            sampleFile.setFilePath("C:\\RawData\\Site54_190909_Study9S_PHASE-1.wiff.scan");
             assertEquals(MsDataSourceTypes.SCIEX, dataSourceUtil.getMsDataSource(sampleFile));
             sampleFile.setFilePath("C:\\RawData\\file.lcd");
             assertEquals(MsDataSourceTypes.SHIMADZU, dataSourceUtil.getMsDataSource(sampleFile));

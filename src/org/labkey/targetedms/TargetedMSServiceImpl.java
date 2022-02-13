@@ -35,6 +35,7 @@ import org.labkey.api.targetedms.SkylineDocumentImportListener;
 import org.labkey.api.targetedms.TargetedMSFolderTypeListener;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
+import org.labkey.api.targetedms.model.SampleFilePath;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.datasource.MsDataSourceUtil;
@@ -47,7 +48,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -202,6 +202,7 @@ public class TargetedMSServiceImpl implements TargetedMSService
         return ModificationManager.getIsotopeModificationsUsedInRun(runId);
     }
 
+    @Override
     public @NotNull List<? extends ISpectrumLibrary> getLibraries(ITargetedMSRun run)
     {
         return run != null ? LibraryManager.getLibraries(run.getId()) : Collections.emptyList();
@@ -302,7 +303,7 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public Map<String, Path> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData)
+    public List<SampleFilePath> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData)
     {
         return MsDataSourceUtil.getInstance().getDataPaths(sampleFiles, container, lookupExpData);
     }

@@ -117,13 +117,13 @@ public class MsDataSourceTypes
         }
     };
 
-    private static MsDataSource[] sourceTypes = new MsDataSource[]{
+    private static final MsDataSource[] sourceTypes = new MsDataSource[]{
             THERMO, SCIEX, SHIMADZU, // File-based
             WATERS, AGILENT, BRUKER, // Directory-based
             CONVERTED_DATA_SOURCE}; // mzML, mzXML etc.
 
 
-    private static Map<String, List<MsDataSource>> EXTENSION_SOURCE_MAP = new HashMap<>();
+    private static final Map<String, List<MsDataSource>> EXTENSION_SOURCE_MAP = new HashMap<>();
     static
     {
         for (MsDataSource s : sourceTypes)
@@ -150,33 +150,13 @@ public class MsDataSourceTypes
         return Arrays.stream(sourceTypes).filter(s -> s.isInstrumentSource(vendorOrModel)).findFirst().orElse(null);
     }
 
-    public static String getBaseName(String fileName, int dots)
-    {
-        String baseName = fileName;
-        while (dots-- > 0 && baseName.indexOf('.') != -1)
-            baseName = baseName.substring(0, baseName.lastIndexOf('.'));
-        return baseName;
-    }
-
     private static String extension(String name)
     {
         return extension(name, 1);
     }
 
-    private static String extension(String name, int dotCount)
+    private static String extension(String name, int dots)
     {
-        String extension = "";
-        if(name != null)
-        {
-            String baseName = name;
-            while (dotCount-- > 0)
-            {
-                int idx = baseName.lastIndexOf('.');
-                if (idx == -1) break;
-                extension = baseName.substring(idx).toLowerCase() + extension;
-                baseName = baseName.substring(0, idx);
-            }
-        }
-        return extension;
+        return name.substring(FileUtil.getBaseName(name, dots).length()).toLowerCase();
     }
 }

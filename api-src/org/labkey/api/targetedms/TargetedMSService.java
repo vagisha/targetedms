@@ -27,11 +27,11 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.targetedms.model.SampleFileInfo;
+import org.labkey.api.targetedms.model.SampleFilePath;
 import org.labkey.api.view.ViewBackgroundInfo;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 
 /**
  * User: vsharma
@@ -124,13 +124,12 @@ public interface TargetedMSService
     Integer importSkylineDocument(ViewBackgroundInfo info, Path skylinePath) throws XarFormatException, PipelineValidationException;
 
     /**
-     *
-     * @param sampleFiles list of sample files for which we should check if data exists
-     * @param container container where we should look for data
-     * @param lookupExpData if true, look for a matching row in exp.data before looking up the filesystem
-     * @return Map of sample file names to the path on the filesystem
+     * @param sampleFiles list of sample files for which we should do a path lookup on the server
+     * @param container container where we should look for the files
+     * @param lookupExpData if true, look for a matching row in exp.data before looking on the filesystem
+     * @return List of {@link SampleFilePath} objects encapsulating an ISampleFile and its path on the server.
      */
-    Map<String, Path> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData);
+    List<SampleFilePath> getSampleFilesPaths(List<? extends ISampleFile> sampleFiles, Container container, boolean lookupExpData);
 
     /**
      * Returns the name of a chromatogram library file according to the naming pattern used for creating
