@@ -1408,6 +1408,54 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    /**
+     * Action class to display the targets (proteins / molecule lists, peptides / molecules, precursors / molecule precursors)
+     * in the Skyline documents in a folder. This action is used in {@link LibraryQueryViewWebPart} to display the grid with
+     * customize grid and view chooser menus available.
+     */
+    @RequiresPermission(ReadPermission.class)
+    public class ShowTargetsAction extends SimpleViewAction<ShowTargetsForm>
+    {
+        private String _pageTitle;
+        @Override
+        public ModelAndView getView(ShowTargetsForm form, BindException errors)
+        {
+            if (StringUtils.isBlank(form.getQueryName()))
+            {
+                errors.reject(ERROR_MSG, String.format("Expected a table name in the request", form.getQueryName()));
+                return new SimpleErrorView(errors);
+            }
+            if (!LibraryQueryViewWebPart.isTableSupported(form.getQueryName()))
+            {
+                errors.reject(ERROR_MSG, String.format("Unsupported table '%s'.", form.getQueryName()));
+                return new SimpleErrorView(errors);
+            }
+
+            _pageTitle = form.getQueryName();
+            VBox vbox = new VBox();
+            vbox.addView(LibraryQueryViewWebPart.forTableAllViews(form.getQueryName(), getViewContext()));
+            return vbox;
+        }
+
+        @Override
+        public void addNavTrail(NavTree root) {root.addChild(_pageTitle);}
+    }
+
+    public static class ShowTargetsForm
+    {
+        private String _queryName;
+
+        public String getQueryName()
+        {
+            return _queryName;
+        }
+
+        public void setQueryName(String queryName)
+        {
+            _queryName = queryName;
+        }
+    }
+
     // ------------------------------------------------------------------------
     // Chromatogram actions
     // ------------------------------------------------------------------------
@@ -3873,30 +3921,17 @@ public class TargetedMSController extends SpringActionController
             DocumentPrecursorsView view;
             if(PeptidePrecursorsView.DATAREGION_NAME.equals(dataRegion))
             {
-                FolderType folderType = TargetedMSManager.getFolderType(getContainer());
-                String queryName;
-                if (folderType == FolderType.LibraryProtein || folderType == FolderType.Library)
-                {
-                    queryName = TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR;
-                }
-                else
-                {
-                    queryName = TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR;
-                }
-
                 view = new PeptidePrecursorsView(getViewContext(),
                         new TargetedMSSchema(getUser(), getContainer()),
-                        queryName,
+                        TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR,
                         form.getId(),
-                        forExport)
-                {
-                };
+                        forExport);
             }
             else
             {
                 view = new SmallMoleculePrecursorsView(getViewContext(),
                         new TargetedMSSchema(getUser(), getContainer()),
-                        TargetedMSSchema.TABLE_MOLECULE_PRECURSOR,
+                        TargetedMSSchema.TABLE_EXPERIMENT_MOLECULE_PRECURSOR,
                         form.getId(),
                         forExport);
             }
