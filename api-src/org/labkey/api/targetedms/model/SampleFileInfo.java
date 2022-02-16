@@ -14,19 +14,20 @@ public class SampleFileInfo extends OutlierCounts
     final String sampleFile;
     final Date acquiredTime;
     final int guideSetId;
-    final boolean ignoreForAllMetric;
     final String filePath;
     final long replicateId;
     /** Use a TreeMap to keep the metrics sorted by name */
     final Map<String, OutlierCounts> byMetric = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    public SampleFileInfo(long sampleId, Date acquiredTime, String sampleFile, int guideSetId, boolean ignoreForAllMetric, String filePath, Long replicateId)
+    private Boolean _inGuideSetTrainingRange;
+    private boolean ignoreForAllMetric;
+
+    public SampleFileInfo(long sampleId, Date acquiredTime, String sampleFile, int guideSetId, String filePath, Long replicateId)
     {
         this.sampleId = sampleId;
         this.acquiredTime = acquiredTime;
         this.sampleFile = sampleFile;
         this.guideSetId = guideSetId;
-        this.ignoreForAllMetric = ignoreForAllMetric;
         this.filePath = filePath;
         this.replicateId = replicateId;
     }
@@ -49,6 +50,11 @@ public class SampleFileInfo extends OutlierCounts
     public boolean isIgnoreForAllMetric()
     {
         return ignoreForAllMetric;
+    }
+
+    public void setIgnoreForAllMetric(boolean ignoreForAllMetric)
+    {
+        this.ignoreForAllMetric = ignoreForAllMetric;
     }
 
     public long getSampleId()
@@ -111,7 +117,20 @@ public class SampleFileInfo extends OutlierCounts
         jsonObject.put("ReplicateId", getReplicateId());
         jsonObject.put("FilePath", getFilePath());
         jsonObject.put("AcquiredTime", getAcquiredTime());
+        jsonObject.put("GuideSetId", getGuideSetId());
+        // Intentionally dereference wrapper object to be sure it's always populated with a true/false value in this codepath
+        jsonObject.put("InGuideSetTrainingRange", _inGuideSetTrainingRange.booleanValue());
 
         return jsonObject;
+    }
+
+    public void setInGuideSetTrainingRange(Boolean inGuideSetTrainingRange)
+    {
+        _inGuideSetTrainingRange = inGuideSetTrainingRange;
+    }
+
+    public boolean getInGuideSetTrainingRange()
+    {
+        return _inGuideSetTrainingRange;
     }
 }

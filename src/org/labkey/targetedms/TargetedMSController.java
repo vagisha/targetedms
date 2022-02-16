@@ -965,7 +965,8 @@ public class TargetedMSController extends SpringActionController
             autoQCPingMap.put("isRecent", lastModified.getTime() >= timeoutMinutesAgo);
         }
         properties.put("autoQCPing", autoQCPingMap);
-        properties.put("metricCount", TargetedMSManager.getEnabledQCMetricConfigurations(instrumentContainer, getUser()).size());
+        TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+        properties.put("metricCount", TargetedMSManager.getEnabledQCMetricConfigurations(schema).size());
 
         return properties;
     }
@@ -978,7 +979,8 @@ public class TargetedMSController extends SpringActionController
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
-            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.getEnabledQCMetricConfigurations(getContainer(), getUser());
+            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.getEnabledQCMetricConfigurations(schema);
 
             List<JSONObject> result = new ArrayList<>();
             for (QCMetricConfiguration configuration : enabledQCMetricConfigurations)
@@ -1090,7 +1092,9 @@ public class TargetedMSController extends SpringActionController
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
-            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.getEnabledQCMetricConfigurations(getContainer(), getUser());
+            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+
+            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.getEnabledQCMetricConfigurations(schema);
 
             if(enabledQCMetricConfigurations.isEmpty())
             {
@@ -1101,11 +1105,11 @@ public class TargetedMSController extends SpringActionController
             List<GuideSet> guideSets = TargetedMSManager.getGuideSets(getContainer(), getUser());
             Map<Integer, QCMetricConfiguration> metricMap = enabledQCMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
 
-            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(getContainer(), getUser(), enabledQCMetricConfigurations, null, null, Collections.emptyList(), true);
+            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(schema, enabledQCMetricConfigurations, null, null, Collections.emptyList(), true);
 
             Map<GuideSetKey, GuideSetStats> stats = OutlierGenerator.get().getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
 
-            List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, getContainer(), form.getSampleLimit());
+            List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, schema, form.getSampleLimit());
 
             response.put("sampleFiles", sampleFiles.stream().map(SampleFileInfo::toJSON).collect(Collectors.toList()));
             response.put("guideSets", guideSets.stream().map(x -> x.toJSON(rawMetricDataSets, metricMap, stats)).collect(Collectors.toList()));
@@ -1268,9 +1272,11 @@ public class TargetedMSController extends SpringActionController
                 }
             }
 
+            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+
             final Date qcStartDate = rangeStartDate;
             List<QCMetricConfiguration> qcMetricConfigurations = TargetedMSManager
-                    .getEnabledQCMetricConfigurations(getContainer(), getUser())
+                    .getEnabledQCMetricConfigurations(schema)
                     .stream()
                     .filter(qcMetricConfiguration -> qcMetricConfiguration.getId() == passedMetricId)
                     .collect(Collectors.toList());
@@ -1281,7 +1287,7 @@ public class TargetedMSController extends SpringActionController
             Date qcFolderEndDate = (Date) qcFolderDateRange.get("endDate");
 
             // always query for the full range
-            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, qcFolderStartDate, qcFolderEndDate, form.getSelectedAnnotations(), form.isShowExcluded());
+            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(schema, qcMetricConfigurations, qcFolderStartDate, qcFolderEndDate, form.getSelectedAnnotations(), form.isShowExcluded());
             Map<GuideSetKey, GuideSetStats> stats = generator.getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
             boolean zoomedRange = qcFolderStartDate != null &&
                     qcFolderEndDate != null &&
@@ -1319,7 +1325,7 @@ public class TargetedMSController extends SpringActionController
             }
 
             Map<Integer, QCMetricConfiguration> metricMap = qcMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
-            List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, targetedStats, metricMap, getContainer(), null);
+            List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, targetedStats, metricMap, schema, null);
             List<QCPlotFragment> qcPlotFragments = OutlierGenerator.get().getQCPlotFragment(rawMetricDataSets, targetedStats, getContainer(), getUser());
 
             response.put("sampleFiles", sampleFiles.stream().map(SampleFileInfo::toQCPlotJSON).collect(Collectors.toList()));

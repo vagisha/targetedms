@@ -2117,16 +2117,10 @@ public class TargetedMSManager
         return Math.log(value.doubleValue()) / Math.log(2);
     }
 
-    public static List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user)
+    public static List<QCMetricConfiguration> getEnabledQCMetricConfigurations(TargetedMSSchema targetedMSSchema)
     {
-        return _metricCache.get(container, null, (p, argument) ->
+        return _metricCache.get(targetedMSSchema.getContainer(), null, (c, argument) ->
         {
-            QuerySchema targetedMSSchema = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
-            if (targetedMSSchema == null)
-            {
-                // Module must not be enabled in this folder, so bail out
-                return Collections.emptyList();
-            }
             TableInfo metricsTable = targetedMSSchema.getTable("qcMetricsConfig", null);
             List<QCMetricConfiguration> metrics = new TableSelector(metricsTable, new SimpleFilter(FieldKey.fromParts("Enabled"), false, CompareType.NEQ_OR_NULL), new Sort(FieldKey.fromParts("Name"))).getArrayList(QCMetricConfiguration.class);
             List<QCMetricConfiguration> result = new ArrayList<>();
@@ -2141,7 +2135,7 @@ public class TargetedMSManager
                     }
                     else
                     {
-                        QuerySchema enabledSchema = TargetedMSSchema.SCHEMA_NAME.equalsIgnoreCase(metric.getEnabledSchemaName()) ? targetedMSSchema : DefaultSchema.get(user, container).getSchema(metric.getEnabledSchemaName());
+                        QuerySchema enabledSchema = TargetedMSSchema.SCHEMA_NAME.equalsIgnoreCase(metric.getEnabledSchemaName()) ? targetedMSSchema : targetedMSSchema.getDefaultSchema().getSchema(metric.getEnabledSchemaName());
                         if (enabledSchema != null)
                         {
                             TableInfo enabledQuery = enabledSchema.getTable(metric.getEnabledQueryName(), null);
@@ -2154,12 +2148,12 @@ public class TargetedMSManager
                             }
                             else
                             {
-                                _log.warn("Could not find query " + metric.getEnabledSchemaName() + "." + metric.getEnabledQueryName() + " to determine if metric " + metric.getName() + " should be enabled in container " + container.getPath());
+                                _log.warn("Could not find query " + metric.getEnabledSchemaName() + "." + metric.getEnabledQueryName() + " to determine if metric " + metric.getName() + " should be enabled in container " + c.getPath());
                             }
                         }
                         else
                         {
-                            _log.warn("Could not find schema " + metric.getEnabledSchemaName() + " to determine if metric " + metric.getName() + " should be enabled in container " + container.getPath());
+                            _log.warn("Could not find schema " + metric.getEnabledSchemaName() + " to determine if metric " + metric.getName() + " should be enabled in container " + c.getPath());
                         }
                     }
                 }
@@ -2176,17 +2170,18 @@ public class TargetedMSManager
 
     public List<SampleFileInfo> getSampleFileInfos(Container container, User user, Integer sampleFileLimit)
     {
-        List<QCMetricConfiguration> enabledQCMetricConfigurations = getEnabledQCMetricConfigurations(container, user);
+        TargetedMSSchema schema = new TargetedMSSchema(user, container);
+        List<QCMetricConfiguration> enabledQCMetricConfigurations = getEnabledQCMetricConfigurations(schema);
         if(!enabledQCMetricConfigurations.isEmpty())
         {
             List<GuideSet> guideSets = TargetedMSManager.getGuideSets(container, user);
             Map<Integer, QCMetricConfiguration> metricMap = enabledQCMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
 
-            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(container, user, enabledQCMetricConfigurations, null, null, Collections.emptyList(), true);
+            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(schema, enabledQCMetricConfigurations, null, null, Collections.emptyList(), true);
 
             Map<GuideSetKey, GuideSetStats> stats = OutlierGenerator.get().getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
 
-            return OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, container, sampleFileLimit);
+            return OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, schema, sampleFileLimit);
         }
         return Collections.emptyList();
     }
@@ -2584,7 +2579,7 @@ public class TargetedMSManager
 
     public static List<QCMetricConfiguration> getTraceMetricConfigurations(Container container, User user)
     {
-        return getEnabledQCMetricConfigurations(container, user)
+        return getEnabledQCMetricConfigurations(new TargetedMSSchema(user, container))
                 .stream()
                 .filter(qcMetricConfiguration -> qcMetricConfiguration.getTraceName() != null)
                 .collect(Collectors.toList());

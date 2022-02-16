@@ -16,16 +16,13 @@
 package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.DuplicateKeyException;
 import org.labkey.api.query.FilteredTable;
@@ -41,7 +38,6 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.model.QCMetricConfiguration;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -95,9 +91,12 @@ public class QCMetricConfigurationTable extends FilteredTable<TargetedMSSchema>
 
     public static class QCMetricConfigurationTableUpdateService extends DefaultQueryUpdateService
     {
-        protected QCMetricConfigurationTableUpdateService(TableInfo queryTable, TableInfo realTable)
+        private final QCMetricConfigurationTable _queryTable;
+
+        protected QCMetricConfigurationTableUpdateService(QCMetricConfigurationTable queryTable, TableInfo realTable)
         {
             super(queryTable, realTable);
+            _queryTable = queryTable;
         }
 
         @Override
@@ -143,7 +142,7 @@ public class QCMetricConfigurationTable extends FilteredTable<TargetedMSSchema>
         private void calculateAndInsertTraceValuesForMetric(int metricId, Container container, User user)
         {
             var qcMetricConfigurations = TargetedMSManager
-                    .getEnabledQCMetricConfigurations(container, user)
+                    .getEnabledQCMetricConfigurations(_queryTable.getUserSchema())
                     .stream()
                     .filter(qcMetricConfiguration -> qcMetricConfiguration.getId() == metricId)
                     .collect(Collectors.toList());

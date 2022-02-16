@@ -113,9 +113,12 @@ public class QCPlotFragment
             dataJsonObject.put("Value", plotData.getMetricValue());
             dataJsonObject.put("SampleFileId", plotData.getSampleFile().getId());
             dataJsonObject.put("PrecursorChromInfoId", plotData.getPrecursorChromInfoId());
-            dataJsonObject.put("InGuideSetTrainingRange", plotData.getSampleFile().isInGuideSetTrainingRange());
-            dataJsonObject.put("GuideSetId", plotData.getSampleFile().getGuideSetId());
-            dataJsonObject.put("IgnoreInQC", plotData.getSampleFile().isIgnoreInQC(plotData.getMetricId()));
+            boolean ignoreInQC = plotData.getSampleFile().isIgnoreInQC(plotData.getMetricId());
+            if (ignoreInQC)
+            {
+                // Reduce JSON payload size by only sending value for rows where it's true
+                dataJsonObject.put("IgnoreInQC", true);
+            }
             dataJsonObject.put("PrecursorId", plotData.getPrecursorId());
             dataJsonObject.put("SeriesType", plotData.getMetricSeriesIndex());
             if (includeMR)

@@ -130,15 +130,21 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCPlotsData.api'),
-            success: this.processPlotData,
+            success: function(response) {
+                this.lastParsedResponse = JSON.parse(response.responseText);
+                this.processPlotData();
+            },
             failure: LABKEY.Utils.getCallbackWrapper(this.failureHandler),
             scope: this,
             jsonData: plotsConfig
         });
     },
 
-    processPlotData: function(response) {
-        var parsed = JSON.parse(response.responseText);
+    processPlotData: function() {
+        var parsed = this.lastParsedResponse;
+        if (!parsed)
+            return;
+
         var plotDataRows = parsed.plotDataRows;
         var metricProps = parsed.metricProps;
         var sampleFiles = parsed.sampleFiles;
@@ -158,19 +164,26 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             this.processRawGuideSetData(plotDataRows);
         }
 
+        let sampleFilesById = {};
+        Ext4.iterate(sampleFiles, function (sampleFile) {
+            sampleFilesById[sampleFile['SampleId']] = sampleFile;
+        }, this);
+
+
         var tempData; // temp variable to store data for setting the date
         for (var i = this.pagingStartIndex; i < this.pagingEndIndex; i++) {
             var plotDataRow = plotDataRows[i];
             tempData = plotDataRow;
             var fragment = plotDataRow.SeriesLabel;
             Ext4.iterate(plotDataRow.data, function (plotData) {
-                Ext4.iterate(sampleFiles, function (sampleFile) {
-                    if (plotData['SampleFileId'] === sampleFile['SampleId']) {
-                        plotData['FilePath'] = sampleFile['FilePath'];
-                        plotData['ReplicateId'] = sampleFile['ReplicateId'];
-                        plotData['AcquiredTime'] = sampleFile['AcquiredTime'];
-                    }
-                }, this);
+
+                // Flatten the sample file data into each row
+                let sampleFile = sampleFilesById[plotData['SampleFileId']];
+                plotData['FilePath'] = sampleFile['FilePath'];
+                plotData['ReplicateId'] = sampleFile['ReplicateId'];
+                plotData['AcquiredTime'] = sampleFile['AcquiredTime'];
+                plotData['GuideSetId'] = sampleFile['GuideSetId'];
+                plotData['InGuideSetTrainingRange'] = sampleFile['InGuideSetTrainingRange'];
 
                 var data = this.processPlotDataRow(plotData, plotDataRow, fragment, metricProps);
                 this.fragmentPlotData[fragment].data.push(data);
