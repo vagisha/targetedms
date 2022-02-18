@@ -95,6 +95,8 @@ public interface TargetedMSService
     List<? extends ISampleFile> getSampleFiles(long runId);
     List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId);
     List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(long runId);
+    IModification.IStructuralModification getStructuralModification(long id);
+    IModification.IIsotopeModification getIsotopeModification(long id);
 
     @Nullable ISpectrumLibrary getLibrary(long id, @Nullable Container container, User user);
 

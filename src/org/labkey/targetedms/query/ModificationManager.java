@@ -15,8 +15,6 @@
 
 package org.labkey.targetedms.query;
 
-import org.jetbrains.annotations.Nullable;
-import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.DatabaseCache;
 import org.labkey.api.data.SQLFragment;
@@ -26,6 +24,7 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.targetedms.IModification;
 import org.labkey.api.util.Pair;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.Peptide;
@@ -54,6 +53,18 @@ public class ModificationManager
     private static PeptideIsotopeModIndexes _peptideIsotopeModIndexes = new PeptideIsotopeModIndexes();
 
     private ModificationManager() {}
+
+    public static IModification.IStructuralModification getStructuralModification(long id)
+    {
+        // This table does not contain rows scoped to a container
+        return new TableSelector(TargetedMSManager.getTableInfoStructuralModification()).getObject(id, PeptideSettings.StructuralModification.class);
+    }
+
+    public static IModification.IIsotopeModification getIsotopeModification(long id)
+    {
+        // This table does not contain rows scoped to a container
+        return new TableSelector(TargetedMSManager.getTableInfoIsotopeModification()).getObject(id, PeptideSettings.IsotopeModification.class);
+    }
 
     /**
      * @param peptideId

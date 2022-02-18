@@ -203,6 +203,18 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
+    public IModification.IStructuralModification getStructuralModification(long id)
+    {
+        return ModificationManager.getStructuralModification(id);
+    }
+
+    @Override
+    public IModification.IIsotopeModification getIsotopeModification(long id)
+    {
+        return ModificationManager.getIsotopeModification(id);
+    }
+
+    @Override
     public @NotNull List<? extends ISpectrumLibrary> getLibraries(ITargetedMSRun run)
     {
         return run != null ? LibraryManager.getLibraries(run.getId()) : Collections.emptyList();
