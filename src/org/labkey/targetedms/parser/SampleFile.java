@@ -51,7 +51,6 @@ public class SampleFile extends SkylineEntity implements ISampleFile
 
     // Calculated values loaded via TargetedMSManager.getSampleFiles()
     private Integer _guideSetId;
-    private boolean _ignoreForAllMetric;
 
     private List<Instrument> _instrumentInfoList;
 
@@ -206,19 +205,9 @@ public class SampleFile extends SkylineEntity implements ISampleFile
         _guideSetId = guideSetId;
     }
 
-    public boolean isIgnoreForAllMetric()
-    {
-        return _ignoreForAllMetric;
-    }
-
-    public void setIgnoreForAllMetric(boolean ignoreForAllMetric)
-    {
-        _ignoreForAllMetric = ignoreForAllMetric;
-    }
-
     public SampleFileInfo toSampleFileInfo()
     {
-        return new SampleFileInfo(getId(), getAcquiredTime(), getSampleName(), _guideSetId, _ignoreForAllMetric, getFilePath(), getReplicateId());
+        return new SampleFileInfo(getId(), getAcquiredTime(), getSampleName(), _guideSetId, getFilePath(), getReplicateId());
     }
 
     @Override

@@ -219,6 +219,10 @@ public class TargetedMSSchema extends UserSchema
     private final ExpSchema _expSchema;
     private Map<String, List<AnnotatedTargetedMSTable.AnnotationSettingForTyping>> _annotations;
 
+    // Cache this info at the schema level to make it easy to reuse
+    private Boolean _hasSmallMolecules;
+    private Boolean _hasPeptides;
+
     static public void register(Module module)
     {
         DefaultSchema.registerProvider(SCHEMA_NAME, new DefaultSchema.SchemaProvider(module)
@@ -679,8 +683,8 @@ public class TargetedMSSchema extends UserSchema
 
         ActionURL url = TargetedMSController.getShowRunURL(getContainer());
 
-        boolean hasSmallMolecules = TargetedMSManager.containerHasSmallMolecules(getContainer());
-        boolean hasPeptides = TargetedMSManager.containerHasPeptides(getContainer());
+        boolean hasSmallMolecules = hasSmallMolecules();
+        boolean hasPeptides = hasPeptides();
         String peptideGroupColName = (hasSmallMolecules ? COL_LIST : COL_PROTEIN) + "s";
 
         skyDocDetailColumn.setFk(new LookupForeignKey(url, "id", "Id", "Description")
@@ -693,7 +697,8 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn(result.getRealTable().getColumn("Description"));
                 result.addWrapColumn(result.getRealTable().getColumn("Created"));
                 result.addWrapColumn(result.getRealTable().getColumn("Filename"));
-                result.addWrapColumn(result.getRealTable().getColumn("ExperimentRunLSID"));
+                var runLSIDColumn = result.addWrapColumn(result.getRealTable().getColumn("ExperimentRunLSID"));
+                runLSIDColumn.setFk(QueryForeignKey.from(TargetedMSSchema.this, cf).schema(ExpSchema.SCHEMA_NAME).to(ExpSchema.TableType.Runs.name(), "LSID", null));
                 result.addWrapColumn(result.getRealTable().getColumn("Status"));
                 var stateColumn = result.addWrapColumn(result.getRealTable().getColumn("RepresentativeDataState"));
                 stateColumn.setFk(QueryForeignKey.from(TargetedMSSchema.this, cf).to(TABLE_REPRESENTATIVE_DATA_STATE_RUN, "RowId", null));
@@ -778,60 +783,73 @@ public class TargetedMSSchema extends UserSchema
             {
                 var versionsCol = result.addWrapColumn("Versions", result.getRealTable().getColumn("ExperimentRunLSID"));
                 versionsCol.setTextAlign("right");
-                versionsCol.setDisplayColumnFactory(new DisplayColumnFactory()
-                {
-                    @Override
-                    public DisplayColumn createRenderer(ColumnInfo colInfo)
-                    {
-                        return new DataColumn(colInfo){
-                            @Override
-                            public Object getValue(RenderContext ctx)
-                            {
-                                String runLsid = ctx.get(getColumnInfo().getFieldKey(), String.class);
-                                if(runLsid != null)
-                                {
-                                    Set<Integer> rowIds = Collections.singleton(ExperimentService.get().getExpRun(runLsid).getRowId());
-                                    return TargetedMSManager.getLinkedVersions(getUser(), getContainer(), rowIds, rowIds).size();
-                                }
-                                return super.getValue(ctx);
-                            }
-                            @Override
-                            public Object getDisplayValue(RenderContext ctx)
-                            {
-                                return getValue(ctx);
-                            }
-                            @Override
-                            public @NotNull HtmlString getFormattedHtml(RenderContext ctx)
-                            {
-                                return HtmlString.of(getValue(ctx));
-                            }
-                            @Override
-                            public boolean isFilterable()
-                            {
-                                return false;
-                            }
-                            @Override
-                            public boolean isSortable()
-                            {
-                                return false;
-                            }
-                            @Override
-                            public void addQueryFieldKeys(Set<FieldKey> keys)
-                            {
-                                keys.add(FieldKey.fromParts("File", "Id"));
-                            }
-                            @Override
-                            public String renderURL(RenderContext ctx)
-                            {
-                                Long runId = ctx.get(FieldKey.fromParts("File", "Id"), Long.class);
-                                if (runId == null)
-                                    return null;
+                versionsCol.setDisplayColumnFactory(colInfo -> new DataColumn(colInfo) {
 
-                                ActionURL url = new ActionURL(TargetedMSController.ShowVersionsAction.class, getContainer());
-                                url.addParameter("id", runId);
-                                return url.toString();
-                            }
-                        };
+                    /** exp.ExperimentRun.RowId -> number of associated runs */
+                    private final Map<Integer, Integer> _counts = new HashMap<>();
+
+                    @Override
+                    public Object getValue(RenderContext ctx)
+                    {
+                        Integer expRunId = ctx.get(getExpRunIdFieldKey(), Integer.class);
+
+                        return expRunId == null ? null : _counts.computeIfAbsent(expRunId, x ->
+                        {
+                            Set<Integer> rowIds = Collections.singleton(x);
+                            return TargetedMSManager.getLinkedVersions(TargetedMSSchema.this, rowIds, rowIds).size();
+                        });
+                    }
+
+                    @Override
+                    public Object getDisplayValue(RenderContext ctx)
+                    {
+                        return getValue(ctx);
+                    }
+
+                    @Override
+                    public @NotNull HtmlString getFormattedHtml(RenderContext ctx)
+                    {
+                        return HtmlString.of(getValue(ctx));
+                    }
+
+                    @Override
+                    public boolean isFilterable()
+                    {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean isSortable()
+                    {
+                        return false;
+                    }
+
+                    private FieldKey getTargetedMSRunIdFieldKey()
+                    {
+                        return getColumnInfo().getFieldKey().getParent().append("Id");
+                    }
+
+                    private FieldKey getExpRunIdFieldKey()
+                    {
+                        return getColumnInfo().getFieldKey().getParent().append("ExperimentRunLSID", "RowId");
+                    }
+
+                    @Override
+                    public void addQueryFieldKeys(Set<FieldKey> keys)
+                    {
+                        keys.add(getTargetedMSRunIdFieldKey());
+                        keys.add(getExpRunIdFieldKey());
+                    }
+                    @Override
+                    public String renderURL(RenderContext ctx)
+                    {
+                        Long runId = ctx.get(getTargetedMSRunIdFieldKey(), Long.class);
+                        if (runId == null)
+                            return null;
+
+                        ActionURL url1 = new ActionURL(TargetedMSController.ShowVersionsAction.class, getContainer());
+                        url1.addParameter("id", runId);
+                        return url1.toString();
                     }
                 });
             }
@@ -935,6 +953,24 @@ public class TargetedMSSchema extends UserSchema
         return result;
     }
 
+    private boolean hasSmallMolecules()
+    {
+        if (_hasSmallMolecules == null)
+        {
+            _hasSmallMolecules = TargetedMSManager.containerHasSmallMolecules(getContainer());
+        }
+        return _hasSmallMolecules.booleanValue();
+    }
+
+    private boolean hasPeptides()
+    {
+        if (_hasPeptides == null)
+        {
+            _hasPeptides = TargetedMSManager.containerHasSmallMolecules(getContainer());
+        }
+        return _hasPeptides.booleanValue();
+    }
+
     @Override
     public TableInfo createTable(String name, ContainerFilter cf)
     {
@@ -983,7 +1019,7 @@ public class TargetedMSSchema extends UserSchema
         // Issue 44713: Disconnect on table name in metadata for targetedms.RepresentativeDataState_Run/RunRepresentativeDataState
         if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name) || RunRepresentativeDataState.class.getSimpleName().equalsIgnoreCase(name))
         {
-            EnumTableInfo result = new EnumTableInfo<>(
+            EnumTableInfo<?> result = new EnumTableInfo<>(
                     RunRepresentativeDataState.class,
                     this,
                     RunRepresentativeDataState::getLabel,

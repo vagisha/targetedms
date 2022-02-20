@@ -10,3 +10,4 @@ LEFT OUTER JOIN (SELECT GROUP_CONCAT(COALESCE(MetricId, -1)) AS ExcludedMetricId
 ON sf.ReplicateId = e.ReplicateId
 LEFT JOIN GuideSetForOutliers gs
 ON ((sf.AcquiredTime >= gs.TrainingStart AND sf.AcquiredTime < gs.ReferenceEnd) OR (sf.AcquiredTime >= gs.TrainingStart AND gs.ReferenceEnd IS NULL))
+WHERE sf.AcquiredTime IS NOT NULL

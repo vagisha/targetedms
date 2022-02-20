@@ -236,11 +236,10 @@ public class OutlierGenerator
         }
     }
 
-    public List<RawMetricDataSet> getRawMetricDataSets(Container container, User user, List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups, boolean showExcluded)
+    public List<RawMetricDataSet> getRawMetricDataSets(TargetedMSSchema schema, List<QCMetricConfiguration> configurations, Date startDate, Date endDate, List<AnnotationGroup> annotationGroups, boolean showExcluded)
     {
         List<RawMetricDataSet> result = new ArrayList<>();
 
-        TargetedMSSchema schema = new TargetedMSSchema(user, container);
         TableInfo sampleFileForQC = schema.getTable("SampleFileForQC");
         List<SampleFileQCMetadata> sfs = new TableSelector(sampleFileForQC).getArrayList(SampleFileQCMetadata.class);
 
@@ -389,9 +388,12 @@ public class OutlierGenerator
 
     /**
      * @param metrics id to QC metric  */
-    public List<SampleFileInfo> getSampleFiles(List<RawMetricDataSet> dataRows, Map<GuideSetKey, GuideSetStats> allStats, Map<Integer, QCMetricConfiguration> metrics, Container container, Integer limit)
+    public List<SampleFileInfo> getSampleFiles(List<RawMetricDataSet> dataRows, Map<GuideSetKey, GuideSetStats> allStats, Map<Integer, QCMetricConfiguration> metrics, TargetedMSSchema schema, Integer limit)
     {
-        List<SampleFileInfo> result = TargetedMSManager.getSampleFiles(container, new SQLFragment("sf.AcquiredTime IS NOT NULL")).stream().map(SampleFile::toSampleFileInfo).collect(Collectors.toList());
+        TableInfo sampleFileForQC = schema.getTable("SampleFileForQC");
+        List<SampleFileQCMetadata> sfs = new TableSelector(sampleFileForQC).getArrayList(SampleFileQCMetadata.class);
+
+        List<SampleFileInfo> result = sfs.stream().map(SampleFile::toSampleFileInfo).collect(Collectors.toList());
         Map<Long, SampleFileInfo> sampleFiles = result.stream().collect(Collectors.toMap(SampleFileInfo::getSampleId, Function.identity(), (a, b) -> a));
 
         for (RawMetricDataSet dataRow : dataRows)
