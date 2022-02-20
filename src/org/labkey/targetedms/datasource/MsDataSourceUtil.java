@@ -295,7 +295,7 @@ public class MsDataSourceUtil
         }
         if (lookupFs)
         {
-            // We did not lookup exp.data or no matches found in exp.data. Look on the filesystem.
+            // We either did not lookup exp.data or no matches found in exp.data. Look on the filesystem.
             return getDataPath(fileName, dataSource, rawFilesDir);
         }
         return null;
