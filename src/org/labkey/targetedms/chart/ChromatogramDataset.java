@@ -940,14 +940,10 @@ public abstract class ChromatogramDataset
             if (tciList.isEmpty() && _pChromInfo.getTransitionChromatogramIndicesList() != null)
             {
                 List<Transition> transitions = TransitionManager.getTransitionsForPrecursor(_precursor.getId(), _user, _container);
-                if (transitions.size() != _pChromInfo.getTransitionChromatogramIndicesList().size())
-                {
-                    throw new IllegalStateException("Mismatch in transitions and indices lengths: " + transitions.size() + " vs " + _pChromInfo.getTransitionChromatogramIndicesList().size());
-                }
                 int index = 0;
                 for (Transition transition : transitions)
                 {
-                    if (include(transition))
+                    if (include(transition) && index < _pChromInfo.getTransitionChromatogramIndicesList().size())
                     {
                         tciList.add(new TransChromInfoPlusTransition(_pChromInfo.makeDummyTransitionChromInfo(index), transition));
                     }

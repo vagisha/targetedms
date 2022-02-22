@@ -178,11 +178,7 @@ public class TransitionManager
 
         if (pci.getTransitionChromatogramIndicesList() != null)
         {
-            if (transitions.size() != pci.getTransitionChromatogramIndicesList().size())
-            {
-                throw new IllegalStateException("Mismatch in transitions and indices lengths: " + transitions.size() + " vs " + pci.getTransitionChromatogramIndicesList().size());
-            }
-            for (int i = 0; i < pci.getTransitionChromatogramIndicesList().size(); i++)
+            for (int i = 0; i < pci.getTransitionChromatogramIndicesList().size() && i < transitions.size(); i++)
             {
                 // Transition list is sorted by the 'Id' column so should be in the same order as the chromatogram indices list
                 GeneralTransition transition = transitions.get(i);
@@ -198,7 +194,7 @@ public class TransitionManager
                 GeneralTransition transition = transitionMap.get(tci.getTransitionId());
                 if(transition == null)
                 {
-                    throw new IllegalStateException("Cannot find transtion for TransitionChromInfo. TransitionId is: " + tci.getTransitionId());
+                    throw new IllegalStateException("Cannot find transition for TransitionChromInfo. TransitionId is: " + tci.getTransitionId());
                 }
                 result.add(new TransitionChromInfoAndQuantitative(tci, transition.isQuantitative(fullScanSettings)));
             }
