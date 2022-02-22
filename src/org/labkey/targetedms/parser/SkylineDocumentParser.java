@@ -3061,6 +3061,7 @@ public class SkylineDocumentParser implements AutoCloseable
                     info.setChromatogramLength(chromatogram.getCompressedSize());
                     info.setNumPoints(chromatogram.getNumPoints());
                     info.setUncompressedSize(chromatogram.getUncompressedSize());
+                    info.setFlags(Short.toUnsignedInt(chromatogram.getFlagBits()));
 
                     result.add(info);
                 }

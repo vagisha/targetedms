@@ -121,7 +121,16 @@ public class ChromGroupHeaderInfo
     }
 
     public EnumSet<FlagValues> getFlagValues() {
-        return EnumFlagValues.enumSetFromFlagValues(FlagValues.class, Short.toUnsignedLong(flagBits));
+        return getFlagValues(Short.toUnsignedLong(flagBits));
+    }
+
+    public static EnumSet<FlagValues> getFlagValues(long bits) {
+        return EnumFlagValues.enumSetFromFlagValues(FlagValues.class, bits);
+    }
+
+    public short getFlagBits()
+    {
+        return flagBits;
     }
 
     public enum FlagValues
@@ -133,7 +142,13 @@ public class ChromGroupHeaderInfo
         has_sim_scan_ids,
         has_frag_scan_ids,
         polarity_negative,
-        raw_chromatograms
+        raw_chromatograms,
+        // Three bits for ion mobility info
+        ion_mobility_type_1,
+        ion_mobility_type_2,
+        ion_mobility_type_3,
+        dda_acquisition_method,
+        extracted_qc_trace
     }
 
     public static int getStructSize(CacheFormatVersion cacheFormatVersion) {

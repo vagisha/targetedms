@@ -181,6 +181,7 @@ import org.labkey.targetedms.model.RawMetricDataSet;
 import org.labkey.targetedms.model.passport.IKeyword;
 import org.labkey.targetedms.outliers.OutlierGenerator;
 import org.labkey.targetedms.parser.CalibrationCurveEntity;
+import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.Molecule;
@@ -4531,14 +4532,24 @@ public class TargetedMSController extends SpringActionController
 
             List<SampleFileChromInfo> sampleFileChromInfos = TargetedMSManager.getSampleFileChromInfos(_sampleFile);
 
+            SampleFileChromInfoForm imgForm = new SampleFileChromInfoForm();
             for (SampleFileChromInfo sampleFileChromInfo : sampleFileChromInfos)
             {
                 ActionURL chromURL = new ActionURL(SampleFileChromatogramChartAction.class, getContainer());
                 chromURL.addParameter("id", sampleFileChromInfo.getId());
-                SampleFileChromInfoForm imgForm = new SampleFileChromInfoForm();
-                HtmlView chromView = new HtmlView(DOM.IMG(at(src, chromURL.toString(), height, imgForm.getChartHeight(), width, imgForm.getChartWidth())));
+                Chromatogram c = sampleFileChromInfo.createChromatogram(_run);
+                HtmlView chromView;
+                if (c == null)
+                {
+                    chromView = new HtmlView(DOM.DIV("Unable to load chromatogram"));
+                }
+                else
+                {
+                    // Keep as a server-generated image as the trace for long runs can create very large SVGs
+                    chromView = new HtmlView(DOM.IMG(at(src, chromURL.toString(), height, imgForm.getChartHeight(), width, imgForm.getChartWidth())));
+                }
                 chromView.setFrame(WebPartView.FrameType.PORTAL);
-                chromView.setTitle(sampleFileChromInfo.getTextId());
+                chromView.setTitle(sampleFileChromInfo.getTitle());
                 result.addView(chromView);
             }
 

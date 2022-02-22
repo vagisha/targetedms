@@ -18,6 +18,9 @@ package org.labkey.targetedms.parser;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.parser.skyd.ChromGroupHeaderInfo;
+
+import java.util.EnumSet;
 
 /**
  * User: vsharma
@@ -29,6 +32,9 @@ public class SampleFileChromInfo extends AbstractChromInfo
     private Float _startTime;
     private Float _endTime;
     private String _textId;
+
+    private String _title;
+    private Integer _flags;
 
     public SampleFileChromInfo()
     {
@@ -92,5 +98,51 @@ public class SampleFileChromInfo extends AbstractChromInfo
     public void setTextId(String textId)
     {
         _textId = textId;
+    }
+
+    public String getTitle()
+    {
+        if (_title == null)
+        {
+            if (_textId != null)
+            {
+                _title = _textId;
+            }
+            else
+            {
+                // We didn't start capturing these flags at import time until 22.3
+                if (_flags != null)
+                {
+                    EnumSet<ChromGroupHeaderInfo.FlagValues> flagValues = ChromGroupHeaderInfo.getFlagValues(_flags);
+                    if (flagValues.contains(ChromGroupHeaderInfo.FlagValues.extracted_base_peak))
+                    {
+                        _title = "Base Peak Chromatogram";
+                    }
+                    else if (flagValues.contains(ChromGroupHeaderInfo.FlagValues.extracted_qc_trace))
+                    {
+                        _title = "QC Trace";
+                    }
+                    else
+                    {
+                        _title = "Total Ion Chromatogram";
+                    }
+                }
+                else
+                {
+                    _title = "Unknown trace";
+                }
+            }
+        }
+        return _title;
+    }
+
+    public void setFlags(Integer flags)
+    {
+        _flags = flags;
+    }
+
+    public Integer getFlags()
+    {
+        return _flags;
     }
 }

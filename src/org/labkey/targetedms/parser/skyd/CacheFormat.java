@@ -82,7 +82,7 @@ public class CacheFormat {
 
     public StructSerializer<CachedFileHeaderStruct> cachedFileSerializer()
     {
-        return new StructSerializer<CachedFileHeaderStruct>(CachedFileHeaderStruct.class,
+        return new StructSerializer<>(CachedFileHeaderStruct.class,
                 CachedFileHeaderStruct.getStructSize(CacheFormatVersion.CURRENT),
                 _cachedFileSize)
         {
@@ -95,7 +95,7 @@ public class CacheFormat {
     }
 
     public StructSerializer<ChromGroupHeaderInfo> chromGroupHeaderInfoSerializer() {
-        return new StructSerializer<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.class, ChromGroupHeaderInfo.getStructSize(CacheFormatVersion.CURRENT), _chromGroupHeaderSize)
+        return new StructSerializer<>(ChromGroupHeaderInfo.class, ChromGroupHeaderInfo.getStructSize(CacheFormatVersion.CURRENT), _chromGroupHeaderSize)
         {
             @Override
             public ChromGroupHeaderInfo fromByteArray(byte[] bytes)
@@ -105,18 +105,18 @@ public class CacheFormat {
         };
     }
     public StructSerializer<ChromTransition> chromTransitionSerializer() {
-        return new StructSerializer<ChromTransition>(ChromTransition.class, ChromTransition.getStructSize(CacheFormatVersion.CURRENT), _chromTransitionSize)
+        return new StructSerializer<>(ChromTransition.class, ChromTransition.getStructSize(CacheFormatVersion.CURRENT), _chromTransitionSize)
+        {
+            @Override
+            public ChromTransition fromByteArray(byte[] bytes)
             {
-                @Override
-                public ChromTransition fromByteArray(byte[] bytes)
-                {
-                    return new ChromTransition(_formatVersion, new LittleEndianByteArrayInputStream(bytes));
-                }
-            };
+                return new ChromTransition(_formatVersion, new LittleEndianByteArrayInputStream(bytes));
+            }
+        };
     }
 
     public StructSerializer<ChromPeak> chromPeakSerializer() {
-        return new StructSerializer<ChromPeak>(ChromPeak.class, ChromPeak.getStructSize(CacheFormatVersion.CURRENT), _chromPeakSize)
+        return new StructSerializer<>(ChromPeak.class, ChromPeak.getStructSize(CacheFormatVersion.CURRENT), _chromPeakSize)
         {
             @Override
             public ChromPeak fromByteArray(byte[] bytes)

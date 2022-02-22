@@ -15,7 +15,6 @@
  */
 package org.labkey.targetedms.chart;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.chart.ChartColor;
@@ -28,6 +27,7 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
 import org.labkey.api.util.Formats;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
@@ -82,7 +82,7 @@ import java.util.stream.Collectors;
  */
 public abstract class ChromatogramDataset
 {
-    private static final Logger LOG = LogManager.getLogger(ChromatogramDataset.class);
+    private static final Logger LOG = LogHelper.getLogger(ChromatogramDataset.class, "Builds chromatograms into datasets for plotting");
 
     XYSeriesCollection _jfreeDataset;
     Double _maxDisplayIntensity; // This is set only when we are synchronizing plots on intensity
@@ -329,7 +329,7 @@ public abstract class ChromatogramDataset
         @Override
         public String getChartTitle()
         {
-            return _chromInfo.getTextId() == null ? "Unknown trace" : _chromInfo.getTextId();
+            return _chromInfo.getTitle();
         }
 
         @Override
@@ -870,7 +870,7 @@ public abstract class ChromatogramDataset
         }
 
         @Nullable
-        private GeneralPrecursor getPrecursor()
+        private GeneralPrecursor<?> getPrecursor()
         {
             getGeneralMoleculeId();
             return _precursor;
@@ -1650,13 +1650,6 @@ public abstract class ChromatogramDataset
             double padding = (fullRange._maxRt - fullRange._minRt) * 0.1;
             _minDisplayRt = fullRange.getMinRt() - padding;
             _maxDisplayRt = fullRange.getMaxRt() + padding;
-        }
-
-        private String getLabel(GeneralMolecule gm, PrecursorChromInfoPlus info)
-        {
-            return gm instanceof Peptide ?
-                LabelFactory.precursorLabel(info.getPrecursorId()) :
-                LabelFactory.moleculePrecursorLabel(info.getPrecursorId(), _user, _container);
         }
 
         private RtRange getChromatogramRange(GeneralMolecule generalMolecule, List<PrecursorChromInfoPlus> chromInfos)

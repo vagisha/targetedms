@@ -468,6 +468,7 @@
             <column columnName="ChromatogramFormat" />
             <column columnName="ChromatogramOffset" />
             <column columnName="ChromatogramLength" />
+            <column columnName="Flags" />
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="PrecursorChromInfo">
