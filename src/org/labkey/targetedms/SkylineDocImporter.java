@@ -52,6 +52,7 @@ import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.StringUtilsLabKey;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.Portal;
 import org.labkey.api.writer.ZipUtil;
 import org.labkey.targetedms.SkylinePort.Irt.IRegressionFunction;
@@ -99,7 +100,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 import static org.labkey.targetedms.TargetedMSManager.getTableInfoPrecursorChromInfo;
 import static org.labkey.targetedms.TargetedMSManager.getTableInfoTransitionChromInfo;
@@ -138,7 +138,7 @@ public class SkylineDocImporter
     private ProgressMonitor _progressMonitor;
 
     // Use system logger for bugs & system problems, and in cases where we don't have a pipeline logger
-    protected static final Logger _systemLog = LogManager.getLogger(SkylineDocImporter.class);
+    protected static final Logger _systemLog = LogHelper.getLogger(SkylineDocImporter.class, "Imports Skyline documents");
     protected final XarContext _context;
     private int blankLabelIndex;
 
@@ -443,13 +443,15 @@ public class SkylineDocImporter
             {
                 if (!expectedMolecules.isEmpty() || !expectedPeptides.isEmpty())
                 {
-                    if (!expectedPeptides.equals(peptides))
+                    // We now allow users to add or remove from the set of monitored peptides/molecules, but not
+                    // completely change the list (at least not in a single import)
+                    if (!expectedPeptides.containsAll(peptides) && !peptides.containsAll(expectedPeptides))
                     {
-                        throw new PipelineJobException("QC folders require that all documents use the same peptides, but they did not match. Please create a new QC folder if you wish to work with different peptides. Attempted import: " + peptides + ". Previously imported: " + expectedPeptides + ".");
+                        throw new PipelineJobException("QC folders allow new imports to add or remove peptides, but not completely change the list. Please create a new QC folder if you wish to work with different peptides. Attempted import: " + peptides + ". Previously imported: " + expectedPeptides + ".");
                     }
-                    if (!expectedMolecules.equals(smallMolecules))
+                    if (!expectedMolecules.containsAll(smallMolecules) && !smallMolecules.containsAll(expectedMolecules))
                     {
-                        throw new PipelineJobException("QC folders require that all documents use the same molecule, but they did not match. Please create a new QC folder if you wish to work with different molecules. Attempted import: " + smallMolecules + ". Previously imported: " + expectedMolecules + ".");
+                        throw new PipelineJobException("QC folders allow new imports to add or remove molecules, but not completely change the list. Please create a new QC folder if you wish to work with different molecules. Attempted import: " + smallMolecules + ". Previously imported: " + expectedMolecules + ".");
                     }
                 }
             }
@@ -578,7 +580,7 @@ public class SkylineDocImporter
         separateIrtScale(existingScale, existingStandards, existingLibrary);
 
         // See which entries matched up with data in the Skyline document
-        List<IrtPeptide> matchedIrts = parser.getiRTScaleSettings().stream().filter(irt -> irt.getGeneralMoleculeId() != null).collect(Collectors.toList());
+        List<IrtPeptide> matchedIrts = parser.getiRTScaleSettings().stream().filter(irt -> irt.getGeneralMoleculeId() != null).toList();
 
         // Find the retention times for each tracked iRT entry in each sample file
         for (SampleFile sampleFile : replicateInfo.skylineIdSampleFileIdMap.values())
@@ -1014,7 +1016,7 @@ public class SkylineDocImporter
             File zipDir = new File(f.getParent(), SkylineFileUtils.getBaseName(f.getName()));
             if (zipDir.exists())
             {
-                FileUtil.deleteDirectoryContents(zipDir);
+                FileUtil.deleteDirectoryContents(zipDir.toPath());
             }
             _blibSourceDir = zipDir;
             List<File> files = ZipUtil.unzipToDirectory(f, zipDir, _log);
@@ -1176,12 +1178,12 @@ public class SkylineDocImporter
         StringBuilder sb = new StringBuilder();
         Map<String, Double> importStandards = new LinkedHashMap<>();
         RetentionTimeProviderImpl rtp = new RetentionTimeProviderImpl(importScale);
-        sb.append("Unable to find sufficient correlation in standard or shared library peptides (iRT Scale Id = " + scaleId + ") for this folder: " + _container.getPath() +"\n");
+        sb.append("Unable to find sufficient correlation in standard or shared library peptides (iRT Scale Id = ").append(scaleId).append(") for this folder: ").append(_container.getPath()).append("\n");
         sb.append("Standards:\n");
         int i = 0;
         for (IrtPeptide pep : existingStandards)
         {
-            sb.append(++i + ")  " + pep.getModifiedSequence() + "\t" + pep.getiRTValue() + "\n");
+            sb.append(++i).append(")  ").append(pep.getModifiedSequence()).append("\t").append(pep.getiRTValue()).append("\n");
             importStandards.put(pep.getModifiedSequence(), rtp.GetRetentionTime(pep.getModifiedSequence()));
         }
         i = 0;
@@ -1190,7 +1192,7 @@ public class SkylineDocImporter
         {
             if (pep.getValue() != null)
             {
-                sb.append(++i + ")  " + pep.getKey() + "\t" + pep.getValue());
+                sb.append(++i).append(")  ").append(pep.getKey()).append("\t").append(pep.getValue());
                 sb.append("\n");
             }
             if (i == 0) // Import didn't contain any of the standards for the library
@@ -1457,9 +1459,8 @@ public class SkylineDocImporter
             }
             Table.insert(_user, TargetedMSManager.getTableInfoPeptide(), peptide);
         }
-        else if (generalMolecule instanceof Molecule)
+        else if (generalMolecule instanceof Molecule molecule)
         {
-            Molecule molecule = (Molecule) generalMolecule;
             molecule.setId(generalMolecule.getId());
             Table.insert(_user, TargetedMSManager.getTableInfoMolecule(), molecule);
 
