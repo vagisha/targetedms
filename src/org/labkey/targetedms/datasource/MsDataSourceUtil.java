@@ -2,7 +2,6 @@ package org.labkey.targetedms.datasource;
 
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -248,12 +247,7 @@ public class MsDataSourceUtil
         FileContentService fcs = FileContentService.get();
         boolean lookupFs = fcs != null && !fcs.isCloudRoot(container);
         ExperimentService expSvc = lookupExpData ? ExperimentService.get() : null;
-        return getSampleFilePaths(sampleFiles, container, expSvc, lookupFs);
-    }
 
-    @NotNull
-    private List<SampleFilePath> getSampleFilePaths(@NotNull List<? extends ISampleFile> sampleFiles, @NotNull Container container, @Nullable ExperimentService expSvc, boolean lookupFs)
-    {
         List<SampleFilePath> sampleFilePaths = new ArrayList<>();
         sampleFiles.stream().forEach(s -> sampleFilePaths.add(new SampleFilePath(s)));
 

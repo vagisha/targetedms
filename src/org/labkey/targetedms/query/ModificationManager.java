@@ -56,13 +56,13 @@ public class ModificationManager
 
     public static IModification.IStructuralModification getStructuralModification(long id)
     {
-        // This table does not contain rows scoped to a container
+        // This table does not contain rows scoped to a container so we don't need a container filter
         return new TableSelector(TargetedMSManager.getTableInfoStructuralModification()).getObject(id, PeptideSettings.StructuralModification.class);
     }
 
     public static IModification.IIsotopeModification getIsotopeModification(long id)
     {
-        // This table does not contain rows scoped to a container
+        // This table does not contain rows scoped to a container so we don't need a container filter
         return new TableSelector(TargetedMSManager.getTableInfoIsotopeModification()).getObject(id, PeptideSettings.IsotopeModification.class);
     }
 
