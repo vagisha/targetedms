@@ -5152,19 +5152,19 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ProteinConflictPeptidesAjaxAction extends ReadOnlyApiAction<ProteinPeptidesForm>
+    public class ProteinConflictPeptidesAjaxAction extends ReadOnlyApiAction<ConflictEntityForm>
     {
         @Override
-        public ApiResponse execute(ProteinPeptidesForm proteinPeptidesForm, BindException errors)
+        public ApiResponse execute(ConflictEntityForm proteinPeptidesForm, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
-            int newProteinId = proteinPeptidesForm.getNewProteinId();
+            long newProteinId = proteinPeptidesForm.getNewEntityId();
             if(PeptideGroupManager.getPeptideGroup(getContainer(), newProteinId) == null)
             {
                 throw new NotFoundException("PeptideGroup with ID "+newProteinId+" was not found in the container.");
             }
-            int oldProteinId = proteinPeptidesForm.getOldProteinId();
+            long oldProteinId = proteinPeptidesForm.getOldEntityId();
             if(PeptideGroupManager.getPeptideGroup(getContainer(), oldProteinId) == null)
             {
                 throw new NotFoundException("PeptideGroup with ID "+oldProteinId+" was not found in the container.");
@@ -5196,31 +5196,31 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    public static class ProteinPeptidesForm
-    {
-        private int _newProteinId;
-        private int _oldProteinId;
-
-        public int getNewProteinId()
-        {
-            return _newProteinId;
-        }
-
-        public void setNewProteinId(int newProteinId)
-        {
-            _newProteinId = newProteinId;
-        }
-
-        public int getOldProteinId()
-        {
-            return _oldProteinId;
-        }
-
-        public void setOldProteinId(int oldProteinId)
-        {
-            _oldProteinId = oldProteinId;
-        }
-    }
+//    public static class ProteinPeptidesForm
+//    {
+//        private int _newProteinId;
+//        private int _oldProteinId;
+//
+//        public int getNewProteinId()
+//        {
+//            return _newProteinId;
+//        }
+//
+//        public void setNewProteinId(int newProteinId)
+//        {
+//            _newProteinId = newProteinId;
+//        }
+//
+//        public int getOldProteinId()
+//        {
+//            return _oldProteinId;
+//        }
+//
+//        public void setOldProteinId(int oldProteinId)
+//        {
+//            _oldProteinId = oldProteinId;
+//        }
+//    }
 
     @RequiresPermission(InsertPermission.class)
     public class ShowPrecursorConflictUiAction extends SimpleViewAction<ConflictUIForm>
@@ -5337,20 +5337,20 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class PrecursorConflictTransitionsAjaxAction extends ReadOnlyApiAction<ConflictPrecursorsForm>
+    public class PrecursorConflictTransitionsAjaxAction extends ReadOnlyApiAction<ConflictEntityForm>
     {
         @Override
-        public ApiResponse execute(ConflictPrecursorsForm conflictPrecursorsForm, BindException errors)
+        public ApiResponse execute(ConflictEntityForm conflictPrecursorsForm, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
-            int newPrecursorId = conflictPrecursorsForm.getNewPrecursorId();
+            long newPrecursorId = conflictPrecursorsForm.getNewEntityId();
             if(PrecursorManager.getPrecursor(getContainer(), newPrecursorId, getUser()) == null &&
                MoleculePrecursorManager.getPrecursor(getContainer(), newPrecursorId, getUser()) == null)
             {
                 throw new NotFoundException("Precursor with ID "+newPrecursorId+" was not found in the container.");
             }
-            int oldPrecursorId = conflictPrecursorsForm.getOldPrecursorId();
+            long oldPrecursorId = conflictPrecursorsForm.getOldEntityId();
             if(PrecursorManager.getPrecursor(getContainer(), oldPrecursorId, getUser()) == null &&
                 MoleculePrecursorManager.getPrecursor(getContainer(), oldPrecursorId, getUser()) == null)
             {
@@ -5380,29 +5380,55 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    public static class ConflictPrecursorsForm
+//    public static class ConflictPrecursorsForm
+//    {
+//        private int _newPrecursorId;
+//        private int _oldPrecursorId;
+//
+//        public int getNewPrecursorId()
+//        {
+//            return _newPrecursorId;
+//        }
+//
+//        public void setNewPrecursorId(int newPrecursorId)
+//        {
+//            _newPrecursorId = newPrecursorId;
+//        }
+//
+//        public int getOldPrecursorId()
+//        {
+//            return _oldPrecursorId;
+//        }
+//
+//        public void setOldPrecursorId(int oldPrecursorId)
+//        {
+//            _oldPrecursorId = oldPrecursorId;
+//        }
+//    }
+
+    public static class ConflictEntityForm
     {
-        private int _newPrecursorId;
-        private int _oldPrecursorId;
+        private long _newEntityId;
+        private long _oldEntityId;
 
-        public int getNewPrecursorId()
+        public long getNewEntityId()
         {
-            return _newPrecursorId;
+            return _newEntityId;
         }
 
-        public void setNewPrecursorId(int newPrecursorId)
+        public void setNewEntityId(long newEntityId)
         {
-            _newPrecursorId = newPrecursorId;
+            _newEntityId = newEntityId;
         }
 
-        public int getOldPrecursorId()
+        public long getOldEntityId()
         {
-            return _oldPrecursorId;
+            return _oldEntityId;
         }
 
-        public void setOldPrecursorId(int oldPrecursorId)
+        public void setOldEntityId(long oldEntityId)
         {
-            _oldPrecursorId = oldPrecursorId;
+            _oldEntityId = oldEntityId;
         }
     }
 

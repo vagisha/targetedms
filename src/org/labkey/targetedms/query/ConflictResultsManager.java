@@ -160,7 +160,7 @@ public class ConflictResultsManager
     }
 
 
-    public static List<ConflictPeptide> getConflictPeptidesForProteins(int newProteinId, int oldProteinId, User user, Container container)
+    public static List<ConflictPeptide> getConflictPeptidesForProteins(long newProteinId, long oldProteinId, User user, Container container)
     {
         List<BestPrecursorPeptide> newProteinPeptides = getBestPrecursorsForProtein(newProteinId, user, container);
         List<BestPrecursorPeptide> oldProteinPeptides = getBestPrecursorsForProtein(oldProteinId, user, container);
@@ -217,7 +217,7 @@ public class ConflictResultsManager
         return modifiedSequence.toString();
     }
 
-    private static List<BestPrecursorPeptide> getBestPrecursorsForProtein(int proteinId, User user, Container container)
+    private static List<BestPrecursorPeptide> getBestPrecursorsForProtein(long proteinId, User user, Container container)
     {
         Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(proteinId);
         List<BestPrecursorPeptide> proteinPeptides = new ArrayList<>();
@@ -318,7 +318,7 @@ public class ConflictResultsManager
         }
     }
 
-    public static List<ConflictTransition> getConflictTransitionsForPrecursors(int newPrecursorId, int oldPrecursorId, User user, Container container)
+    public static List<ConflictTransition> getConflictTransitionsForPrecursors(long newPrecursorId, long oldPrecursorId, User user, Container container)
     {
         List<TransitionWithAreaAndRank> newPrecursorTransitions = getRankedTransitionsForPrecursor(newPrecursorId, user, container);
         List<TransitionWithAreaAndRank> oldPrecursorTransitions = getRankedTransitionsForPrecursor(oldPrecursorId, user, container);
